@@ -7,6 +7,7 @@ import KeyUnmountDemo from '@/demos/react-key-practices/key-unmount-demo'
 import FixedPositionDemo from '@/demos/fixed-position/fixed'
 import PreviewImageDemo from '@/demos/blob-and-file/preview-image'
 import PreviewBase64Demo from '@/demos/blob-and-file/preview-base64'
+import SvgDuplicateIds from '@/demos/svg-duplicate-ids/duplicate-ids'
 import { unified } from 'unified'
 import rehypeParse from 'rehype-parse'
 import rehypePrismPlus from 'rehype-prism-plus'
@@ -25,6 +26,7 @@ const demoComponents: Record<string, React.ComponentType> = {
   'fixed-position/fixed.tsx': FixedPositionDemo,
   'blob-and-file/preview-image.tsx': PreviewImageDemo,
   'blob-and-file/preview-base64.tsx': PreviewBase64Demo,
+  'svg-duplicate-ids/duplicate-ids.tsx': SvgDuplicateIds,
 }
 
 const LiveDemo = async ({ code: initialCode, demoPath }: LiveDemoProps) => {
