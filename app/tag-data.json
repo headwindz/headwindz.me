@@ -1,7 +1,7 @@
 {
   "web": 6,
   "svg": 1,
-  "react": 2,
+  "react": 3,
   "security": 1,
   "cookies": 1,
   "privacy": 1,
@@ -9,6 +9,8 @@
   "notes": 4,
   "cheatsheet": 3,
   "css": 2,
+  "nextjs": 1,
+  "routing": 1,
   "javascript": 1,
   "nginx": 1,
   "web-server": 1,
