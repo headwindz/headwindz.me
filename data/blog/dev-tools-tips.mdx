@@ -1,0 +1,176 @@
+---
+title: Practical chrome DevTools tips
+tags: [devtools, chrome, debugging]
+date: 2026-01-24
+summary: Quick and practical chrome DevTools tips for everyday debugging tasks.
+---
+
+Chrome DevTools is one of the most powerful tools in a web developer's arsenal. While most developers are familiar with the basics like inspecting elements and checking console logs, DevTools offers a wealth of advanced capabilities that can dramatically speed up debugging and development workflows.
+
+This post is a curated collection of practical DevTools tips I use regularly in my day-to-day development. Rather than being an exhaustive reference, these are the techniques that consistently save me time: from debugging transient UI states and tracking down network issues, to profiling performance and manipulating the DOM.
+
+Let's dive into some of the most useful chrome DevTools features you should know.
+
+## Breakpoints & pausing
+
+**Pause after a delay**: Useful for debugging transient UI elements like tooltips or hover states that disappear when you right-click to inspect them.
+
+```js
+// Pause the page after 3 seconds
+setTimeout(() => debugger, 3000)
+```
+
+This gives you time to hover over an element, trigger a tooltip, or set up any UI state before the debugger pauses.
+
+## Network debugging
+
+**Simulate offline and throttle bandwidth**: Reproduce slow connections or offline scenarios to test your app's behavior.
+
+- `Network` panel → `throttle` dropdown → select `Slow 4G`, `Fast 4G`, `Offline` or create a custom profile
+
+![Network throttle](/static/blogs/dev-tool/network-throttle.gif)
+
+## Screenshots & capture
+
+**Full page screenshot**:
+
+- Command Menu (Cmd+Shift+P) → `Capture full size screenshot`
+
+**Element (node) screenshot**:
+
+- `Elements` panel → right-click a node → `Capture node screenshot`
+
+![Capture node screenshot](/static/blogs/dev-tool/capture-node-screenshot.png)
+
+## Elements panel tips
+
+**Force pseudo states**:
+
+- `Elements` panel → select a node → right-click → `Force state` → `:hover`, `:focus`, `:active`, etc., to style/test without user interaction
+
+![Force pseudo state](/static/blogs/dev-tool/force-pseudo-state.png)
+
+**Quick copy CSS declarations**:
+
+- Right-click a declaration → `Copy declaration` or `Copy all declarations`
+
+![Copy style](/static/blogs/dev-tool/copy-style.png)
+
+**Jump to source declaration**:
+
+- In `Styles` panel, click the filename/line link to open the stylesheet at the exact rule
+
+![Style declaration](/static/blogs/dev-tool/style-declaration.png)
+
+## Sources panel tips
+
+**DOM breakpoints**: Catch unexpected DOM mutations.
+
+- `Elements` panel → right-click a node → `Break on` →
+  - **Subtree modifications**: Pause when child nodes or content changes
+  - **Attribute modifications**: Pause when attributes (like `className`) change
+  - **Node removal**: Pause when the node is removed from the DOM
+
+![Dom break on](/static/blogs/dev-tool/dom-break-on.png)
+
+## Network panel
+
+**Locate request origin**: See where a network request was triggered.
+
+- `Network` panel → select request → check `Initiator` for the call stack → click to jump to source code
+
+![Network initiator](/static/blogs/dev-tool/network-initiator.png)
+
+**Disable cache while DevTools open**:
+
+- `Network` panel → check `Disable cache` to avoid stale resources during debugging
+
+![Disable cache](/static/blogs/dev-tool/network-disable-cache.png)
+
+**Preserve log**: Keep `Network` and `Console` logs across page reloads.
+
+- `Network/Console` panel → check `Preserve log`
+
+![Preserve log](/static/blogs/dev-tool/preserve-log.png)
+
+**Copy as fetch/cURL**:
+
+- `Network` panel → right-click → `Copy` → `Copy as fetch` or `Copy as cURL` for reproducible requests
+- Useful for sharing requests or debugging API calls
+
+![Network copy](/static/blogs/dev-tool/network-copy.png)
+
+**Block requests**:
+
+- `Network` panel → right-click a request → `Block request domain` or `Block request URL`
+- Add patterns (e.g., `*.analytics*`) to simulate third-party failures
+- Useful for testing how your app handles missing resources
+
+![Network block request](/static/blogs/dev-tool/network-block-request.png)
+
+**Customize columns**:
+
+- `Network` panel → right-click column headers → check desired columns.
+
+![Network customize columns](/static/blogs/dev-tool/network-customize-columns.gif)
+
+**Network summary**: View key metrics at the bottom of the panel.
+
+![Network resources info](/static/blogs/dev-tool/network-resources-info.png)
+
+From left to right:
+
+- **Requests**: Total number of requests (only counts requests after DevTools opened)
+- **Transferred**: Size of compressed data sent over the network
+- **Resources**: Total uncompressed size of all resources
+- **Finished event**: Time when the last resource finished loading
+- **DOMContentLoaded event**: Time when the DOMContentLoaded event fired
+- **Load event**: Time when the load event fired
+
+## Rendering
+
+**Rendering tools**: Visualize performance issues.
+
+- Command Menu (Cmd+Shift+P) → `Show Rendering` → enable:
+  - **Paint flashing**: Green highlights show repainted areas
+  - **Layout shift regions**: Highlights unexpected shifts (CLS debugging)
+  - **Frame Rendering Stats**: Display FPS, GPU usage
+
+![Rendering tools](/static/blogs/dev-tool/rendering.png)
+
+## Performance basics
+
+**Record a performance trace**:
+
+- `Performance` panel → Record while interacting → Stop; inspect Main thread activity, screenshots lane, and Web Vitals metrics
+
+**CPU throttling for realism**:
+
+- `Performance` panel → "CPU" dropdown → throttle (e.g., 4×) to surface timing issues on lower-end devices
+
+![Performance CPU throttling](/static/blogs/dev-tool/performance-cpu-throttling.gif)
+
+## Console utilities
+
+DevTools Console provides powerful shortcuts when no library has claimed them:
+
+**`$` / `$$`**: Shortcuts for `querySelector` and `querySelectorAll` (returns a real array, not NodeList).
+
+```js
+// Get all links
+console.log($$('a').map((el) => el.href))
+```
+
+**`$0` to `$4`**: References to the last 5 selected elements in the Elements panel.
+
+**`$_`**: The result of the last evaluated Console expression.
+
+**`copy(obj)`**: Copy any object to clipboard (even formats JSON for you).
+
+## References
+
+- [Chrome DevTools Documentation](https://developer.chrome.com/docs/devtools/)
+- [Network Panel Reference](https://developer.chrome.com/docs/devtools/network/)
+- [Rendering Tools](https://developer.chrome.com/docs/devtools/rendering/)
+- [Console Utilities API](https://developer.chrome.com/docs/devtools/console/utilities/)
+- [Performance Features](https://developer.chrome.com/docs/devtools/performance/)
