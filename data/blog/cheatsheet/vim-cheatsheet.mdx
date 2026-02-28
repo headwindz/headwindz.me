@@ -1,65 +1,91 @@
 ---
-title: My Vim cheatsheet
-date: 2023-06-23
-summary: Most helpful Vim commands
+title: My vim cheatsheet
+date: 2023-02-23
+summary: Essential vim commands for efficient editing
 tags: [cheatsheet]
 ---
 
-## Movement
+Vim is a highly configurable text editor built to enable efficient text editing. It is based on a modal editing philosophy, where you switch between modes for inserting text, navigating, and issuing commands.
 
-- `gg`: the beginning of the file
-- `G`: the end of the file
-- `0`: the beginning of the line
-- `^`: the first non-blank character of the line
-- `$`: the end of the line
-- `w`: next word
-- `b`: previous word
-- `e`: end of word
+## Modes
 
-## Insert -> insert mode
+- **Normal mode**: Navigation and commands (default)
+- **Insert mode**: Text input (`i`, `I`, `a`, `A`, `o`, `O`)
+- **Visual mode**: Select text (`v`, `V`, `Ctrl+v`)
+- **Command-line mode**: Commands starting with `:`
 
-- `I`: insert at the beginning of the line
-- `A`: insert at the end of the line
-- `o`: insert a new line below the current line
-- `O`: insert a new line above the current line
+## Navigation
 
-## Actions
+- `gg`: Go to the beginning of the file
+- `G`: Go to the end of the file
+- `0`: Go to the beginning of the line
+- `^`: Go to the first non-blank character of the line
+- `$`: Go to the end of the line
+- `w`: Next word
+- `b`: Previous word
+- `e`: End of word
+- `f<char>`: Find character on the line
+- `;`: Repeat previous `f` or `F` or `t` or `T` motion in the same direction
+- `,`: Repeat previous `f` or `F` or `t` or `T` motion in the opposite direction
+- `gd`: Go to local definition
 
-- `d`: delete
-- `c`: change
-- `y`: copy
-- `v`: enter visual mode
+## Insert mode
 
-## Motions
+- `i`: Insert before cursor
+- `I`: Insert at the beginning of the line
+- `a`: Append after cursor
+- `A`: Append at the end of the line
+- `o`: Open new line below
+- `O`: Open new line above
 
-- `i{object}`: inner object(inside)
-- `a{object}`: outer object(around)
+## Editing actions
 
-## Text objects
+- `d`: Delete (combine with motions, e.g., `dw`)
+- `c`: Change (e.g., `cw` to change word)
+- `y`: Yank (copy)
+- `p`: Paste after cursor
+- `P`: Paste before cursor
+- `v`: Enter visual mode
+- `u`: Undo
+- `Ctrl+r`: Redo
+- `.`: Repeat last command
 
-- `w`: word
-- `b`: bracket (or `(`, `{`, `[`, `<`)
-- `t`: tag
-- `q`: quote (or `'`, `"`, ```)
+## Motions & text objects
 
-## Return to normal mode
+- `i{object}`: Inner object (inside)
+- `a{object}`: Around object (including delimiters)
+- Common objects: `w` (word), `b` (bracket), `t` (tag), `q` (quote)
+- Example: `ciw` (change inner word), `da"` (delete around quotes)
 
-- Esc
-- Ctrl + [
+## Visual mode
 
-## Miscellaneous
+- `v`: Character-wise visual mode
+- `V`: Line-wise visual mode
+- `o`: Move to other end of selection
 
-- `gd`: go to definition
-- `f<char>`: find character
-
-### Move to other end of marked area Visual mode
-
-Press `o` at visual mode
-
-### Change case in Vim
+## Case changing
 
 Select the text then:
 
-- `U` for uppercase
-- `u` for lowercase
-- `~` for toggle case
+- `U`: Uppercase
+- `u`: Lowercase
+- `~`: Toggle case
+
+## Search & replace
+
+- `/pattern`: Search forward
+- `?pattern`: Search backward
+- `n` / `N`: Next/previous match
+- `:%s/old/new/g`: Replace all in file
+
+## Saving & quitting
+
+- `:w`: Save
+- `:q`: Quit
+- `:wq` or `:x`: Save and quit
+- `:qa!`: Quit all without saving
+
+## References
+
+- [Vim Documentation](https://vimhelp.org/)
+- [Vim Adventures (Game)](https://vim-adventures.com/)

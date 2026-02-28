@@ -1,0 +1,135 @@
+---
+title: How to fix duplicate svg id collisions in React
+tags: [web, svg, react]
+date: 2025-10-12
+summary: Learn how to identify and resolve duplicate SVG ID collisions when using multiple SVGs in your web applications, with practical solutions using SVGR, runtime transformations, and best practices.
+---
+
+When building modern web applications, you'll often import SVG files as React components for icons, illustrations, or graphics. However, a common but subtle issue arises when using multiple instances of SVGs that contain same internal id: **duplicate id collisions**. This problem can cause visual glitches, broken gradients, incorrect clip paths, and accessibility issues. In this post, I'll explain what causes these collisions and show you multiple ways to fix them.
+
+# The problem
+
+Svg files often use internal id to reference elements like gradients, masks, filters, and clip paths. According to the HTML specification, **id must be unique within a document**. When you render the same svg multiple times on a page, or use different svgs that happen to have the same id, you violate this requirement. The browser can only reference the first element with that id, causing subsequent references to fail or behave unpredictably.
+
+## Example: a broken svg
+
+[svg duplicate ids demo](demo://svg-duplicate-ids/duplicate-ids.tsx)
+
+**Why does the second icon disappear when the first icon is hidden?**
+
+This demonstrates a critical aspect of the duplicate id problem. Both icons use `id="gradient"` for their gradient definitions. Since id must be unique, the browser only recognizes the first occurrence. When the second icon references `fill="url(#gradient)"`, it's actually pointing to the first icon's gradient—not its own.
+
+When you hide the first icon with `display: none`, its entire SVG subtree (including the `<linearGradient id="gradient">` definition) is removed from the rendering tree. The `url(#gradient)` reference in the second icon now points to nothing, causing it to lose its fill and appear invisible. This is why you'll see the second icon vanish even though it's still visible in the DOM.
+
+**Key takeaway**: Elements with duplicate IDs don't get their own independent definitions—they all share the same reference to whichever element appears first in the DOM.
+
+## Real-world impact
+
+- **Visual bugs**: Colors, gradients, or filters may appear incorrect
+- **Accessibility issues**: `aria-labelledby` and `aria-describedby` may reference the wrong elements
+- **Clip paths failing**: Multiple components may share the same clipping region
+- **Hard to debug**: The issue only appears when multiple instances exist
+
+# Solutions
+
+## Solution 1: runtime id generation with custom hook
+
+If you can't modify your build configuration or need more control, you can create id at runtime using a custom React hook:
+
+```tsx
+import { useId } from 'react'
+
+function IconWithGradient() {
+  const id = useId() // Generates a unique id like ":r1:"
+  const gradientId = `gradient-${id}`
+
+  return (
+    <svg viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id={gradientId}>
+          <stop offset="0%" stopColor="blue" />
+          <stop offset="100%" stopColor="red" />
+        </linearGradient>
+      </defs>
+      <circle cx="50" cy="50" r="40" fill={`url(#${gradientId})`} />
+    </svg>
+  )
+}
+```
+
+For React 17 or earlier, you can use a custom hook:
+
+```tsx
+import { useRef, useEffect } from 'react'
+
+let idCounter = 0
+
+function useUniqueId(prefix = 'id') {
+  const idRef = useRef(null)
+
+  if (idRef.current === null) {
+    idRef.current = `${prefix}-${++idCounter}`
+  }
+
+  return idRef.current
+}
+
+function IconWithGradient() {
+  const gradientId = useUniqueId('gradient')
+
+  return (
+    <svg viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id={gradientId}>
+          <stop offset="0%" stopColor="blue" />
+          <stop offset="100%" stopColor="red" />
+        </linearGradient>
+      </defs>
+      <circle cx="50" cy="50" r="40" fill={`url(#${gradientId})`} />
+    </svg>
+  )
+}
+```
+
+## Solution 2: inline svgs without ids
+
+For simple svgs, consider removing id entirely and using inline styles or direct references:
+
+```tsx
+// Instead of using url(#gradient)
+<svg viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="gradient">
+      <stop offset="0%" stopColor="blue" />
+      <stop offset="100%" stopColor="red" />
+    </linearGradient>
+  </defs>
+  <circle fill="url(#gradient)" />
+</svg>
+
+// Use direct colors or CSS variables
+<svg viewBox="0 0 100 100">
+  <circle fill="var(--gradient-color)" />
+</svg>
+```
+
+## Best practices
+
+1. **Choose the right solution for your use case**:
+   - Runtime hooks: When you need dynamic control
+   - No ids: For simple icons without gradients/filters
+
+2. **Test with multiple instances**: Always test svgs by rendering them multiple times on the same page
+
+3. **Check your svg source**: Review exported svgs from design tools (Figma, Illustrator) for unnecessary `id`s
+
+4. **Use consistent naming**: If manually prefixing, use a clear naming convention like `component-element-id`
+
+# Conclusion
+
+Duplicate svg id collisions are a subtle but important issue in modern web development. While the browser won't throw errors, the visual and accessibility implications can impact user experience. By understanding this issue and implementing one of these solutions, you'll avoid confusing bugs and create more robust applications.
+
+# References
+
+- [SVGR Issue Discussion #322](https://github.com/gregberge/svgr/issues/322)
+- [React useId Documentation](https://react.dev/reference/react/useId)

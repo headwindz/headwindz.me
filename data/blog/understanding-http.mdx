@@ -1,0 +1,987 @@
+---
+title: Understanding the HTTP protocol
+date: 2024-11-15
+tags: ['HTTP', 'web', 'security', 'CORS']
+summary: Master HTTP protocol fundamentals. Learn status codes (301 vs 302, 401 vs 403 etc.), request/response headers, HTTP methods, proxy patterns and security best practices (CORS, XSS, CSRF).
+---
+
+# Introduction
+
+The Hypertext Transfer Protocol (HTTP) is the foundation of data communication on the world wide web. Understanding HTTP is crucial for any web developer, as it governs how clients and servers communicate. This comprehensive guide explores the key concepts, mechanisms, and security considerations of HTTP and its secure variant HTTPS.
+
+# Table of contents
+
+- [HTTP status codes](#http-status-codes)
+- [HTTP headers](#http-headers)
+- [HTTP methods](#http-methods)
+- [Proxy and gateway](#proxy-and-gateway)
+- [Security](#security)
+- [HTTPS and encryption](#https-and-encryption)
+
+# HTTP status codes
+
+HTTP status codes are three-digit numbers that indicate the outcome of an HTTP request. Refer to the [complete list of HTTP status codes](https://toolhub.run/tools/http-status-code) for a full reference. Let's explore some of the most important and relevant ones:
+
+## 301 - Permanent redirect
+
+A 301 status code indicates that the requested resource has been permanently moved to a new URL. This is crucial for SEO as search engines will update their indexes to point to the new location.
+
+**Use cases:**
+
+- Website domain changes
+- URL structure reorganization
+- Consolidating duplicate content
+
+```js
+// Example: express.js permanent redirect
+app.get('/old-page', (req, res) => {
+  res.redirect(301, '/new-page')
+})
+```
+
+## 302 - Temporary redirect
+
+Unlike 301, a 302 status code indicates a temporary redirect. The original URL should still be used for future requests.
+
+**Use cases:**
+
+- A/B testing different page versions
+- Temporary maintenance pages
+- **URL shortening services** - Short links use 302 redirects to preserve the analytics on the original short URL
+
+**Can ajax requests be redirected?**
+
+Yes, ajax requests can follow redirects automatically. However, the behavior depends on the HTTP method:
+
+- `GET` requests: The browsers automatically follow redirects
+- `POST` requests: The browsers may change the method to `GET` when following the redirect (depending on the status code)
+
+```js
+// Ajax will automatically follow redirects
+fetch('/api/endpoint').then((response) => {
+  // If there was a redirect, response.url will show the final URL
+  console.log('Final URL:', response.url)
+  return response.json()
+})
+```
+
+## 304 - Not modified (caching)
+
+The 304 status code is used for **conditional requests** to leverage browser caching. When a client has a cached version of a resource, it can send a conditional request with headers like `If-Modified-Since` or `If-None-Match`. If the resource hasn't changed, the server responds with 304, and the browser uses its cached version.
+
+```http
+// Request with conditional headers
+GET /style.css HTTP/1.1
+Host: example.com
+If-Modified-Since: Wed, 21 Oct 2025 07:28:00 GMT
+
+// Response (resource not modified)
+HTTP/1.1 304 Not Modified
+Cache-Control: max-age=3600
+```
+
+This significantly reduces bandwidth usage and improves page load times.
+
+## 401 - Authentication required
+
+A 401 status code indicates that the request requires **authentication**. The client must provide valid credentials to access the resource.
+
+```http
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer realm="example"
+```
+
+**Common authentication methods:**
+
+- Basic Authentication
+- Bearer tokens (JWT)
+- OAuth
+- SSO
+- QRCodes
+
+For a complete guide on authentication methods, refer to [Complete guide to web authentication methods](https://headwindz.me/blog/guide-to-authentication)
+
+## 403 - Forbidden (authorization)
+
+While 401 is about **authentication** (proving who you are), 403 is about **authorization** (what you're allowed to do). Even with valid credentials, you may not have permission to access a resource. For example, a regular user might be authenticated and allowed to view posts in a forum, but when trying to delete a post created by another user, they would receive a 403 error because they lack the necessary authorization such as admin privileges or post ownership etc.
+
+```js
+// Authentication
+if (!user) {
+  return res.status(401).json({ error: 'Authentication required' })
+}
+// Authorization
+if (!user.hasPermission('admin')) {
+  return res.status(403).json({ error: 'Insufficient permissions' })
+}
+```
+
+## 429 - Too many requests
+
+A 429 status code indicates that the user has sent too many requests in a given time period (rate limiting).
+
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 3600
+```
+
+**Common use cases:**
+
+- API rate limiting to prevent abuse
+- Protecting against DDoS attacks
+- Ensuring fair resource usage
+
+```js
+// Express rate limiting example
+const rateLimit = require('express-rate-limit')
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  message: 'Too many requests, please try again later',
+})
+
+app.use('/api/', limiter)
+```
+
+## 500 - Internal server error
+
+A 500 status code indicates that the server encountered an unexpected condition that prevented it from fulfilling the request.
+
+```http
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/json
+
+{"error": "An unexpected error occurred"}
+```
+
+**Common causes:**
+
+- Unhandled exceptions in server code
+- Database connection failures
+- Missing configuration
+- Code bugs
+
+**Best practice:** Always log 500 errors and return generic messages to clients (don't expose internal details).
+
+## 502 - Bad gateway
+
+A 502 status code indicates that a server acting as a `gateway` or `proxy` received an invalid response from an upstream server.
+
+```http
+HTTP/1.1 502 Bad Gateway
+```
+
+**Common causes:**
+
+- Backend application server is down
+- Timeout connecting to upstream server
+- Reverse proxy can't reach backend
+- DNS resolution failures
+
+## 503 - Service unavailable
+
+A 503 status code indicates that the server is temporarily unable to handle the request, usually due to maintenance or overload.
+
+```http
+HTTP/1.1 503 Service Unavailable
+Retry-After: 120
+```
+
+**Common causes:**
+
+- Scheduled maintenance
+- Server overload
+- Graceful shutdown during deployment
+- Database maintenance
+
+```js
+// Maintenance mode example
+app.use((req, res, next) => {
+  if (process.env.MAINTENANCE_MODE === 'true') {
+    return res.status(503).json({
+      error: 'Service temporarily unavailable for maintenance',
+    })
+  }
+  next()
+})
+```
+
+# HTTP headers
+
+HTTP headers are key-value pairs sent with requests and responses to convey metadata about the communication. They control caching, authentication, content type, security policies, and more.
+
+## Request Headers
+
+Request headers are sent by the client to provide information about the request and the client itself.
+
+### Host header
+
+The `Host` header is crucial in HTTP/1.1 and later versions. It specifies the domain name of the server and optionally the TCP port number.
+
+**Why is it important?**
+
+A single IP address can host multiple websites (virtual hosting). The `Host` header tells the server which website the client wants to access.
+
+```http
+GET /index.html HTTP/1.1
+Host: www.example.com
+```
+
+**Without the Host header**, the server wouldn't know which website to serve when multiple domains point to the same IP address.
+
+```nginx
+// Nginx virtual host configuration example
+server {
+  listen 80;
+  server_name example.com;
+  root /var/www/example;
+}
+
+server {
+  listen 80;
+  server_name another.com;
+  root /var/www/another;
+}
+```
+
+### Content-Type header (Request)
+
+When sending data to the server (in POST, PUT, or PATCH requests), the `Content-Type` header tells the server how to interpret the request body. This is critical for proper data parsing.
+
+#### 1. application/json
+
+The most common content type in modern APIs. Used to send structured data.
+
+```js
+// Client-side example
+fetch('/api/users', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'John', email: 'john@example.com' }),
+})
+```
+
+```http
+<!-- Raw http -->
+POST /api/users HTTP/1.1
+Host: example.com
+Content-Type: application/json
+{"name": "John", "email": "john@example.com"}
+```
+
+**Backend parsing:**
+
+```js
+// Node.js (vanilla HTTP server)
+const http = require('http')
+
+const server = http.createServer((req, res) => {
+  if (req.method === 'POST' && req.url === '/api/users') {
+    let body = ''
+
+    req.on('data', (chunk) => {
+      body += chunk.toString()
+    })
+
+    req.on('end', () => {
+      const data = JSON.parse(body) // Parse JSON string
+      console.log(data.name) // "John"
+      console.log(data.email) // "john@example.com"
+      res.end(JSON.stringify({ success: true }))
+    })
+  }
+})
+```
+
+#### 2. application/x-www-form-urlencoded
+
+Used for simple HTML form submissions. Data is encoded as key-value pairs separated by the `&`.
+
+```html
+<form action="/login" method="POST">
+  <input type="text" name="username" />
+  <input type="password" name="password" />
+  <button type="submit">Login</button>
+</form>
+```
+
+```http
+<!-- Raw http -->
+POST /login HTTP/1.1
+Host: example.com
+Content-Type: application/x-www-form-urlencoded
+
+username=john_doe&password=secretpass123
+```
+
+**Backend parsing:**
+
+```js
+// Node.js (vanilla HTTP server)
+const http = require('http')
+const querystring = require('querystring')
+
+const server = http.createServer((req, res) => {
+  if (req.method === 'POST' && req.url === '/login') {
+    let body = ''
+
+    req.on('data', (chunk) => {
+      body += chunk.toString()
+    })
+
+    req.on('end', () => {
+      // Parse form-encoded data: key1=value1&key2=value2
+      const data = querystring.parse(body)
+      console.log(data.username) // "john_doe"
+      console.log(data.password) // "secretpass123"
+      res.end(JSON.stringify({ authenticated: true }))
+    })
+  }
+})
+```
+
+#### 3. multipart/form-data
+
+Used when uploading files through HTML forms. It allows sending binary data (like images, videos, PDFs) along with text data in a single request.
+
+```html
+<form action="/upload" method="POST" enctype="multipart/form-data">
+  <input type="text" name="username" />
+  <input type="file" name="avatar" />
+  <button type="submit">Upload</button>
+</form>
+```
+
+**Backend parsing:**
+
+The server needs to parse the multipart data to extract individual fields and files. The body is divided into parts separated by boundaries.
+
+```http
+POST /upload HTTP/1.1
+Host: example.com
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="username"
+
+john_doe
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="avatar"; filename="photo.jpg"
+Content-Type: image/jpeg
+
+[binary data]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+```
+
+```js
+// Node.js (vanilla - simplified example)
+const http = require('http')
+const fs = require('fs')
+
+const server = http.createServer((req, res) => {
+  if (req.method === 'POST' && req.url === '/upload') {
+    // Extract boundary from Content-Type header
+    const boundary = req.headers['content-type'].split(';')[1].trim().replace('boundary=', '')
+
+    // Manually parse multipart body (complex - usually handled by libraries)
+    let body = Buffer.alloc(0)
+    req.on('data', (chunk) => {
+      body = Buffer.concat([body, chunk])
+    })
+
+    req.on('end', () => {
+      // Split by boundary and extract parts
+      const parts = body.toString().split(`--${boundary}`)
+      // Further parsing needed to extract fields and files
+      res.end('Upload received')
+    })
+  }
+})
+```
+
+**Note:** Multipart parsing is complex, so most frameworks and languages provide built-in or library support for this content type.
+
+#### text/plain
+
+Raw text data sent to the server.
+
+```http
+<!-- Raw http -->
+POST /api/logs HTTP/1.1
+Host: example.com
+Content-Type: text/plain
+```
+
+**Backend parsing**
+
+```js
+// Node.js (vanilla HTTP server)
+const http = require('http')
+
+const server = http.createServer((req, res) => {
+  if (req.method === 'POST' && req.url === '/api/logs') {
+    let body = ''
+    req.on('data', (chunk) => {
+      body += chunk.toString()
+    })
+
+    req.on('end', () => {
+      console.log('Received log:', body) // Raw text string
+      res.end(JSON.stringify({ received: true }))
+    })
+  }
+})
+```
+
+### User-Agent header
+
+Identifies the client application making the request. Useful for logging, analytics, and compatibility decisions.
+
+```bash
+GET /index.html HTTP/1.1
+Host: example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+```
+
+### Accept header
+
+Tells the server what content types the client can handle. The server should prioritize returning the requested format.
+
+```bash
+GET /api/data HTTP/1.1
+Host: api.example.com
+Accept: application/json, application/xml;q=0.9, */*;q=0.8
+```
+
+The `q` parameter indicates quality/preference (1.0 is highest).
+
+### Referer header
+
+Indicates the URL of the page that made the request. Useful for analytics and security (CSRF protection).
+
+```bash
+GET /article/123 HTTP/1.1
+Host: example.com
+Referer: https://example.com/search?q=javascript
+```
+
+**Note:** The header name is misspelled as "Referer" for historical reasons, not "Referrer".
+
+## Response Headers
+
+Response headers are sent by the server to provide information about the response and server behavior.
+
+### Content-Type header (Response)
+
+In responses, `Content-Type` tells the client how to interpret the response body. It's set by the server based on the resource being returned.
+
+```bash
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"id": 1, "name": "John"}
+```
+
+Common response content types:
+
+- `text/html` - HTML documents
+- `application/json` - JSON data
+- `text/css` - CSS stylesheets
+- `application/javascript` - JavaScript files
+- `image/png`, `image/jpeg` - Images
+- `application/pdf` - PDF documents
+
+### Cache-Control header
+
+Controls caching behavior for browsers and proxies, reducing bandwidth and improving performance.
+
+```bash
+# Public resource, cached for 1 hour
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=3600
+
+# Private resource, cached for 24 hours
+HTTP/1.1 200 OK
+Cache-Control: private, max-age=86400
+
+# Always revalidate before using
+HTTP/1.1 200 OK
+Cache-Control: no-cache, must-revalidate
+```
+
+Common directives:
+
+- `max-age=<seconds>` - How long the resource is valid
+- `public` - Can be cached by any cache
+- `private` - Only client can cache, not proxies
+- `no-cache` - Must revalidate with server before using
+- `no-store` - Never cache
+
+### Set-Cookie header
+
+Sends cookies to the client to be stored and sent with future requests.
+
+```bash
+HTTP/1.1 200 OK
+Set-Cookie: sessionId=abc123; Path=/; HttpOnly; Secure; SameSite=Strict
+```
+
+Security attributes:
+
+- `HttpOnly` - Cookie not accessible via JavaScript (prevents XSS theft)
+- `Secure` - Only sent over HTTPS
+- `SameSite` - Protection against CSRF attacks (Strict, Lax, or None)
+
+### Access-Control-Allow-Origin header
+
+Part of CORS, tells browsers which origins can access this resource.
+
+```bash
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: https://trusted-site.com
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE
+Access-Control-Allow-Headers: Content-Type, Authorization
+```
+
+### Security headers
+
+Important headers that enhance security:
+
+```bash
+HTTP/1.1 200 OK
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'
+```
+
+- `Strict-Transport-Security` - Force HTTPS connections
+- `X-Content-Type-Options` - Prevent MIME type sniffing
+- `X-Frame-Options` - Prevent clickjacking
+- `Content-Security-Policy` - Control which resources can be loaded
+
+# HTTP methods
+
+HTTP defines several methods to indicate the desired action for a resource:
+
+## GET
+
+**Retrieves** data from the server. Should be **idempotent** (multiple identical requests should have the same effect) and have no side effects.
+
+```js
+fetch('/api/users/123').then((res) => res.json())
+```
+
+## POST
+
+**Submits** data to create a new resource. Not idempotent: multiple identical requests may create multiple resources.
+
+```js
+fetch('/api/users', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'John', email: 'john@example.com' }),
+})
+```
+
+## PUT
+
+**Replaces** an existing resource entirely. Idempotent: multiple identical requests should have the same effect.
+
+```js
+fetch('/api/users/123', {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'John Doe', email: 'john@example.com' }),
+})
+```
+
+## PATCH
+
+**Partially updates** a resource. May or may not be idempotent depending on the implementation.
+
+```js
+fetch('/api/users/123', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email: 'newemail@example.com' }),
+})
+```
+
+## DELETE
+
+**Removes** a resource. Idempotent: deleting the same resource multiple times has the same effect as deleting it once.
+
+```js
+fetch('/api/users/123', {
+  method: 'DELETE',
+})
+```
+
+# Proxy and gateway
+
+## Gateway
+
+A gateway is a server that acts as an intermediary between different protocols. It can translate requests from one protocol to another, **supporting non-HTTP protocols** like FTP, SMTP, gRPC, or WebSocket.
+
+**Key characteristics:**
+
+- **Protocol translation**: Converts between different communication protocols
+- **Intelligent routing**: Routes based on application logic, not just HTTP
+- **Protocol agnostic**: Not limited to HTTP-based communication
+
+**Example use cases:**
+
+- API gateway: Routes HTTP requests to different microservices, handles authentication, rate limiting
+- Protocol translation: HTTP to gRPC, HTTP to database protocols (SQL, NoSQL)
+- Message gateway: HTTP to message queues (RabbitMQ, Kafka)
+- IoT gateway: HTTP to MQTT, CoAP for IoT devices
+
+```
+Client (HTTP) → Gateway → Microservice 1 (gRPC)
+                        → Microservice 2 (REST API)
+                        → Message Queue (AMQP)
+```
+
+## Proxy
+
+A proxy server acts as an intermediary for requests from clients. Unlike gateways, proxies primarily work at the HTTP level and maintain protocol consistency.
+
+**Key characteristics:**
+
+- **Same protocol**: Both sides communicate using the same protocol (usually HTTP)
+- **Request forwarding**: Forwards requests and responses with minimal transformation
+- **Transparent or explicit**: Can work with or without client awareness
+
+### Forward proxy
+
+A forward proxy sits between clients and the internet. Clients explicitly send requests to the proxy, which then forwards them to the destination server.
+
+**Benefits:**
+
+- Anonymity: Hide client IP addresses from destination servers
+- Content filtering: Block access to certain websites or content
+- Caching: Improve performance for frequently accessed resources
+- Bypass geographical restrictions: Access content from different regions
+- Monitoring: Track and log client activity
+
+**Use cases:**
+
+- Corporate network security: Monitor employee internet usage
+- ISP-level caching: Reduce bandwidth usage
+- VPN services: Hide actual IP address
+
+```
+Client → Forward Proxy → Internet → Destination Server
+```
+
+### Reverse proxy
+
+A reverse proxy sits in front of web servers and forwards client requests to the appropriate backend server. Clients don't know they're communicating with a proxy. They think they're talking to the origin server.
+
+**Benefits:**
+
+- Load balancing: Distribute traffic evenly across multiple backend servers
+- Caching: Store frequently accessed static and dynamic content
+- Security: Hide backend server details, act as a firewall
+- Compression: Compress responses before sending to clients
+- Request routing: Route based on URL, hostname, or other criteria
+
+**Use cases:**
+
+- Web server acceleration: Nginx, Apache reverse proxies in front of application servers
+- CDN: Cloudflare, Akamai as reverse proxies globally
+- API scaling: Distribute API requests across multiple backend servers
+- Zero-downtime deployment: Gradually shift traffic between server versions
+
+```
+Client → Internet → Reverse Proxy → Backend Server 1
+                                  → Backend Server 2
+                                  → Backend Server 3
+```
+
+**Example setup:**
+
+```nginx
+# Nginx reverse proxy configuration
+upstream backend {
+  server backend1.example.com:8080;
+  server backend2.example.com:8080;
+  server backend3.example.com:8080;
+}
+
+server {
+  listen 80;
+  server_name api.example.com;
+
+  location / {
+    proxy_pass http://backend;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}
+```
+
+**Popular reverse proxies:** Nginx, Apache, HAProxy, Cloudflare, AWS ALB
+
+## Gateway vs Proxy
+
+| Aspect             | Gateway                                     | Proxy                                |
+| ------------------ | ------------------------------------------- | ------------------------------------ |
+| **Protocol**       | Translates between different protocols      | Maintains same protocol (HTTP/HTTPS) |
+| **Scope**          | Works across protocol boundaries            | Works within protocol boundaries     |
+| **Transformation** | Significant message transformation required | Minimal to no message transformation |
+| **Use case**       | Connecting different services/protocols     | Routing and forwarding within HTTP   |
+| **Complexity**     | Higher (needs protocol knowledge)           | Lower (understands one protocol)     |
+| **Example**        | HTTP ↔ gRPC, HTTP ↔ MQTT                  | HTTP → Multiple HTTP backends        |
+
+Gateways and proxies are often used **together** in modern architectures:
+
+1. **Reverse Proxy + Gateway**: A reverse proxy (Nginx) sits at the entry point for load balancing, then routes to an API gateway (Kong, AWS API Gateway) which handles service routing and protocol translation.
+
+2. **Forward Proxy + Gateway**: A forward proxy might route requests through a gateway for authentication and protocol translation before reaching backend services.
+
+**Typical microservices architecture:**
+
+```
+Client Request
+    ↓
+Reverse Proxy (Nginx) - Load balancing, SSL termination
+    ↓
+API Gateway (Kong/AWS API Gateway) - Authentication, rate limiting
+    ↓
+Gateway (gRPC Gateway) - Protocol translation HTTP to gRPC
+    ↓
+Microservices (gRPC, REST, etc.)
+```
+
+In practice, some tools blur the lines: an API gateway acts as both a reverse proxy and a gateway, handling HTTP routing plus protocol translation and service mesh integration.
+
+# Security
+
+## Cross-origin resource sharing (CORS)
+
+Web browsers implement the **Same-Origin Policy** for security, which restricts how a document or script from one origin can interact with resources from another origin.
+
+**Origin** consists of:
+
+- Protocol (HTTP/HTTPS)
+- Domain (example.com)
+- Port (80, 443, etc.)
+
+```js
+// Same origin
+https://example.com/page1
+https://example.com/page2
+
+// Different origins
+https://example.com (different protocol)
+http://example.com
+
+https://api.example.com (different subdomain)
+https://example.com
+
+https://example.com:8080 (different port)
+https://example.com
+```
+
+**CORS headers** allow servers to specify which origins can access their resources:
+
+```js
+// Server-side CORS configuration
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://trusted-site.com')
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.header('Access-Control-Allow-Credentials', 'true')
+  next()
+})
+```
+
+**Preflight requests:** For complex requests (non-simple methods, custom headers), browsers send an OPTIONS request first to check if the actual request is allowed.
+
+To test if a request will trigger CORS restrictions, use [Will It CORS?](https://toolhub.run/tools/will-it-cors)
+
+## XSS (Cross-Site Scripting)
+
+XSS occurs when an attacker injects malicious scripts into web pages viewed by other users. This happens when user input is not properly sanitized before being rendered.
+
+**Example vulnerable code:**
+
+```js
+// Dangerous! User input directly inserted into HTML
+app.get('/search', (req, res) => {
+  const query = req.query.q
+  res.send(`<h1>Search results for: ${query}</h1>`)
+})
+
+// Attack: /search?q=<script>alert('XSS')</script>
+```
+
+**Prevention:**
+
+1. **Escape user input** before rendering
+2. Use **Content Security Policy (CSP)** headers
+3. Sanitize HTML input
+4. Use modern frameworks that auto-escape by default (React, Vue)
+
+```js
+// Safe: Using template engines with auto-escaping
+app.get('/search', (req, res) => {
+  res.render('search', { query: req.query.q }) // Auto-escaped
+})
+
+// CSP header
+res.setHeader('Content-Security-Policy', "default-src 'self'")
+```
+
+### CSRF (Cross-Site Request Forgery)
+
+CSRF tricks authenticated users into executing unwanted actions on a web application where they're authenticated.
+
+**Attack scenario:**
+
+1. User logs into `bank.com`
+2. User visits malicious site `evil.com`
+3. `evil.com` contains: `<img src="https://bank.com/transfer?to=attacker&amount=1000">`
+4. Browser automatically sends cookies with the request
+5. Bank transfers money to attacker
+
+**Prevention:**
+
+```js
+// 1. CSRF tokens
+app.use(csrf())
+
+app.get('/form', (req, res) => {
+  res.render('form', { csrfToken: req.csrfToken() })
+})
+
+// 2. SameSite cookie attribute
+res.cookie('session', sessionId, {
+  httpOnly: true,
+  sameSite: 'strict', // or 'lax'
+})
+
+// 3. Verify Origin/Referer headers
+app.use((req, res, next) => {
+  const origin = req.get('origin')
+  if (origin && !origin.includes('trusted-domain.com')) {
+    return res.status(403).send('Forbidden')
+  }
+  next()
+})
+```
+
+## SQL injection
+
+SQL injection occurs when user input is directly concatenated into SQL queries, allowing attackers to execute arbitrary SQL commands.
+
+**Vulnerable code:**
+
+```js
+// Dangerous!
+const userId = req.params.id
+const query = `SELECT * FROM users WHERE id = ${userId}`
+db.query(query)
+
+// Attack: /users/1 OR 1=1-- (returns all users)
+```
+
+**Prevention:**
+
+```js
+// Use parameterized queries / prepared statements
+const query = 'SELECT * FROM users WHERE id = ?'
+db.query(query, [userId])
+
+// Or use ORMs
+const user = await User.findById(userId)
+```
+
+**General rule:** **Never trust user input.** Always validate, sanitize, and use parameterized queries when constructing SQL statements or rendering user data in HTML.
+
+# HTTPS and encryption
+
+HTTPS (HTTP Secure) is HTTP over TLS/SSL, providing encryption, data integrity, and authentication.
+
+## TCP handshake (3-way handshake)
+
+Before HTTPS can establish a secure connection, TCP must first establish a connection:
+
+1. **SYN**: Client sends synchronization packet to server
+2. **SYN-ACK**: Server acknowledges and sends its own synchronization packet
+3. **ACK**: Client acknowledges server's packet
+
+```
+Client                                  Server
+  |                                       |
+  |------------SYN (seq=100)------------->|
+  |                                       |
+  |<------SYN-ACK (seq=300, ack=101)------|
+  |                                       |
+  |------------ACK (ack=301)------------->|
+  |                                       |
+```
+
+## TLS/SSL handshake
+
+After TCP connection is established, the TLS handshake occurs:
+
+1. **Client Hello**: Client sends supported cipher suites and TLS version
+2. **Server Hello**: Server chooses cipher suite and sends its certificate (containing public key)
+3. **Certificate Verification**: Client verifies server's certificate with CA (Certificate Authority)
+4. **Key Exchange**: Client generates pre-master secret, encrypts it with server's public key, sends to server
+5. **Session Keys**: Both parties generate session keys from the pre-master secret
+6. **Finished**: Both parties send encrypted "finished" messages to verify the handshake
+
+```
+Client                              Server
+  |---Client Hello------------------>|
+  |                                  |
+  |<--Server Hello, Certificate------|
+  |                                  |
+  |---Key Exchange------------------>|
+  |                                  |
+  |---Change Cipher Spec------------>|
+  |---Finished (encrypted)---------->|
+  |                                  |
+  |<--Change Cipher Spec-------------|
+  |<--Finished (encrypted)-----------|
+  |                                  |
+  |===Encrypted Application Data====>|
+```
+
+## Symmetric vs asymmetric encryption
+
+**Asymmetric encryption (Public-key cryptography):**
+
+- Uses a pair of keys: public key (encrypt) and private key (decrypt)
+- Slower but more secure for key exchange
+- Used during TLS handshake to securely exchange the symmetric key
+- Examples: RSA, ECC
+
+**Symmetric encryption:**
+
+- Uses the same key for encryption and decryption
+- Much faster than asymmetric encryption
+- Used for actual data transmission after handshake
+- Examples: AES, ChaCha20
+
+**HTTPS uses both:**
+
+1. Asymmetric encryption to securely exchange keys during handshake
+2. Symmetric encryption for the actual data transfer (for performance)
+
+## Conclusion
+
+Understanding HTTP is fundamental to web development. From status codes that communicate request outcomes, to security mechanisms that protect users. As the web continues to evolve, staying informed about HTTP and its security implications remains essential for building robust, performant, and secure web applications.
+
+**Key takeaways:**
+
+- **Status codes matter**: Use appropriate codes (301 vs 302, 401 vs 403, 429, 500-503) to communicate clearly with clients
+- **Headers are powerful**: Leverage caching, security, and CORS headers to build robust applications
+- **Security is non-negotiable**: Always validate inputs, use HTTPS, implement CSRF protection, and set proper security headers
+- **Understand proxies**: Gateway and reverse proxy patterns are essential for scaling and securing modern applications
+- **Developer responsibility**: Never trust user input, use parameterized queries, and follow security best practices

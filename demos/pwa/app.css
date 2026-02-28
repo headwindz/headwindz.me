@@ -1,0 +1,14 @@
+body {
+  max-width: 640px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+#container {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  min-height: 120px;
+  white-space: pre-wrap;
+}

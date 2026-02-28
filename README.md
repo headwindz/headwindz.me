@@ -6,4 +6,4 @@ https://headwindz.me
 
 ## Attributes
 
-Generated from [tailwind-nextjs-starter-blog](https://github.com/timlrx/tailwind-nextjs-starter-blog)
+Generated from the starter template: [tailwind-nextjs-starter-blog](https://github.com/timlrx/tailwind-nextjs-starter-blog)

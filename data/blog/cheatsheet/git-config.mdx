@@ -1,9 +1,11 @@
 ---
 title: My git config
-date: 2025-03-05
+date: 2022-09-05
 tags: [notes]
-summary: My personal git config settings
+summary: My personal git config settings with explanations for each option
 ---
+
+## My git config settings
 
 ```shell
 [branch]
@@ -33,3 +35,111 @@ summary: My personal git config settings
 [merge]
   conflictstyle = zdiff3
 ```
+
+## Branch settings
+
+```shell
+[branch]
+  sort = -committerdate
+```
+
+**`sort = -committerdate`** - When listing branches (e.g., `git branch`), sort them by most recent commit date first. The minus sign means descending order, so the most recently committed branches appear at the top. Useful for finding active branches quickly.
+
+## Tag settings
+
+```shell
+[tag]
+  sort = version:refname
+```
+
+**`sort = version:refname`** - Sort tags using version number ordering (semantic versioning). For example, `v1.2.0`, `v1.10.0`, `v2.0.0` will be sorted correctly instead of alphabetically where `v1.10.0` would come before `v1.2.0`.
+
+## Diff settings
+
+```shell
+[diff]
+  algorithm = histogram
+  colorMoved = plain
+  mnemonicPrefix = true
+  renames = true
+```
+
+**`algorithm = histogram`** - Use the histogram algorithm for generating diffs. It's generally faster and produces more human-readable diffs than the default Myers algorithm, especially for large files with moved blocks of code.
+
+**`colorMoved = plain`** - Highlight moved lines in diffs with different colors. When code is moved (not just deleted and added), Git will show this visually, making refactoring easier to review.
+
+**`mnemonicPrefix = true`** - Use more descriptive prefixes in diffs instead of `a/` and `b/`. For example, shows `i/` (index), `w/` (working tree), `c/` (commit), `o/` (object) to indicate where the file is coming from.
+
+**`renames = true`** - Detect when files are renamed and show them as renames in the diff rather than as a deletion and addition. Makes it easier to track file history.
+
+## Push settings
+
+```shell
+[push]
+  default = simple
+  autoSetupRemote = true
+  followTags = true
+```
+
+**`default = simple`** - When you run `git push` without specifying a branch, push the current branch to its upstream branch. The branch names must match. This is the safest option and is the default in modern Git.
+
+**`autoSetupRemote = true`** - Automatically set up the remote tracking branch when you push a new local branch for the first time. No need to use `git push -u origin branch-name` anymore—just `git push` works.
+
+**`followTags = true`** - Automatically push tags that are reachable from the commits being pushed. Useful for ensuring version tags are synchronized with their commits.
+
+## Init settings
+
+```shell
+[init]
+  defaultBranch = main
+```
+
+**`defaultBranch = main`** - Set the default branch name to `main` instead of `master` when creating new repositories with `git init`. Aligns with modern naming conventions used by GitHub and other platforms.
+
+## Pull settings
+
+```shell
+[pull]
+  rebase = true
+```
+
+**`rebase = true`** - Use `git pull --rebase` by default instead of merge. This keeps your commit history linear by replaying your local commits on top of the fetched commits, avoiding unnecessary merge commits. Equivalent to `git fetch` followed by `git rebase`.
+
+## Core settings
+
+```shell
+[core]
+  editor = vim
+```
+
+**`editor = vim`** - Set `vim` as the default text editor for Git operations like writing commit messages, interactive rebases, and resolving merge conflicts. Change to `nano`, `code`, or your preferred editor.
+
+## User settings
+
+```shell
+[user]
+  name = headwindz
+  email = zhengjianhua.michael@gmail.com
+```
+
+**`name`** - Your name that appears in commit author information.
+
+**`email`** - Your email address that appears in commit author information. Make sure this matches your GitHub/GitLab email for proper commit attribution.
+
+## Commit settings
+
+```shell
+[commit]
+  verbose = true
+```
+
+**`verbose = true`** - Show the diff of changes being committed in the commit message editor. Helps you write more accurate commit messages by seeing exactly what you're committing while writing the message.
+
+## Merge settings
+
+```shell
+[merge]
+  conflictstyle = zdiff3
+```
+
+**`conflictstyle = zdiff3`** - Use the zdiff3 conflict style which shows three sections in conflicts: the original common ancestor code, your changes, and their changes. This extra context makes it much easier to understand and resolve merge conflicts compared to the default `merge` style.

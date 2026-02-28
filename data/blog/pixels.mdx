@@ -1,0 +1,226 @@
+---
+title: All you need to know about pixels
+tags: [css, web]
+date: 2020-08-05
+summary: Learn about physical pixels, CSS pixels, device pixel ratio, and why understanding them matters for responsive design and accessibility. A comprehensive guide to building better web experiences.
+---
+
+# What is a pixel
+
+A pixel (`picture element`) is a single point in a raster image representing a specific color. The term can refer to different concepts in web development:
+
+- **Physical pixels**: The actual hardware dots on a screen
+- **Logical pixels**: Operating system(OS) abstraction for consistent display across devices
+- **CSS pixels**: Web development units independent of device density
+
+## Physical pixel (also called device pixel or hardware pixel)
+
+Physical pixels are the actual hardware dots on a device screen. There's a fixed amount on any device, determined by the hardware.
+
+```
+One physical pixel = one hardware dot.
+```
+
+**Resolution** is the number of physical pixels on a display, typically expressed as width × height (e.g., 1920 × 1080). Higher resolution means more pixels, resulting in sharper visuals.
+
+Example:
+
+```
+iMac (Retina 4K, 21.5-inch, 2017)
+Physical resolution: 4096 x 2304
+```
+
+Key characteristics:
+
+- Fixed count determined by screen hardware. You can't change the number of physical pixels on a device.
+- The smallest light-emitting unit on the display
+- When you buy a monitor, the advertised resolution (e.g., 1920 × 1080) in tech specs refers to physical pixels
+- Density is physical pixels per inch (PPI). Higher PPI means more pixels in the same physical space, resulting in sharper images.
+
+## Logical pixel (also called device-independent pixel `DIP`)
+
+Logical pixels are an operating system abstraction that ensures content displays consistently across devices with different physical pixel densities. The operating system maps logical pixels to physical pixels based on the device's characteristics, allowing for a consistent user experience. An element that's `100px wide` in logical pixels looks similar in real-world size on a phone and a desktop, even though that phone has more physical pixels per inch.
+
+```js
+// Get screen resolution in logical pixels
+console.log(screen.width + '×' + screen.height)
+
+// Get available screen size
+console.log(screen.availWidth + '×' + screen.availHeight)
+
+// Get window size, taking zoom level into account
+console.log(window.innerWidth + '×' + window.innerHeight)
+```
+
+### Logical resolution
+
+When you change resolution in your operating system(e.g. `Display Settings`), you're changing logical pixels, not physical pixels. The operating system will map the new logical resolution to the same physical pixels, which can make things look larger or smaller.
+
+Example: iMac (Retina 4K, 21.5-inch, 2017)
+
+- `Default mode`: logical resolution is `2048 × 1152`
+- `More space mode`: logical resolution is `2304 × 1296`
+
+## CSS pixel
+
+An abstraction layer created specifically for web developers to be used in CSS and JS (e.g., `border: 1px solid black`). It is defined by the CSS spec as a reference pixel tied to a standard viewing angle, not directly to one hardware dot.
+
+### Device pixel ratio (`DPR`)
+
+Also referred to as CSS pixel ratio, this is the ratio of the number of device pixels to CSS pixels in the `ideal viewport`. This value can change with zoom or when moving a window between displays. For example:
+
+| Device            | Physical Resolution | Device Pixel Ratio | Logical Resolution |
+| ----------------- | ------------------- | ------------------ | ------------------ |
+| iPhone 6          | 750 × 1334          | 2                  | 375 × 667          |
+| iPhone X          | 1125 × 2436         | 3                  | 375 × 812          |
+| iPad Pro          | 2048 × 2736         | 2                  | 1024 × 1368        |
+| Samsung Galaxy S4 | 1080 × 1920         | 3                  | 360 × 640          |
+
+```js
+// Get device pixel ratio
+window.devicePixelRatio
+```
+
+### Relationship between CSS pixels and logical pixels
+
+- On many devices(typical phones, laptops, desktops): The browser often makes 1 CSS pixel = 1 logical pixel. So viewport and layout dimensions in `CSS px` match `the operating system's logical size`
+- They can diverge on browser zoom. Zoom changes how many physical pixels one CSS pixel uses. Logical pixel usually doesn't change. So `1px CSS px` can represent a different amount of screen than `1 logical px` while zoomed
+
+## Comparisons between pixel concepts
+
+| Aspect           | CSS pixel                                                        | Logical Pixel                                                        | Physical Pixel             |
+| :--------------- | :--------------------------------------------------------------- | :------------------------------------------------------------------- | :------------------------- |
+| Scope            | Web (HTML/CSS/JS)                                                | Operating system/platform (native apps, sometimes browser internals) | Hardware                   |
+| Definition       | CSS spec; reference pixel                                        | Platform-defined device-independent unit                             | Actual light-emitting dots |
+| Where you see it | `width:200px`, `window.innerWidth`                               | Native UI, `screen.width`                                            | Display specs              |
+| Zoom             | Browser zoom changes how many physical pixels map to 1 CSS pixel | Usually not affected by browser zoom (OS-level)                      | Fixed by hardware          |
+
+## Pixels per inch (PPI)
+
+Pixel density (also called screen density or display density) measures the density of **physical pixels** in a given physical area. PPI is a physical measurement and usually doesn't affect CSS layout directly, but it's important for understanding display quality. Higher PPI means sharper displays, which is why Retina and high-DPR screens look so crisp.
+
+# Viewport
+
+## Layout viewport
+
+The viewport relative to which the CSS layout is calculated, and which contains the layout.
+
+## Visual viewport
+
+The area of the site the user is currently seeing. The user can manipulate the visual viewport by zooming out or in, without affecting the layout viewport.
+
+## Ideal viewport
+
+The size of the layout viewport that is ideal for the device.
+
+```html
+<!-- ✅ Correctly set viewport so CSS pixels match device-independent pixels -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- ❌ NEVER disable user scaling - violates WCAG accessibility guidelines -->
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+/>
+```
+
+The first meta tag tells the browser to make the layout viewport match the ideal viewport (the `device-width`). **Never** use `user-scalable=no` or restrictive `maximum-scale` values, as this prevents users with low vision from zooming and violates WCAG 2.1 Success Criterion 1.4.4.
+
+# Zooming
+
+Zooming changes the device pixel ratio and the relationship between CSS pixels and physical pixels. Zoom in/out changes how many CSS pixels fit on the screen(e.g. 125% zoom means fewer CSS pixels in the same physical space). That behaves like a change in the effective ratio between CSS and physical pixels for layout/rendering. In many browsers, zoom also changes `window.devicePixelRatio` (or the effective value used for layout).
+
+**Note**: `window.innerWidth` typically changes with zoom while `screen.width` typically does not.
+
+# CSS units and accessibility
+
+While `px` (pixels) are the most intuitive CSS unit, they don't scale with user font size preferences. This is a critical accessibility concern.
+
+## Pixel (`px`)
+
+The `px` unit is an abstraction for web developers. It's not a physical pixel but rather a standard unit of measurement independent of device DPR. In practice, it's the most concrete unit we have and works well for many layout properties.
+
+## Em (`em`)
+
+The `em` unit is relative to the font size of the current element. For example, `1.5em` means 1.5 times the element's computed font size.
+
+```css
+.paragraph {
+  font-size: 16px;
+  margin-bottom: 1.5em; /* 24px */
+}
+```
+
+The challenge with `em` is that it compounds: if a parent has `font-size: 0.9em` and a child has `font-size: 1.25em`, you need to multiply them together to get the actual size.
+
+## Rem (`rem`)
+
+The `rem` unit (`Root em`) is always relative to the root `<html>` element's font size, avoiding the compounding issue.
+
+```css
+html {
+  font-size: 16px;
+}
+
+h1 {
+  font-size: 2rem; /* 32px */
+}
+```
+
+## Accessibility: font scaling vs. zooming
+
+Users with low vision can increase text size in two ways:
+
+1. **Browser zoom** (`Ctrl/Cmd and +` or `settings`): Scales everything, including `px` values. WCAG requires sites to be usable at 200% zoom.
+2. **Default font size** (browser settings): Only affects elements using relative units (`rem`, `em`, `%`). This is critical for users who rely on persistent font scaling rather than zooming per-site.
+
+**The problem**: `px` values do not respect a user's default font size setting, breaking accessibility for users who rely on this feature.
+
+```css
+/* ❌ Bad: ignores user font size preference */
+p {
+  font-size: 16px;
+}
+
+/* ✅ Good: respects user font size preference */
+p {
+  font-size: 1rem;
+}
+```
+
+# Best practices
+
+## When to use each unit
+
+- **Use `rem`**: Typography, spacing, component sizing that should scale with user preferences
+- **Use `px`**: Fixed decorative elements (borders, shadows), breakpoints in media queries
+- **Avoid `px` for**: Font sizes, containers that should adapt to text size
+
+## Testing different pixel densities
+
+Modern browsers provide tools to test how your site looks on different devices:
+
+```js
+// Test responsive images
+console.log('Screen width:', window.screen.width)
+console.log('Viewport width:', window.innerWidth)
+console.log('DPR:', window.devicePixelRatio)
+console.log('Effective pixel width:', window.innerWidth * window.devicePixelRatio)
+```
+
+**Chrome DevTools**: Open DevTools → Toggle device toolbar → Select different devices to test various DPRs (1x, 2x, 3x)
+
+## Common pitfalls
+
+1. **Fixed pixel widths**: Break responsive design. Use relative units or max-width instead
+2. **Ignoring user font size**: Always test by changing browser default font size (not just zoom)
+3. **Low-resolution images on Retina**: Provide 2x images via `srcset` for crisp visuals
+
+```html
+<!-- Responsive images for different DPRs -->
+<img src="image.jpg" srcset="image.jpg 1x, image@2x.jpg 2x, image@3x.jpg 3x" alt="Description" />
+```
+
+# Conclusion
+
+Understanding pixels isn't just about knowing the definitions—it's about making strategic decisions that improve user experience and accessibility. Use `rem` for typography and scalable components, `px` for fixed decorative elements, and always test with different font sizes and zoom levels. With responsive images via `srcset`, proper viewport configuration, and thoughtful unit choices, you can build web experiences that work beautifully for everyone.

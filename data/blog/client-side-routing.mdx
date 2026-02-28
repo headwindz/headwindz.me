@@ -1,0 +1,188 @@
+---
+title: Understanding client-side routing in single page applications
+tags: [react, nextjs, routing]
+date: 2024-05-15
+summary: A comprehensive guide to client-side routing, covering the differences between hash-based and html5 history api routing, and how to configure them in modern web applications.
+---
+
+# What is client-side routing?
+
+Client-side routing is a technique used in single page applications (SPAs) where page navigation is handled entirely by JavaScript without triggering a full browser reload. This approach provides a faster, more seamless user experience compared to traditional server-side navigation.
+
+## How next.js Link component works
+
+In next.js, the `Link` component enables client-side navigation between pages:
+
+```jsx
+import Link from 'next/link'
+
+function Navigation() {
+  return (
+    <nav>
+      <Link href="/about">About</Link>
+      <Link href="/blog">Blog</Link>
+    </nav>
+  )
+}
+```
+
+When users click these links, Next.js handles the navigation using JavaScript instead of making a full HTTP request to the server. This means:
+
+- No full page reload
+- Faster page transitions
+- Preserved JavaScript state
+- Better user experience
+
+## How to verify client-side navigation
+
+There's a simple way to verify that client-side navigation is working:
+
+1. Open your browser's developer tools
+2. Use the Elements/Inspector panel to change the background CSS property of `<html>` to yellow:
+   ```css
+   html {
+     background: yellow;
+   }
+   ```
+3. Click on navigation links to move between pages
+4. Observe that the yellow background persists between page transitions
+
+If the background color persists, it confirms that the browser is not performing full page reloads and client-side navigation is indeed working!
+
+### Additional Validation Methods
+
+- **Network Tab**: Watch the Network tab in dev tools. With client-side routing, you'll see XHR/Fetch requests for data instead of full HTML document requests
+- **Loading Indicator**: The browser's native loading spinner in the address bar won't appear during client-side navigation
+
+## Hash-based routing vs html5 history api
+
+There are two primary approaches to implementing client-side routing:
+
+### Hash-based routing
+
+Hash-based routing uses the URL fragment identifier (the `#` symbol) to manage routes:
+
+```
+http://www.example.com/#/about
+http://www.example.com/#/blog/post-1
+```
+
+**How it works:**
+
+- The hash portion of the URL (everything after `#`) is not sent to the server in HTTP requests
+- Changing the hash doesn't trigger a page reload
+- The `hashchange` event fires when the URL hash changes, allowing JavaScript to update the view
+
+**Example:**
+
+```js
+// Listen for hash changes
+window.addEventListener('hashchange', (event) => {
+  const hash = window.location.hash // e.g., "#/about"
+  // Update the view based on the new hash
+  renderView(hash)
+})
+
+// Navigate programmatically
+window.location.hash = '#/about'
+```
+
+**Pros:**
+
+- Works in all browsers, including older ones
+- No server configuration required
+- Easy to implement
+
+**Cons:**
+
+- URLs look less clean with the `#` symbol
+- Not ideal for SEO (though modern search engines can handle it)
+- Cannot leverage the full browser history API
+
+[Try hash routing demo](https://codesandbox.io/s/hashhistory-vwk9n)
+
+### Html5 history api Routing
+
+The history api provides methods to manipulate the browser's session history without reloading the page:
+
+```js
+// Navigate to a new URL
+history.pushState({ page: 'about' }, 'About', '/about')
+
+// Listen for navigation events
+window.addEventListener('popstate', (event) => {
+  console.log('Location:', window.location.pathname)
+  console.log('State:', event.state)
+  // Update the view based on the new URL
+  renderView(window.location.pathname)
+})
+```
+
+**Key methods:**
+
+- **`pushState(state, title, url)`**: Adds a new entry to the browser history
+- **`replaceState(state, title, url)`**: Modifies the current history entry
+- **`popstate` event**: Fires when the user navigates using browser back/forward buttons
+
+**Pros:**
+
+- Clean, semantic URLs without hash symbols
+- Better for SEO
+- Full control over browser history
+- Can pass state objects with each history entry
+
+**Cons:**
+
+- Requires server configuration to handle direct URL access
+- Only works in modern browsers (though this is rarely an issue today)
+
+[Try history api demo](https://codesandbox.io/s/statehistory-ewj5j)
+
+## Server configuration for history api routing
+
+When using html5 history api routing, your server must be configured to serve the main `index.html` file for all routes. Otherwise, direct navigation to routes like `/about` will result in a 404 error.
+
+### Webpack dev server for local development settings
+
+```js
+module.exports = {
+  entry: {
+    app: './src/index.js',
+  },
+  devServer: {
+    // This line is the important part for history api routing
+    historyApiFallback: true,
+    port: 3000,
+    hot: true,
+  },
+}
+```
+
+The `historyApiFallback: true` option tells the dev server to serve `index.html` for any 404 responses.
+
+### Nginx configuration for production settings
+
+```nginx
+server {
+  listen 80;
+  server_name example.com;
+
+  location / {
+    root /home/dist;
+    index index.html index.htm;
+    try_files $uri $uri/ /index.html;
+  }
+}
+```
+
+The `try_files` directive attempts to serve the requested file, then the directory, and finally falls back to `index.html` if neither exists.
+
+## Conclusion
+
+Client-side routing is fundamental to modern web applications, providing fast, seamless navigation experiences. While hash-based routing is simpler and works everywhere, the html5 history api offers cleaner urls and better SEO at the cost of requiring proper server configuration. When building with frameworks like next.js, react router, or vue router, much of this complexity is abstracted away—but understanding the underlying mechanisms helps you debug issues and make informed architectural decisions.
+
+## References
+
+- [MDN: SPA](https://developer.mozilla.org/en-US/docs/Glossary/SPA)
+- [MDN: History.pushState()](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)
+- [MDN: popstate event](https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event)

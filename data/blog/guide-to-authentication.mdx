@@ -1,0 +1,1494 @@
+---
+title: Complete guide to web authentication methods
+tags: [authentication, web, cookie, session, token, jwt, sso, oauth]
+date: 2026-02-19
+summary: A comprehensive guide to modern web authentication methods including Cookie + Session, Token (JWT), Single Sign-On (SSO), OAuth, and QR Code login with implementation details and security best practices.
+---
+
+Authentication is a fundamental feature of every web application. There are various methods and protocols to handle authentication securely and efficiently. This guide explores the most common web authentication methods, their implementation details, advantages, disadvantages, and best practices.
+
+# Table of contents
+
+- [Cookie + session authentication](#cookie--session-authentication)
+- [Token-based authentication (JWT)](#token-based-authentication-jwt)
+- [OAuth third-party authentication](#oauth-third-party-authentication)
+- [Single Sign-On (SSO)](#single-sign-on-sso)
+- [QR code authentication](#qr-code-authentication)
+- [Comparison & best practices](#comparison--best-practices)
+
+## Cookie + session authentication
+
+### Understanding HTTP statelessness
+
+HTTP is a stateless protocol. Each client request establishes a new connection to the server, which is terminated after the response is sent. While this design conserves connection resources, it creates a significant challenge: **the server cannot identify whether subsequent requests come from the same user**.
+
+To solve this problem, [Lou Montulli](https://en.wikipedia.org/wiki/Lou_Montulli) introduced `cookies` in 1994.
+
+### How cookies work
+
+A `cookie` is a piece of data sent from the server and stored on the client-side. The browser automatically includes these cookies in subsequent requests to the **same domain**, allowing the server to recognize returning users.
+
+However, cookies alone don't provide authentication—we need `sessions` to verify user identity.
+
+A `session` is server-side storage (in memory, files, or databases) that holds user state information, identified by a unique session id.
+
+### Implementation flow
+
+```
+┌─────────┐                                  ┌──────────────┐                    ┌─────────────┐
+│ Browser │                                  │  Web Server  │                    │   Session   │
+└────┬────┘                                  └──────┬───────┘                    └──────┬──────┘
+     │                                              │                                   │
+     │  1. POST /login (username, password)         │                                   │
+     │─────────────────────────────────────────────>│                                   │
+     │                                              │                                   │
+     │                                              │  2. Validate credentials          │
+     │                                              │  (check against database)         │
+     │                                              │                                   │
+     │                                              │  3. Create session                │
+     │                                              │  sessionId = generateId()         │
+     │                                              │──────────────────────────────────>│
+     │                                              │                                   │
+     │                                              │  4. Store session data            │
+     │                                              │  { userId, loginTime, ... }       │
+     │                                              │<──────────────────────────────────│
+     │                                              │                                   │
+     │  5. Set-Cookie: sessionId=abc123;            │                                   │
+     │     HttpOnly; Secure; SameSite=Strict        │                                   │
+     │<─────────────────────────────────────────────│                                   │
+     │                                              │                                   │
+     │  6. GET /dashboard                           │                                   │
+     │     Cookie: sessionId=abc123                 │                                   │
+     │─────────────────────────────────────────────>│                                   │
+     │                                              │                                   │
+     │                                              │  7. Retrieve session              │
+     │                                              │  GET session by sessionId         │
+     │                                              │──────────────────────────────────>│
+     │                                              │                                   │
+     │                                              │  8. Return session data           │
+     │                                              │  { userId: 123, valid: true }     │
+     │                                              │<──────────────────────────────────│
+     │                                              │                                   │
+     │  9. Return protected resource                │                                   │
+     │     (dashboard HTML)                         │                                   │
+     │<─────────────────────────────────────────────│                                   │
+     │                                              │                                   │
+     │  10. GET /api/profile                        │                                   │
+     │      Cookie: sessionId=abc123                │                                   │
+     │─────────────────────────────────────────────>│                                   │
+     │                                              │  Session automatically validated  │
+     │  11. Return user profile                     │  (repeat steps 7-8)               │
+     │<─────────────────────────────────────────────│                                   │
+```
+
+**Initial login:**
+
+1. User visits `example.com/page` and enters credentials
+2. Server validates credentials and creates a unique session id
+3. Session id is stored server-side (in memory, Redis, database, etc.)
+4. Server responds with `Set-Cookie` header containing the session id
+5. Browser stores the cookie automatically
+
+**Subsequent requests:**
+
+1. User navigates to `example.com/another-page`
+2. Browser automatically includes the session id cookie in the request
+3. Server retrieves the session data using the session id
+4. If valid, server grants access to the requested resource
+
+### Limitations
+
+While `Cookie + Session` authentication is battle-tested, it has several drawbacks:
+
+**Scalability issues:**
+
+- Server must store all active sessions, consuming memory
+- In a clustered environment, sessions must be synchronized across servers (using Redis or sticky sessions)
+- Difficult to horizontally scale
+
+**Security concerns:**
+
+- Vulnerable to CSRF (Cross-Site Request Forgery) attacks
+- Requires careful domain and path configuration
+
+**Cross-domain challenges:**
+
+- Cookies don't work across different domains
+- Requires workarounds for microservices architectures
+
+### Security best practices
+
+When implementing `Cookie + Session` authentication, always:
+
+- **Set `HttpOnly` flag** - Prevents JavaScript access, mitigating XSS attacks
+- **Set `Secure` flag** - Ensures cookies only sent over HTTPS
+- **Set `SameSite` attribute** - Prevents CSRF attacks (`SameSite=Strict` or `SameSite=Lax`)
+
+E.g.
+
+```bash
+Set-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict; Max-Age=3600; Path=/
+```
+
+## Token-based authentication (JWT)
+
+To address the limitations of `Cookie + Session` authentication, **token-based authentication** offers a stateless alternative.
+
+### What is a token?
+
+A `token` is a cryptographically **signed** string generated by the server that serves as a user's credential. Unlike sessions, tokens are self-contained. They carry all necessary user information within themselves, eliminating the need for server-side storage.
+
+### Implementation flow
+
+```
+┌─────────┐                                  ┌──────────────┐
+│ Client  │                                  │  API Server  │
+└────┬────┘                                  └──────┬───────┘
+     │                                              │
+     │  1. POST /api/login                          │
+     │     { username, password }                   │
+     │─────────────────────────────────────────────>│
+     │                                              │
+     │                                              │  2. Validate credentials
+     │                                              │     (check database)
+     │                                              │
+     │                                              │  3. Generate token
+     │                                              │     - Create payload
+     │                                              │     - Sign with secret
+     │                                              │
+     │  4. Return token                             │
+     │     { token: "eyJhbGc...", expiresIn }       │
+     │<─────────────────────────────────────────────│
+     │                                              │
+     │  5. Store token locally                      │
+     │     (e.g. localStorage/memory)               │
+     │                                              │
+     │  6. GET /api/profile                         │
+     │     Authorization: Bearer eyJhbGc...         │
+     │─────────────────────────────────────────────>│
+     │                                              │
+     │                                              │  7. Extract token from header
+     │                                              │
+     │                                              │  8. Verify token signature
+     │                                              │     (using secret key)
+     │                                              │
+     │                                              │  9. Check token expiration
+     │                                              │     (exp claim)
+     │                                              │
+     │                                              │  10. Decode payload
+     │                                              │      (extract user info)
+     │                                              │
+     │  11. Return user data                        │
+     │      { id, name, email, ... }                │
+     │<─────────────────────────────────────────────│
+     │                                              │
+     │  12. GET /api/posts                          │
+     │      Authorization: Bearer eyJhbGc...        │
+     │─────────────────────────────────────────────>│
+     │                                              │
+     │                                              │  Token validation
+     │                                              │  (repeat steps 7-10)
+     │                                              │
+     │  13. Return posts                            │
+     │<─────────────────────────────────────────────│
+```
+
+**Initial login:**
+
+1. User authenticates (through username/password, MFA, etc.)
+2. Server generates a token and returns it to the client
+3. Client stores the token (localStorage, sessionStorage, or memory)
+
+**Subsequent requests:**
+
+1. Client includes the token in the request header (typically `Authorization: Bearer <token>`)
+2. Server validates the token signature and expiration
+3. If valid, server processes the request
+
+### Advantages and disadvantages
+
+**Advantages:**
+
+- **Stateless** - No server-side session storage required
+- **Scalable** - Works seamlessly in distributed/clustered environments
+- **Cross-domain** - Can be sent in headers, bypassing cookie domain restrictions
+
+**Disadvantages:**
+
+- **Cannot be revoked easily** - Once issued, tokens remain valid until expiration
+- **Larger payload** - Tokens are larger than session id, consuming more bandwidth
+- **Storage concerns** - Vulnerable to XSS if stored in localStorage
+
+### Understanding JWT (JSON Web Token)
+
+The most popular token format is **JWT**, which consists of three parts separated by dots (`.`):
+
+```bash
+header.payload.signature
+```
+
+#### 1. Header
+
+Specifies the algorithm and token type:
+
+```javascript
+const header = {
+  alg: 'HS256', // HMAC-SHA256 algorithm
+  typ: 'JWT', // Token type
+}
+```
+
+#### 2. Payload
+
+Contains claims (user data and metadata):
+
+```js
+const payload = {
+  sub: '123456', // Subject (user ID)
+  name: 'headwindz', // User name
+  iat: 1422779638, // Issued at timestamp
+  exp: 1422783238, // Expiration timestamp
+  role: 'admin', // Custom claim
+}
+```
+
+**Standard claims:**
+
+- `iss` (issuer) - Who issued the token
+- `sub` (subject) - User identifier
+- `aud` (audience) - Intended recipient
+- `exp` (expiration) - Expiration time
+- `iat` (issued at) - Token creation time
+- `nbf` (not before) - Token not valid before this time
+
+#### 3. Signature
+
+Ensures token integrity and authenticity:
+
+```js
+// Generate signature
+const base64Header = base64UrlEncode(JSON.stringify(header))
+const base64Payload = base64UrlEncode(JSON.stringify(payload))
+const unsignedToken = `${base64Header}.${base64Payload}`
+
+// Sign with secret key
+const signature = HMAC_SHA256(secretKey, unsignedToken)
+const base64Signature = base64UrlEncode(signature)
+
+// Final token
+const token = `${base64Header}.${base64Payload}.${base64Signature}`
+```
+
+**Example jwt:**
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+```
+
+Since JWTs are base64 encoded, you can easily decode them to inspect the header and payload:
+
+[JWT decoder](https://toolhub.run/tools/jwt-decoder)
+
+Note: JWTs are **not encrypted** by default. They are only encoded and signed. Therefore, avoid putting sensitive information in the payload. Backends should always verify the signature and validate claims before trusting the data in the token.
+
+### Token verification process
+
+When the server receives a token:
+
+```js
+function verifyToken(token, secretKey) {
+  // 1. Split the token
+  const [base64Header, base64Payload, base64Signature] = token.split('.')
+
+  // 2. Verify signature
+  const unsignedToken = `${base64Header}.${base64Payload}`
+  const expectedSignature = HMAC_SHA256(secretKey, unsignedToken)
+  const receivedSignature = base64UrlDecode(base64Signature)
+
+  if (expectedSignature !== receivedSignature) {
+    throw new Error('Invalid signature - token has been tampered with')
+  }
+
+  // 3. Verify expiration
+  const payload = JSON.parse(base64UrlDecode(base64Payload))
+  const currentTime = Math.floor(Date.now() / 1000)
+
+  if (payload.exp && currentTime > payload.exp) {
+    throw new Error('Token has expired')
+  }
+
+  return { valid: true, payload }
+}
+```
+
+### Refresh tokens and token rotation
+
+One of the major criticisms of JWT is that tokens cannot be revoked easily once issued. The solution is to use **short-lived access tokens** paired with **refresh tokens**.
+
+**Access tokens** are short-lived credentials (5-15 minutes) that grant access to resources. They expire quickly, limiting the window of vulnerability if compromised.
+
+**Refresh tokens** are long-lived credentials (7-30 days) used solely to obtain new access tokens. They're stored securely on the backend and enable token rotation without requiring the user to log in again.
+
+#### Implementation flow
+
+```
+┌─────────┐                                  ┌──────────────┐
+│ Client  │                                  │  API Server  │
+└────┬────┘                                  └──────┬───────┘
+     │                                              │
+     │  1. POST /login                              │
+     │     { username, password }                   │
+     │─────────────────────────────────────────────>│
+     │                                              │
+     │                                              │  2. Validate credentials
+     │                                              │
+     │  3. Return tokens                            │
+     │     {                                        │
+     │       "accessToken": "eyJhbGc...",           │
+     │       "refreshToken": "ref_abc123",          │
+     │       "expiresIn": 900                       │
+     │     }                                        │
+     │<─────────────────────────────────────────────│
+     │                                              │
+     │  4. Store tokens                             │
+     │     - accessToken: memory or sessionStorage  │
+     │     - refreshToken: httpOnly cookie          │
+     │                                              │
+     │  5. GET /api/protected                       │
+     │     Authorization: Bearer eyJhbGc...         │
+     │─────────────────────────────────────────────>│
+     │                                              │
+     │                                              │  6. Verify accessToken
+     │                                              │  Still valid (7 min left)
+     │                                              │
+     │  7. Return protected data                    │
+     │<─────────────────────────────────────────────│
+     │                                              │
+     │  --- AccessToken expires after 15 min ---    │
+     │                                              │
+     │  8. GET /api/data                            │
+     │     Authorization: Bearer eyJhbGc...         │
+     │─────────────────────────────────────────────>│
+     │                                              │
+     │                                              │  9. Token expired!
+     │                                              │
+     │  10. 401 Unauthorized                        │
+     │      { error: "token_expired" }              │
+     │<─────────────────────────────────────────────│
+     │                                              │
+     │  11. POST /auth/refresh                      │
+     │      { refreshToken: "ref_abc123" }          │
+     │─────────────────────────────────────────────>│
+     │                                              │
+     │                                              │  12. Validate refreshToken
+     │                                              │  - Check token signature
+     │                                              │  - Check against rotation list
+     │                                              │  - Check device binding
+     │                                              │
+     │  13. Return new accessToken                  │
+     │      {                                       │
+     │        "accessToken": "eyJhbGc...",          │
+     │        "refreshToken": "ref_def456"          │
+     │      }                                       │
+     │<─────────────────────────────────────────────│
+     │                                              │
+     │  14. Store new tokens                        │
+     │     (Replace old tokens)                     │
+     │                                              │
+     │  15. Retry original request                  │
+     │      GET /api/data                           │
+     │      Authorization: Bearer eyJhbGc...(new)   │
+     │─────────────────────────────────────────────>│
+     │                                              │
+     │  16. Return protected data                   │
+     │<─────────────────────────────────────────────│
+```
+
+#### Backend implementation example
+
+```js
+// Login endpoint - issue both tokens
+app.post('/login', async (req, res) => {
+  const user = await validateCredentials(req.body.username, req.body.password)
+
+  // Access token: short-lived, safe to send in Authorization header
+  const accessToken = jwt.sign({ userId: user.id, type: 'access' }, ACCESS_TOKEN_SECRET, {
+    expiresIn: '15m',
+    algorithm: 'HS256',
+  })
+
+  // Refresh token: long-lived, stored in database with rotation tracking
+  const refreshToken = jwt.sign(
+    { userId: user.id, type: 'refresh', jti: generateRandomId() },
+    REFRESH_TOKEN_SECRET,
+    { expiresIn: '7d', algorithm: 'HS256' }
+  )
+
+  // Store refresh token in database (enables revocation later)
+  await db.refreshTokens.create({
+    token: refreshToken,
+    userId: user.id,
+    deviceId: getDeviceFingerprint(req),
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    isRevoked: false,
+  })
+
+  res.json({
+    accessToken,
+    refreshToken,
+    expiresIn: 900, // 15 minutes in seconds
+  })
+})
+
+// Refresh endpoint - issue new access token
+app.post('/auth/refresh', async (req, res) => {
+  const { refreshToken } = req.body
+
+  // Verify token signature
+  let payload
+  try {
+    payload = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET)
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid refresh token' })
+  }
+
+  // Check if token is revoked
+  const storedToken = await db.refreshTokens.findOne({
+    token: refreshToken,
+    userId: payload.userId,
+  })
+
+  if (!storedToken || storedToken.isRevoked) {
+    return res.status(401).json({ error: 'Token has been revoked' })
+  }
+
+  // Optional: Check device binding (prevent token theft)
+  const currentDevice = getDeviceFingerprint(req)
+  if (storedToken.deviceId !== currentDevice) {
+    // Device mismatch - potential token theft
+    // Revoke all tokens for this user
+    await db.refreshTokens.updateMany({ userId: payload.userId }, { isRevoked: true })
+    return res.status(401).json({ error: 'Token invalidated - login again' })
+  }
+
+  // Issue new access token
+  const newAccessToken = jwt.sign({ userId: payload.userId, type: 'access' }, ACCESS_TOKEN_SECRET, {
+    expiresIn: '15m',
+  })
+
+  res.json({ accessToken: newAccessToken })
+})
+
+// Verify access token middleware
+function verifyAccessToken(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1]
+
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' })
+  }
+
+  try {
+    const payload = jwt.verify(token, ACCESS_TOKEN_SECRET)
+    req.user = payload
+    next()
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'token_expired' })
+    }
+    return res.status(401).json({ error: 'Invalid token' })
+  }
+}
+```
+
+#### Key benefits
+
+- **Short attack window** - Compromised access tokens are only valid for 15 minutes
+- **User doesn't re-authenticate** - Refresh token allows seamless token rotation without password entry
+- **Revocation possible** - Refresh tokens stored server-side can be revoked immediately
+- **Device detection** - Detect if refresh token is used from different device (potential theft)
+
+### Token revocation strategies
+
+Even with refresh tokens, you need ways to **immediately invalidate tokens** (e.g., user logout, security breach, account suspension).
+
+#### Strategy 1: Token blacklist (simple)
+
+Maintain a server-side list of revoked tokens. When a token is presented, check if it's blacklisted.
+
+**Pros:** Simple to implement, works for all token types
+
+**Cons:** Requires server-side lookup for every request, doesn't scale well
+
+#### Strategy 2: JTI (JWT ID) claim - recommended
+
+Add a unique identifier (`jti`) to every token and track which ones are invalidated. This is more scalable than blacklisting all tokens.
+
+**Pros:** Scalable, only revoked tokens tracked, flexible, industry standard
+
+**Cons:** Requires database lookup, slightly more complex
+
+```js
+// Generate token with JTI
+const jti = generateRandomId() // Unique token ID
+const token = jwt.sign(
+  {
+    userId: user.id,
+    jti: jti, // Add unique ID
+    type: 'access',
+  },
+  SECRET,
+  { expiresIn: '15m' }
+)
+
+// Store JTI in database when issued
+await db.tokenJtis.create({
+  jti: jti,
+  userId: user.id,
+  issuedAt: new Date(),
+  expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+  isRevoked: false,
+})
+
+// Logout - revoke by marking JTI as revoked
+app.post('/logout', verifyAccessToken, async (req, res) => {
+  const token = req.headers.authorization.split(' ')[1]
+  const payload = jwt.decode(token)
+
+  await db.tokenJtis.updateOne({ jti: payload.jti }, { isRevoked: true })
+
+  res.json({ message: 'Logged out successfully' })
+})
+
+// Verification middleware
+async function verifyToken(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1]
+
+  try {
+    const payload = jwt.verify(token, SECRET)
+
+    // Check if JTI is revoked
+    const jti = await db.tokenJtis.findOne({ jti: payload.jti })
+    if (!jti || jti.isRevoked) {
+      return res.status(401).json({ error: 'Token has been revoked' })
+    }
+
+    req.user = payload
+    next()
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token' })
+  }
+}
+```
+
+#### Strategy 3: Token version/rotation - advanced
+
+Assign a version number to tokens and rotate it on logout. Only tokens with current version are valid.
+
+**Pros:** One database lookup per user (not per token), instant revocation, can revoke all user tokens
+
+**Cons:** Requires tracking per user, less granular than JTI
+
+```js
+// Login - include user's current token version
+const tokenVersion = 1
+const token = jwt.sign(
+  {
+    userId: user.id,
+    version: tokenVersion,
+  },
+  SECRET,
+  { expiresIn: '15m' }
+)
+
+// User logout - increment their token version
+app.post('/logout', verifyAccessToken, async (req, res) => {
+  await db.users.updateOne(
+    { id: req.user.userId },
+    { $inc: { tokenVersion: 1 } } // Invalidates all existing tokens for this user
+  )
+
+  res.json({ message: 'Logged out, all devices logged out' })
+})
+
+// Verification - compare token version against user's current version
+async function verifyToken(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1]
+
+  try {
+    const payload = jwt.verify(token, SECRET)
+    const user = await db.users.findOne({ id: payload.userId })
+
+    if (!user || payload.version !== user.tokenVersion) {
+      return res.status(401).json({ error: 'Token has been revoked' })
+    }
+
+    req.user = payload
+    next()
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token' })
+  }
+}
+```
+
+#### Comparison of revocation strategies
+
+| Strategy         | Scalability | Lookup Overhead | Granularity | Complexity |
+| ---------------- | ----------- | --------------- | ----------- | ---------- |
+| Blacklist        | Poor        | Check all       | Per token   | Low        |
+| JTI Claim        | Good        | Per token index | Per token   | Medium     |
+| Version/Rotation | Excellent   | Per user        | Per user    | Medium     |
+
+**Recommendation:** Use **JTI claim** for most applications. It provides excellent balance between scalability and granularity. For high-scale systems, consider **token version** to reduce database lookups.
+
+### Security recommendations
+
+1. **Use strong secret keys** - At least 256 bits, randomly generated
+2. **Never expose secrets** - Keep secret keys secure, use environment variables
+3. **Set appropriate expiration** - Balance security and user experience
+4. **Avoid sensitive data in payload** - jwt payload is base64 encoded, not encrypted
+
+## OAuth third-party authentication
+
+**OAuth** enables users to log in using existing accounts from trusted third-party providers like Google, GitHub, Facebook, or Twitter.
+
+### Why OAuth?
+
+**For users:**
+
+- No need to create yet another account
+- Faster registration process
+- Trust established providers' security
+- One less password to remember
+
+**For developers:**
+
+- Reduce development time (no need to build authentication from scratch)
+- Lower security risks (password storage handled by provider)
+- Access user data with permission (email, profile picture, etc.)
+
+### OAuth 2.0 flow
+
+Let's walk through a practical example using **Google OAuth** (similar to GitHub/Facebook OAuth):
+
+#### Setup Phase
+
+1. **Register your application** at [Google Cloud Console](https://console.cloud.google.com/)
+2. **Create OAuth 2.0 credentials** and receive:
+   - `client_id` - Public identifier for your app
+   - `client_secret` - Secret key for server communication
+3. **Configure authorized redirect URIs** (e.g., `https://yourapp.com/auth/google/callback`)
+
+#### Authentication flow
+
+```
+┌─────────┐                                  ┌──────────┐                     ┌─────────────┐
+│  User   │                                  │ Your App │                     │   Google    │
+└────┬────┘                                  └────┬─────┘                     └──────┬──────┘
+     │                                            │                                  │
+     │  1. Click "Login with Google"              │                                  │
+     │───────────────────────────────────────────>│                                  │
+     │                                            │                                  │
+     │  2. Redirect to Google OAuth               │                                  │
+     │<───────────────────────────────────────────│                                  │
+     │                                                                               │
+     │  https://accounts.google.com/o/oauth2/v2/auth?                                │
+     │     client_id=YOUR_CLIENT_ID&                                                 │
+     │     redirect_uri=yourapp.com/callback&                                        │
+     │     response_type=code&                                                       │
+     │     scope=openid%20profile%20email                                            │
+     │                                                                               │
+     │  3. User logs in & authorizes                                                 │
+     │──────────────────────────────────────────────────────────────────────────────>│
+     │                                            │                                  │
+     │                                              4. Redirect back with code       │
+     │                                              yourapp.com/callback?code=xx     │
+     │                                            |<─────────────────────────────────│
+     │                                            │                                  │
+     │                                            │                                  │
+     │                                            │  5. Exchange code for token      │
+     │                                            │  POST /oauth/token               │
+     │                                            │  - code: xx                      │
+     │                                            │  - client_id                     │
+     │                                            │  - client_secret                 │
+     │                                            │─────────────────────────────────>│
+     │                                            │                                  │
+     │                                            │  6. Return access_token          │
+     │                                            │<─────────────────────────────────│
+     │                                            │                                  │
+     │                                            │  7. Fetch user info              │
+     │                                            │  GET /api/user                   │
+     │                                            │  Authorization: Bearer TOKEN     │
+     │                                            │─────────────────────────────────>│
+     │                                            │                                  │
+     │                                            │  8. Return user data             │
+     │                                            │<─────────────────────────────────│
+     │                                            │                                  │
+     │  9. Create session & redirect              │                                  │
+     │<───────────────────────────────────────────│                                  │
+```
+
+### Detailed steps
+
+**Step 1: Initiate login**
+
+User clicks "Login with Google" on your site.
+
+**Step 2: Redirect to OAuth provider**
+
+```js
+const authUrl =
+  `https://accounts.google.com/o/oauth2/v2/auth?` +
+  `client_id=${CLIENT_ID}` +
+  `&redirect_uri=${encodeURIComponent('https://yourapp.com/callback')}` +
+  `&response_type=code` +
+  `&scope=${encodeURIComponent('openid profile email')}` +
+  `&state=${randomStateValue}` + // CSRF protection
+  `&access_type=offline` + // Get refresh token
+  `&prompt=consent` // Force consent screen
+
+window.location.href = authUrl
+```
+
+**Step 3: User authorizes**
+
+User logs in to Google (if not already) and approves the requested permissions (profile, email, etc.)
+
+**Step 4: Provider redirects with code**
+
+Google redirects back to your specified callback:
+
+```
+https://yourapp.com/callback?code=AUTHORIZATION_CODE&state=RANDOM_STATE&scope=openid+profile+email
+```
+
+**Step 5: Exchange code for access token**
+
+Your **server** (**not client!**) exchanges the code for an access token:
+
+```js
+const response = await fetch('https://oauth2.googleapis.com/token', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: new URLSearchParams({
+    code: authorizationCode,
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    redirect_uri: 'https://yourapp.com/callback',
+    grant_type: 'authorization_code',
+  }),
+})
+
+const { access_token, refresh_token, id_token } = await response.json()
+```
+
+**Why backend-only?** The `client_secret` must never be exposed to the browser!
+
+**Step 6-8: fetch user information**
+
+```js
+const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+  headers: {
+    Authorization: `Bearer ${access_token}`,
+  },
+})
+
+const userData = await userResponse.json()
+// { id: "123456789", email: "user@gmail.com", name: "John Doe", picture: "https://...", ... }
+```
+
+**Step 9: create session**
+
+Create your own application session/token for the user:
+
+```js
+// Create user in your database (if new)
+const user = await User.findOrCreate({
+  googleId: userData.id,
+  email: userData.email,
+  name: userData.name,
+  picture: userData.picture,
+})
+
+// Generate your app's session token
+const sessionToken = jwt.sign({ userId: user.id }, YOUR_SECRET)
+
+// Set cookie or return token to client
+res.cookie('session', sessionToken, { httpOnly: true, secure: true })
+```
+
+### OAuth scopes
+
+Scopes define what data your app can access. Each provider has its own set of scopes. E.g.
+
+| Scope     | Description                       |
+| --------- | --------------------------------- |
+| `openid`  | User unique identifier (required) |
+| `profile` | Basic profile (name, picture)     |
+| `email`   | Email address                     |
+| `repo`    | GitHub repositories (GitHub)      |
+
+**Important:** Only request scopes you actually need! Users are less likely to authorize apps that request excessive permissions.
+
+### Security considerations
+
+1. **Validate `state` parameter** - Prevents CSRF attacks
+
+```js
+// Before redirecting to OAuth
+const state = generateRandomString()
+sessionStorage.setItem('oauth_state', state)
+
+// In callback
+if (req.query.state !== sessionStorage.getItem('oauth_state')) {
+  throw new Error('Invalid state - possible CSRF attack')
+}
+```
+
+2. **Never expose `client_secret`** - Keep it server-side only
+
+3. **Validate tokens** - Always verify tokens with the provider
+
+### Popular OAuth Providers
+
+| Provider   | Use Cases                          | Documentation                                                                  |
+| ---------- | ---------------------------------- | ------------------------------------------------------------------------------ |
+| **Google** | General purpose, wide reach        | [Google OAuth](https://developers.google.com/identity/protocols/oauth2)        |
+| **GitHub** | Developer tools, code repositories | [GitHub OAuth](https://docs.github.com/en/developers/apps/building-oauth-apps) |
+
+### Why need code → access token exchange?
+
+You might wonder: why not return the access token directly in the redirect URL? Why the extra step of exchanging a code?
+
+The **authorization code flow** is a critical security design that protects against token theft.
+
+**The problem with direct token return:**
+
+If the access token were returned directly in the URL:
+
+```
+yourapp.com/callback?access_token=SECRET_TOKEN_123
+```
+
+This would expose the token to:
+
+- Browser history - Token visible in browser's URL history
+- Browser extensions - Malicious extensions can read URLs
+- Server logs - Tokens logged in web server access logs
+- Proxy servers - Network intermediaries can intercept URLs
+
+**Security benefits:**
+
+1. Access token never exposed to browser - Token only travels over secure server-to-server connection
+2. Client secret validation - OAuth provider verifies your server's identity using `client_secret`
+3. Code is single-use - Authorization code becomes invalid after one exchange
+4. Code is short-lived - Expires in ~10 minutes, limiting attack window
+5. Prevents token theft - Even if code is intercepted, attacker needs `client_secret` to use it
+
+This two-step process ensures that sensitive access tokens are only handled by trusted backend servers, never exposed to potentially compromised browser environments.
+
+## Single Sign-On (SSO)
+
+**Single Sign-On (SSO)** allows users to authenticate once and gain access to multiple applications without re-entering credentials. It's a centralized authentication mechanism commonly used in enterprise environments.
+
+### The problem SSO Solves
+
+Imagine a large organization with multiple internal applications:
+
+- HR portal
+- Project management tool
+- CRM system
+
+Without SSO, users would need to:
+
+- Remember different passwords for each system
+- Log in separately to each application
+- Deal with password reset requests across multiple platforms
+
+SSO solves this by providing `one authentication point` for all services.
+
+### How SSO works
+
+SSO relies on a **central authentication server** (often called an Identity Provider or IdP) that all applications trust.
+
+```
+┌─────────┐                 ┌──────────┐                 ┌──────────┐                 ┌──────────┐
+│  User   │                 │  App A   │                 │  App B   │                 │   SSO    │
+└────┬────┘                 └────┬─────┘                 └────┬─────┘                 └────┬─────┘
+     │                           │                            │                            │
+     │  1. Visit app-a.com       │                            │                            │
+     │──────────────────────────>│                            │                            │
+     │                           │                            │                            │
+     │                           │  2. No session found       │                            │
+     │                           │     redirect to SSO        │                            │
+     │                           │                            │                            │
+     │  3. Redirect to SSO login                                                           │
+     │     sso.com?returnUrl=app-a.com&appId=app-a                                         │
+     │────────────────────────────────────────────────────────────────────────────────────>│
+     │                           │                            │                            │
+     │  4. Show login page                                                                 │
+     │<────────────────────────────────────────────────────────────────────────────────────│
+     │                           │                            │                            │
+     │  5. Submit credentials and authenticates                                            │
+     │────────────────────────────────────────────────────────────────────────────────────>│
+     │                           │                            │                            │
+     │                           │                            │  6. Validate credentials   │
+     │                           │                            │     Create session         │
+     │                           │                            │     Generate ticket        │
+     │                           │                            │                            │
+     │  7. Redirect with ticket                                                            │
+     │     app-a.com?ticket=xyz123                                                         │
+     │     Set-Cookie: ssoSession=abc (sso.com domain)                                     │
+     │<────────────────────────────────────────────────────────────────────────────────────│
+     │                           │                            │                            │
+     │  8. Request with ticket   │                            │                            │
+     │──────────────────────────>│                            │                            │
+     │                           │                            │                            │
+     │                           │  9. Validate ticket (server-to-server)                  │
+     │                           │     POST sso.com/validate                               │
+     │                           │     { ticket: "xyz123", appId: "app_a" }                │
+     │                           │────────────────────────────────────────────────────────>│
+     │                           │                            │                            │
+     │                           │  10. Return user info      │                            │
+     │                           │      { userId, email, name, valid: true }               │
+     │                           │<────────────────────────────────────────────────────────│
+     │                           │                            │                            │
+     │                           │  11. Create session        │                            │
+     │                           │                            │                            │
+     │ 12.Return app-a.com page                               │                            │
+     │    Set-Cookie: appASession                             │                            │
+     │<──────────────────────────│                            │                            │
+     │                           │                            │                            │
+     │  --- User now has 2 sessions: sso.com & app-a.com ---  │                            │
+     │                           │                            │                            │
+     │  13. Visit app-b.com                                                                │
+     │───────────────────────────────────────────────────────>│                            │
+     │                           │                            │                            │
+     │                           │                            │  14. No session            │
+     │                           │                            │      redirect to SSO       │
+     │                           │                            │                            │
+     │  15. Redirect to SSO                                                                │
+     │     sso.com?returnUrl=app-b.com&appId=app-b                                         │
+     │────────────────────────────────────────────────────────────────────────────────────>│
+     │                           │                            │                            │
+     │                           │                            │  16. Check SSO cookie      │
+     │                           │                            │      Session exists!       │
+     │                           │                            │      No login needed       │
+     │                           │                            │      Generate ticket       │
+     │                           │                            │                            │
+     │  17. Redirect with ticket                              │                            │
+     │      app-b.com?ticket=abc789                           │                            │
+     │<────────────────────────────────────────────────────────────────────────────────────│
+     │                           │                            │                            │
+     │  18. Request with ticket                               │                            │
+     │───────────────────────────────────────────────────────>│                            │
+     │                           │                            │                            │
+     │                           │                            │  19. Validate ticket       │
+     │                           │                            │──────────────────────────> │
+     │                           │                            │                            │
+     │                           │                            │  20. Return user info      │
+     │                           │                            │<────────────────────────── │
+     │                           │                            │                            │
+     │                           │                            │  21. Create session        │
+     │                           │                            │                            │
+     │  22. Return app-b.com page                                                          │
+     │      Set-Cookie: appBSession                                                        │
+     │<───────────────────────────────────────────────────────│                            │
+     │                           │                            │                            │
+     │  --- User now has 3 sessions: sso.com, app-a.com, app-b.com ---                     │
+```
+
+#### First-time access flow
+
+1. User visits `app-a.com`
+2. App A checks if user has a valid session → No
+3. Redirect to SSO `sso.example.com?returnUrl=app-a.com`
+4. User authenticates at the central SSO server (through username/password, MFA, etc.)
+5. SSO creates session and stores it in a cookie for `sso.example.com`
+6. SSO generates ticket (one-time use token) and redirects to `app-a.com?ticket=xyz123`
+7. App A validates ticket with SSO server backend-to-backend
+8. SSO confirms ticket is valid and provides user information
+9. App A creates session for the user and sets its own session cookie
+10. User accesses the requested resource
+
+Now the user has **two active sessions**:
+
+- One with the SSO server (`sso.example.com`)
+- One with App A (`app-a.com`)
+
+#### Accessing another application
+
+1. User visits `app-b.com`
+2. App B checks if user has a valid session → No
+3. Redirect to SSO `sso.example.com?returnUrl=app-b.com`
+4. SSO detects existing session (from step 5 above)
+5. No login required! SSO immediately generates a ticket
+6. Redirects to `app-b.com?ticket=abc789`
+7. App B validates and creates its own session
+8. User accesses the resource without re-entering credentials
+
+### Benefits and challenges
+
+**Benefits:**
+
+- Better UX - Users log in once, access everything
+- Centralized security - Single point for security policies, MFA, auditing
+- Reduced password fatigue - Fewer passwords to remember
+- IT efficiency - Easier user management and access control
+
+**Challenges:**
+
+- Implementation complexity - Requires coordination across applications
+- Security risk - Compromised SSO credentials expose all applications
+
+### Popular SSO providers
+
+| Provider         | Use Cases                        | Documentation                                                     |
+| ---------------- | -------------------------------- | ----------------------------------------------------------------- |
+| Okta             | Enterprise identity management   | [Okta Developer](https://developer.okta.com/)                     |
+| Auth0            | Developer-friendly, customizable | [Auth0 Docs](https://auth0.com/docs)                              |
+| Google Workspace | Google-integrated organizations  | [Google Workspace SSO](https://support.google.com/a/answer/60224) |
+
+### Why SSO uses tickets directly instead of OAuth's code flow
+
+You might notice that SSO uses a ticket-based flow similar to OAuth's authorization code, but there's a key difference in the trust model:
+
+**SSO context - internal trust:**
+
+In SSO, all applications (App A, App B, SSO Server) belong to the `same organization`:
+
+- All servers are under your control and trust each other
+- Direct server-to-server communication is secure and trusted
+- No need for `client_secret` validation between your own services
+- Focus is on **single sign-on convenience** rather than third-party authorization
+
+**OAuth context - external trust:**
+
+OAuth involves `third-party` providers (Google, GitHub) authorizing access to `external resources`:
+
+- Your app is untrusted from the provider's perspective
+- Need to prove your identity using `client_secret`
+- User is authorizing access to their data on another platform
+- Focus is on **delegated authorization** and preventing token theft
+
+**Key differences:**
+
+| Aspect         | SSO (Internal)                  | OAuth (External)                    |
+| -------------- | ------------------------------- | ----------------------------------- |
+| Trust model    | All apps owned by same org      | Third-party provider relationship   |
+| Secret needed  | No `client_secret` required     | Requires `client_secret` validation |
+| Token exposure | Less concern (internal network) | Critical concern (public internet)  |
+| Validation     | Simple ticket verification      | Cryptographic validation + secrets  |
+
+In summary: **SSO simplifies authentication within a trusted ecosystem**, while **OAuth adds security layers for untrusted third-party integrations**.
+
+## QR code authentication
+
+QR code login provides a seamless way for users to authenticate on desktop/web applications using their mobile devices. Simply scan a code on your computer with your phone, confirm, and you're logged in.
+
+### QR code basics
+
+A **QR code** (Quick Response code) is a 2D barcode that encodes text data—plain text, URLs, JSON, or any string up to ~4,000 characters.
+
+[QRCode generator](https://toolhub.run/tools/qr-generator)
+[QRCode parser](https://toolhub.run/tools/qr-parser)
+
+### Understanding mobile token authentication
+
+Before diving into QR code login, it's important to understand how mobile apps maintain login state.
+
+**Why mobile apps don't store passwords:**
+
+For security reasons, mobile apps never store your login password locally. However, you've likely noticed that after logging in once, you remain logged in even after closing the app or restarting your phone. This is achieved through **token-based authentication**.
+
+**How mobile token authentication works:**
+
+1. Initial login - User enters username and password
+2. Device binding - Client sends credentials + device information to server
+3. Token generation - Server validates credentials and creates a token mapped to:
+   ```js
+   const tokenData = {
+     accountId: 'user_123',
+     deviceId: 'unique_device_identifier',
+     deviceType: 'ios', // or 'android', 'pc', etc.
+   }
+   ```
+4. Token storage - Client saves token locally (secure storage/keychain)
+5. Subsequent requests - Every API call includes token + device info
+6. Validation - Server verifies token exists and device info matches
+
+**The goal of login:** Obtain a device-specific token that serves as your authentication credential.
+
+### QR code login flow
+
+During the login process, the QR code transitions through three states:
+
+1. Waiting for scan - QR code displayed, no interaction yet
+2. Scanned, awaiting confirmation - Mobile scanned, user needs to approve
+3. Confirmed - User approved, PC login successful
+
+Each state change is tracked by a unique QR code ID that binds the PC device to the authentication flow.
+
+```
+┌──────────┐                      ┌──────────┐                      ┌──────────┐
+│    PC    │                      │  Server  │                      │  Mobile  │
+└────┬─────┘                      └────┬─────┘                      └────┬─────┘
+     │                                 │                                 │
+     │ ═ Phase 1: QR Code Preparation ═                                  │
+     │                                 │                                 │
+     │  1. Request QR code             │                                 │
+     │     POST /api/qr/generate       │                                 │
+     │     { deviceInfo }              │                                 │
+     │────────────────────────────────>│                                 │
+     │                                 │                                 │
+     │                                 │  2. Generate QR ID              │
+     │                                 │     Bind PC device              │
+     │                                 │     Set status: 'waiting'       │
+     │                                 │                                 │
+     │  3. Return QR ID                │                                 │
+     │     { qrCodeId: 'qr_abc123' }   │                                 │
+     │<────────────────────────────────│                                 │
+     │                                 │                                 │
+     │  4. Display QR code             │                                 │
+     │     [QR CODE IMAGE]             │                                 │
+     │                                 │                                 │
+     │  5. Start polling status        │                                 │
+     │     GET /api/qr/status          │                                 │
+     │────────────────────────────────>│                                 │
+     │                                 │                                 │
+     │  6. Status: 'waiting'           │                                 │
+     │<────────────────────────────────│                                 │
+     │                                 │                                 │
+     │ ═ Phase 2: Scan & Bind User ═                                     │
+     │                                 │                                 │
+     │                                 │  7. User scans QR code          │
+     │                                 │     Extract qrCodeId            │
+     │                                 │<────────────────────────────────│
+     │                                 │                                 │
+     │                                 │  8. Send scan notification      │
+     │                                 │     POST /api/qr/scan           │
+     │                                 │     { qrCodeId, userToken }     │
+     │                                 │<────────────────────────────────│
+     │                                 │                                 │
+     │                                 │  9. Validate user token         │
+     │                                 │     Update status: 'scanned'    │
+     │                                 │     Bind userId to QR           │
+     │                                 │     Generate temp token         │
+     │                                 │                                 │
+     │                                 │  10. Return temp token          │
+     │                                 │      { tempToken, pcDeviceInfo }│
+     │                                 │────────────────────────────────>│
+     │                                 │                                 │
+     │                                 │  11. Show confirmation screen   │
+     │                                 │                                 │
+     │                                 │                                 │
+     │  12. Poll detects 'scanned'     │                                 │
+     │      GET /api/qr/status         │                                 │
+     │────────────────────────────────>│                                 │
+     │                                 │                                 │
+     │  13. Status: 'scanned'          │                                 │
+     │<────────────────────────────────│                                 │
+     │                                 │                                 │
+     │  14. Update UI                  │                                 │
+     │      "Scanned! Confirm on phone"│                                 │
+     │                                 │                                 │
+     │ ═ Phase 3: Confirmation & Token Generation ═                      │
+     │                                 │                                 │
+     │                                 │  15. User clicks "Confirm"      │
+     │                                 │      POST /api/qr/confirm       │
+     │                                 │      { qrCodeId, tempToken }    │
+     │                                 │<────────────────────────────────│
+     │                                 │                                 │
+     │                                 │  16. Validate temp token        │
+     │                                 │      Generate PC login token    │
+     │                                 │      Update status: 'confirmed' │
+     │                                 │                                 │
+     │                                 │  17. Return success             │
+     │                                 │      { success: true }          │
+     │                                 │────────────────────────────────>│
+     │                                 │                                 │
+     │                                 │  18. Show "Login successful!"   │
+     │                                 │                                 │
+     │                                 │                                 │
+     │  19. Poll detects 'confirmed'   │                                 │
+     │      GET /api/qr/status         │                                 │
+     │────────────────────────────────>│                                 │
+     │                                 │                                 │
+     │  20. Receive PC token           │                                 │
+     │      { status: 'confirmed',     │                                 │
+     │        token: 'pc_token_xyz' }  │                                 │
+     │<────────────────────────────────│                                 │
+     │                                 │                                 │
+     │  21. Save token & redirect      │                                 │
+     │      localStorage.setItem()     │                                 │
+     │      window.location = '/home'  │                                 │
+     │                                 │                                 │
+     │  ✓ Login Complete               │                                 │
+```
+
+### Detailed implementation flow
+
+#### Phase 1: QR code preparation (Waiting for scan)
+
+When a user opens the PC login page and selects QR code login:
+
+**1. PC requests QR code:**
+
+```js
+// PC → Server
+// POST /api/qr/generate
+{
+  deviceInfo: {
+    deviceId: 'pc_device_uuid',
+    deviceType: 'windows',
+    browser: 'chrome',
+    ip: '192.168.1.100'
+  }
+}
+```
+
+**2. Server generates QR code id:**
+
+```js
+// Server creates unique ID and binds PC device
+const qrCodeId = generateUUID() // e.g., 'qr_abc123xyz'
+const qrData = {
+  qrCodeId: qrCodeId,
+  deviceInfo: pcDeviceInfo,
+  status: 'waiting', // Initial state
+  createdAt: Date.now(),
+  expiresAt: Date.now() + 300000, // 5 minutes
+}
+saveToCache(qrCodeId, qrData)
+
+// Server → PC
+return { qrCodeId: 'qr_abc123xyz' }
+```
+
+**3. PC displays QR code:**
+
+```js
+// Generate QR code containing the id
+const qrContent = JSON.stringify({
+  qrCodeId: 'qr_abc123xyz',
+  action: 'login',
+  appId: 'your_app',
+})
+displayQRCode(qrContent)
+```
+
+**4. PC starts polling:**
+
+```js
+// Poll server every 1-2 seconds for status updates
+setInterval(async () => {
+  const response = await fetch(`/api/qr/status?qrCodeId=${qrCodeId}`)
+  const { status, token } = await response.json()
+
+  if (status === 'scanned') {
+    showScannedMessage() // "Scanned! Please confirm on your phone"
+  } else if (status === 'confirmed') {
+    localStorage.setItem('token', token)
+    redirectToDashboard()
+  } else if (status === 'expired') {
+    showExpiredMessage()
+  }
+}, 2000)
+```
+
+#### Phase 2: Scanning (scanned, awaiting confirmation)
+
+User opens the mobile app (already logged in) and scans the QR code:
+
+**1. Mobile scans QR code:**
+
+```js
+// Mobile extracts QR code id from scanned content
+const { qrCodeId } = parseQRCode(scannedData) // 'qr_abc123xyz'
+```
+
+**2. Mobile sends scan notification:**
+
+```js
+// Mobile → Server
+POST /api/qr/scan
+{
+  qrCodeId: 'qr_abc123xyz',
+  userToken: 'mobile_user_token_xyz', // Mobile's existing token
+  mobileDeviceInfo: { ... }
+}
+```
+
+**3. Server updates status and binds user:**
+
+```js
+// Server validates mobile token and updates QR data
+const userData = validateToken(userToken) // { userId: '123', ... }
+
+updateQRStatus(qrCodeId, {
+  status: 'scanned',
+  userId: userData.userId,
+  userName: userData.name,
+  scannedAt: Date.now(),
+})
+
+// Generate temporary token for confirmation step
+const tempToken = generateTempToken({
+  qrCodeId: qrCodeId,
+  userId: userData.userId,
+  expiresIn: 60, // 1 minute, single-use only
+})
+
+// Server → Mobile
+return {
+  status: 'scanned',
+  tempToken: tempToken,
+  pcDeviceInfo: { deviceType: 'windows', browser: 'chrome' }, // Show user what device is logging in
+}
+```
+
+**4. Mobile shows confirmation screen:**
+
+```js
+// Display confirmation dialog to user
+showConfirmationDialog(pcDeviceInfo)
+```
+
+**5. PC detects status change:**
+
+```js
+// PC's polling detects status changed to 'scanned'
+updateUI('QR Code scanned! Please confirm on your phone')
+```
+
+**Why return a temporary token?**
+
+The temporary token ensures that the scan and confirm actions come from the same mobile device, preventing man-in-the-middle attacks. It's single-use and expires quickly (60 seconds).
+
+#### Phase 3: Confirmation (login confirmed)
+
+User clicks "Confirm" on their mobile device:
+
+**1. Mobile sends confirmation:**
+
+```js
+// Mobile → Server
+POST /api/qr/confirm
+{
+  qrCodeId: 'qr_abc123xyz',
+  tempToken: 'temp_token_from_step2' // Validates this is the same device
+}
+```
+
+**2. Server generates PC token:**
+
+```js
+// Server validates temp token
+validateTempToken(tempToken, qrCodeId)
+
+// Retrieve QR data with bound user and PC device info
+const qrData = getQRData(qrCodeId)
+
+// Generate PC-specific login token
+const pcToken = generateToken({
+  userId: qrData.userId,
+  deviceId: qrData.deviceInfo.deviceId,
+  deviceType: 'pc',
+  // ... other claims
+})
+
+// Update QR status
+updateQRStatus(qrCodeId, {
+  status: 'confirmed',
+  token: pcToken,
+  confirmedAt: Date.now(),
+})
+
+// Server → Mobile
+return { success: true }
+```
+
+**3. PC retrieves token:**
+
+```js
+// PC's next poll request
+GET /api/qr/status?qrCodeId=qr_abc123xyz
+
+// Server → PC
+return {
+  status: 'confirmed',
+  token: 'pc_login_token_abc', // PC's new token!
+  userInfo: { id: '123', name: 'John', email: '...' }
+}
+```
+
+**4. PC completes login:**
+
+```javascript
+// PC stores token and logs in
+localStorage.setItem('authToken', pcToken)
+localStorage.setItem('deviceId', deviceId)
+
+// Redirect to dashboard
+window.location.href = '/dashboard'
+```
+
+**5. Mobile shows success:**
+
+```js
+// Mobile displays: "Login successful!"
+showSuccessMessage()
+```
+
+### Key security principles
+
+1. Token isolation - Each device has its own token; tokens cannot be shared
+2. Device binding - Tokens are tied to specific device information
+3. Temporary tokens - Scan-to-confirm uses single-use, short-lived temp tokens
+4. Two-step verification - Scan + Confirm prevents accidental logins
+5. Status polling - PC constantly checks for updates (or use WebSocket for real-time)
+6. QR expiration - Codes expire after 2-5 minutes
+
+## Comparison & best practices
+
+### Authentication methods comparison
+
+| Method               | Use Case                               | Advantages                           | Disadvantages                           |
+| -------------------- | -------------------------------------- | ------------------------------------ | --------------------------------------- |
+| **Cookie + Session** | Traditional web apps, simple backends  | Easy to implement, server-controlled | Server memory overhead, CSRF vulnerable |
+| **Token (jwt)**      | Distributed systems, SPAs, mobile apps | Stateless, scalable, cross-domain    | Cannot revoke easily, larger payload    |
+| **SSO**              | Enterprise multi-app environments      | Single login, centralized control    | Complex setup                           |
+| **OAuth**            | Quick integration, consumer apps       | Pre-built, trusted providers         | Third-party dependency                  |
+| **QR code**          | Desktop-mobile cross-device            | No password entry, secure, fast      | Requires mobile device                  |
+
+### When to use what
+
+**Cookie + Session:** Internal tools, admin panels, traditional server-rendered apps
+
+**Token (JWT):** RESTful APIs, microservices, mobile apps, SPAs
+
+**SSO:** Organizations with 5+ apps, centralized user management
+
+**OAuth:** Consumer apps, reduce signup friction, social features, MVPs
+
+**QR code:** Companion mobile apps, payment confirmations
+
+### Universal security best practices
+
+1. Transport security: Always use HTTPS in production
+2. Rate limiting: Limit login attempts (5 per 15 minutes)
+3. Account lockout: Lock after failed attempts (30-60 min)
+4. Multi-factor authentication: Offer TOTP-based MFA
+5. Secure cookies: Set `httpOnly`, `secure`, `sameSite` flags
+6. Token refresh: Short-lived access (15 min) + refresh tokens (7 days)
+
+## Conclusion
+
+Authentication is critical to web security. Each method has strengths and ideal use cases:
+
+- **Cookie + Session** for simple applications
+- **JWT** when scaling or building APIs
+- **OAuth** to leverage existing user bases
+- **SSO** for managing enterprise applications
+- **QR Code** for enhanced mobile-desktop experiences
+
+**Remember:** No authentication method is perfect. Layer multiple security practices, stay updated on vulnerabilities, and always prioritize user data protection. Security is an ongoing process, not a one-time implementation.
