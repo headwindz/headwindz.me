@@ -1,0 +1,300 @@
+---
+title: CSS solutions and styling approaches
+date: 2026-03-08
+tags: ['css', 'css in js', 'atomic css', 'tailwind']
+summary: Introduce and compare modern CSS solutions including BEM, CSS modules, CSS-in-JS with styled-components, and Atomic CSS. Learn the trade-offs, benefits, and when to use each approach.
+---
+
+# Introduction
+
+Styling web applications has evolved significantly over the years. As applications became more complex, developers realized that traditional global CSS stylesheets led to maintenance challenges, naming conflicts, and unpredictable cascading effects. Today, we have multiple approaches to CSS architecture, each solving the problem of scope management and styling organization differently. This guide explores the major CSS solutions available today: BEM, CSS modules, CSS-in-JS, and Atomic CSS.
+
+# Table of contents
+
+- [BEM (Block, Element, Modifier)](#bem-block-element-modifier)
+- [CSS modules](#css-modules)
+- [CSS-in-JS](#css-in-js)
+- [Atomic CSS](#atomic-css)
+- [Comparisons](#comparisons)
+
+# BEM (Block, Element, Modifier)
+
+BEM stands for `Block, Element, Modifier`. It's a `naming convention` and methodology for organizing CSS code that encourages modular thinking about your styles.
+
+## How BEM works
+
+BEM scopes styles at the module and block level rather than in the global stylesheet scope. This is a game-changer because you can change the style of a module without worrying about breaking something else on the page. Note that **BEM is a convention, not a tool or library. It relies on developers following the naming rules to maintain style organization and prevent conflicts.**
+
+The structure is:
+
+- **Block**: A standalone entity that is meaningful on its own (e.g., `button`, `card`, `header`)
+- **Element**: A part of a block that has no standalone meaning (e.g., `header__logo`, `button__text`)
+- **Modifier**: A flag on a block or element that changes appearance or behavior (e.g., `button--primary`, `card--featured`)
+
+## Example
+
+```css
+/* Block */
+.card {
+  padding: 16px;
+  border-radius: 8px;
+}
+
+/* Element */
+.card__title {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.card__body {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Modifier */
+.card--featured {
+  border: 2px solid gold;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card__title--featured {
+  color: #d4af37;
+}
+```
+
+```html
+<!-- Usage -->
+<div class="card card--featured">
+  <h2 class="card__title card__title--featured">Featured Post</h2>
+  <p class="card__body">This is an important post...</p>
+</div>
+```
+
+## Advantages
+
+- Clear naming convention prevents **naming conflicts**
+- Easy to understand structure and hierarchy
+- Works with any CSS preprocessor
+- **No build tool required**
+
+## Disadvantages
+
+- Verbose class names
+- Relies on developer discipline
+- Can become repetitive
+- No enforcement of CSS scope at the tooling level
+
+# CSS modules
+
+CSS modules solve the scoping problem by making CSS local by default. When you import a CSS module, the class names are scoped to the module and cannot leak to other parts of your application.
+
+## How CSS modules work
+
+Each CSS file becomes a module with locally scoped class names. The **build process** generates **unique class names** that prevent collisions across your application.
+
+```css
+/* Button.module.css */
+.button {
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.primary {
+  background-color: #0070f3;
+  color: white;
+}
+
+.secondary {
+  background-color: #e5e5e5;
+  color: #333;
+}
+```
+
+```jsx
+// Button.tsx
+import styles from './Button.module.css'
+
+export default function Button({ variant = 'primary', children }) {
+  return <button className={styles[variant]}>{children}</button>
+}
+```
+
+## How scoping works
+
+When you build your application, CSS modules transform class names:
+
+```css
+/* Compiled output */
+.Button_primary__a1b2c {
+  background-color: #0070f3;
+  color: white;
+}
+```
+
+This ensures that styles from one module never affect another module.
+
+## Advantages
+
+- **True style scoping** at the `build` level
+- No naming conflicts possible
+- Works well with components
+- Easy to understand for developers familiar with CSS
+
+## Disadvantages
+
+- Requires build tool support
+- Learning curve for importing styles
+- Dynamic class composition can be verbose
+
+# CSS-in-JS
+
+CSS-in-JS libraries like `styled-components` allow you to write CSS directly in JavaScript. They provide component-level styling with automatic critical CSS extraction and dynamic styling capabilities.
+
+## How styled-components works
+
+Styled-components generate unique class names for each styled component and inject styles directly into the DOM. Styles are scoped to the component and can be **dynamic** based on props.
+
+```jsx
+import styled from 'styled-components'
+
+const StyledButton = styled.button`
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+
+  background-color: ${(props) => (props.primary ? '#0070f3' : '#e5e5e5')};
+  color: ${(props) => (props.primary ? 'white' : '#333')};
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
+export default function Button({ primary, disabled, children }) {
+  return (
+    <StyledButton primary={primary} disabled={disabled}>
+      {children}
+    </StyledButton>
+  )
+}
+```
+
+## Advanced features
+
+Styled-components enables component-level styling approaches like extending styles and creating style compositions:
+
+```jsx
+const BaseCard = styled.div`
+  padding: 16px;
+  border-radius: 8px;
+  background: white;
+`
+
+const FeaturedCard = styled(BaseCard)`
+  border: 2px solid gold;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+`
+
+// Using it in a component
+function PostCard({ featured, title, excerpt }) {
+  const CardComponent = featured ? FeaturedCard : BaseCard
+  return (
+    <CardComponent>
+      <h2>{title}</h2>
+      <p>{excerpt}</p>
+    </CardComponent>
+  )
+}
+```
+
+## Advantages
+
+- True component-level scoping
+- **Dynamic** styling based on component props
+- Full JavaScript capabilities for styles
+- No class naming conflicts
+
+## Disadvantages
+
+- Larger runtime overhead (styles added at runtime)
+- JavaScript bundle size increase
+- Performance implications for large applications
+- Learning curve for developers unfamiliar with JS-in-CSS
+- Complexity in SSR scenarios
+
+# Atomic CSS
+
+Atomic CSS (also called Utility-First CSS) takes a different approach: instead of creating semantic component classes, you use small, single-purpose utility classes. Frameworks like `tailwind` have popularized this approach.
+
+Atomic CSS is fundamentally similar to inline styles in that you're limiting styles to a very small scope, but it solves several problems that inline styles have:
+
+## Problems with inline styles
+
+Inline styles have high CSS specificity, making them difficult to override. They don't support pseudo-classes (`:hover`, `:focus`) or pseudo-elements (`::before`, `::after`), limiting their capabilities.
+
+## How Atomic CSS solves this
+
+Atomic CSS uses tiny, reusable utility classes that you compose together:
+
+```html
+<!-- Instead of writing custom CSS -->
+<div class="flex items-center justify-between rounded-lg bg-white p-4 shadow-md">
+  <h2 class="text-lg font-bold text-gray-900">Post Title</h2>
+  <button class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600">Read More</button>
+</div>
+```
+
+With a build process, only the utilities you use are included in the final CSS. This approach:
+
+- **Supports pseudo-classes**: `hover:bg-blue-600`, `focus:outline-none`
+- **Lower specificity**: Easy to override utilities with modifiers
+- **Small scope**: Each utility impacts only what you explicitly apply
+- **Consistent design system**: Utility values come from a predefined theme
+
+## Atomic CSS in practice
+
+```html
+<!-- Tailwind CSS example -->
+<button
+  class="rounded-lg bg-blue-500 px-6 py-2 text-white transition-colors hover:bg-blue-600 focus:ring-2 focus:ring-blue-300 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+>
+  Click me
+</button>
+```
+
+## Advantages
+
+- No naming conflicts
+- Easy to maintain design consistency
+- **Minimal CSS output (only used utilities are bundled)**: Atomic CSS frameworks use build-time scanning to detect which utility classes are actually used in your markup. This means only the CSS for utilities you apply gets included in your final CSS file. For a large application, this can result in significantly **smaller** CSS bundles compared to other approaches where unused selectors might still be included. This leads to faster load times and better performance, especially on mobile devices.
+- **Easier to find source code**: When searching for where a style is applied, you can directly search for the utility class name in your codebase. For example, searching for `hover:bg-blue-600` will immediately show you every component that uses this style. This works because utility names are directly in your HTML/JSX. In contrast, other approaches usually uses `less/sass` preprocessors, CSS files, or styled component definitions that require you to search through multiple files and understand the structure of your stylesheets to find where a particular style is defined or applied. With Atomic CSS, the relationship between the class name and its effect is explicit and straightforward, making it much easier to trace styles back to their source in the codebase.
+- **More AI friendly!**: Large language models and code assistants understand utility class names more readily because they follow predictable patterns. The relationship between class names and their styles is explicit and documented in framework documentation. For example, `hover:bg-blue-600` clearly means `blue-600 background on hover` without mystery. This makes it easier for AI tools to suggest the right utilities, autocomplete className attributes, or understand what a component's styling does without needing to trace through CSS files, import statements, or styled component definitions. AI can generate correct tailwind markup because the class naming is semantic and consistent, whereas it struggles more with CSS-in-JS where it needs to understand styled template literals or BEM where it needs to learn custom naming conventions.
+
+## Disadvantages
+
+- Verbose HTML markup
+- Steep learning curve for utility class names
+- Tightly couples styling to markup
+- Harder to read HTML for developers unfamiliar with Atomic CSS
+- **Limited by string-based class detection**: Atomic CSS frameworks like Tailwind scan your codebase at build time looking for class name strings. If you generate classes dynamically (e.g., `className={colors[theme]}` where `colors` is an object), the build tool won't detect them and the styles won't be included. You need to use explicit class names or use tailwind's `preset` system to ensure all variations are generated. This requires discipline and can be a gotcha for developers new to the approach.
+
+# Comparisons
+
+| Approach        | Scope            | Learning Curve | Performance | Flexibility | Maintenance       |
+| --------------- | ---------------- | -------------- | ----------- | ----------- | ----------------- |
+| **BEM**         | Convention-based | Low            | Excellent   | Low         | Manual discipline |
+| **CSS Modules** | File-based       | Medium         | Excellent   | Medium      | Good              |
+| **CSS-in-JS**   | Component-level  | Medium-High    | Good        | High        | Good              |
+| **Atomic CSS**  | Utility-based    | Medium         | Excellent   | High        | Low               |
+
+When choosing a CSS solution, consider factors like team familiarity, project size, performance requirements, and the need for dynamic styling. BEM is great for simple projects or teams new to CSS architecture. CSS modules offer true scoping without a runtime cost. CSS-in-JS provides powerful dynamic styling but can impact performance. Atomic CSS excels at consistency and performance but requires a shift in mindset. Many projects successfully combine approaches, using BEM for global styles, CSS modules for component styles, and Atomic CSS for utility classes.
+
+# Conclusion
+
+There's no one-size-fits-all solution. Each approach has trade-offs in terms of developer experience, runtime performance, and maintainability. The best choice depends on your project's specific needs and constraints. Understanding these approaches helps you make informed decisions when starting a new project or refactoring existing styles. Many successful projects use a combination of these approaches, leveraging the strengths of each for different parts of their codebase. The key is to choose the right tool for the right job and maintain discipline in your styling practices to ensure a maintainable and scalable codebase.
