@@ -1,0 +1,561 @@
+---
+title: Web performance optimization
+date: 2026-05-24
+tags: ['web', 'webpack', 'performance']
+summary: 'A deep dive into the key techniques for performance optimization: how to measure with Core Web Vitals and DevTools. Performance optimization with tree shaking, code splitting, and dynamic import.'
+---
+
+JavaScript is the most expensive resource shipped to the browser. Unlike images, which only consume bandwidth, JavaScript must be downloaded, parsed, compiled, and executed before it does anything useful. Every step on the critical path costs time that users feel directly.
+
+This post is organized into four parts:
+
+1. **Understanding performance**: the metrics that matter and how JS bundle size affects each one
+2. **Reducing what you bundle**: build-time techniques including tree shaking and `babel-plugin-import`
+3. **Controlling what loads when**: runtime techniques including code splitting and dynamic import
+4. **Putting it all together**: how the techniques combine together, and a best practices checklist
+
+# Understanding performance
+
+## Core web vitals and performance metrics
+
+Google's **Core Web Vitals** are the standard for measuring real-user experience. They focus on loading, interactivity, and visual stability - the three axes users actually perceive.
+
+### The key metrics
+
+**LCP (Largest Contentful Paint)**
+
+LCP measures when the largest visible content element (hero image, heading, or block of text) finishes rendering. On pages that depend on JavaScript to render content, particularly client-rendered SPAs, render-blocking bundles directly delay LCP because the browser cannot paint anything meaningful until scripts finish executing.
+
+**CLS (Cumulative Layout Shift)**
+
+CLS measures unexpected visual shifts. While less directly tied to bundle size, scripts that inject content or dynamically load fonts and images without reserved space contribute to layout shifts.
+
+**FCP (First Contentful Paint)**
+
+FCP is when the browser renders the first pixel of actual content. Render blocking `<script>` tags in `<head>` without `async` or `defer` delay FCP outright.
+
+**TTI (Time to Interactive)**
+
+TTI marks when the page is reliably interactive. The main thread is quiet and can respond to user input within 50 ms. A large synchronous bundle, even one that loads quickly, delays TTI because the browser is tied up parsing and executing it.
+
+### How bundle size maps to metrics
+
+| Metric | Primary bundle size impact                                     |
+| ------ | -------------------------------------------------------------- |
+| LCP    | Large render-blocking bundles delay the first meaningful paint |
+| FCP    | Synchronous scripts in `<head>` stall initial render           |
+| TTI    | Any large bundle delays the quiet main-thread state            |
+| CLS    | Dynamic script-injected content without reserved dimensions    |
+
+## Diagnosing with DevTools and Lighthouse
+
+**Identify the bottleneck before you optimize.** Every technique in this post has a cost: added build complexity, delayed module loading and more brittle imports. Applying them without measurement means you are paying those costs blindly, possibly on code paths that are not even slow. The bottleneck is rarely where you expect it to be.
+
+The diagnostic workflow is:
+
+1. **Measure** — get a baseline score and identify which metrics are failing
+2. **Profile** — trace the failing metric to a specific resource, module, or code path
+3. **Optimize** — apply the targeted fix
+4. **Re-measure** — verify the improvement without introducing regressions
+
+Skipping steps 1–2 and jumping straight to step 3 is the most common performance mistake. Optimizing the wrong thing wastes effort and can introduce regressions.
+
+### Lighthouse
+
+Lighthouse is the starting point. Open Chrome DevTools → **Lighthouse** tab, select **Performance** category, and run an audit. The report gives you:
+
+- Scored metrics (LCP, FCP, TTI, CLS)
+- **Opportunities**: actionable items such as "Reduce unused JavaScript", "Eliminate render-blocking resources", and "Avoid serving legacy JavaScript"
+- **Diagnostics**: supporting data like main-thread work breakdown and network request counts
+
+### Network tab
+
+The Network tab shows what is actually downloaded. Filter by **JS** to see your chunks. Key things to look for:
+
+- **Chunk sizes**: any individual file over 500 KB (uncompressed) is a candidate for splitting or lazy loading
+- **Request count on initial load**: excessive parallelism has its own cost. Too many small chunks can hurt HTTP/1.1 sites
+- **Cache headers**: chunks with content hash filenames should have long `max-age` values. If they don't, code splitting provides no cache benefit
+- **Waterfall**: scripts that block DOMContentLoaded appear before the blue line. Move them to `async`/`defer` or lazy load them
+
+### Performance tab (flame chart)
+
+Record a page load in the **Performance** tab. Look for:
+
+- **"Evaluate Script" entries**: the yellow blocks on the main thread timeline. Wide blocks mean expensive parse/compile. If a single entry spans hundreds of milliseconds, that module is a candidate for splitting
+- **Long tasks (red triangles)**: JavaScript execution is usually the culprit
+
+### Webpack bundle analyzer
+
+After identifying that bundles are too large, `webpack-bundle-analyzer` reveals _why_:
+
+```bash
+npm install --save-dev webpack-bundle-analyzer
+```
+
+```js
+// webpack.config.js
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+
+module.exports = {
+  plugins: [new BundleAnalyzerPlugin()],
+}
+```
+
+The interactive treemap visualization shows which modules are largest, which dependencies are duplicated, and whether a library you thought was tree-shaken is still fully bundled.
+
+### Practical diagnosis workflow
+
+```
+Lighthouse → identify which metrics are failing
+     ↓
+Bundle analyzer → find which modules/deps are bloating those files
+     ↓
+Apply: tree shaking / babel-plugin-import / splitChunks / dynamic import
+     ↓
+Re-measure (Lighthouse) to verify improvement
+```
+
+# Reducing what you bundle
+
+This section covers **build-time** techniques to ensure unused code never makes it into the final bundle in the first place. There are two complementary approaches:
+
+- `Tree shaking`: the bundler statically analyzes your imports and removes exports that are never used
+- `babel-plugin-import`: a Babel compile-time transform that rewrites broad named imports into targeted path imports, achieving the same effect for libraries that don't support ESM
+
+## Tree shaking
+
+Tree shaking is dead-code elimination at build time. The bundler analyzes which exported symbols are actually imported and used, then excludes unused ones from the final output. The name comes from the idea of shaking a dependency tree until dead branches fall off.
+
+### Why tree shaking requires ESM
+
+Tree shaking only works with **ES Modules (ESM)**. The reason is that ESM has statically deterministic semantics:
+
+- `import` paths must be string literals (not runtime variables)
+- `import` statements must appear at the top level (not inside `if` blocks or functions)
+- imported bindings are immutable and cannot be reassigned at runtime
+
+These constraints allow a bundler to construct the full dependency graph at compile time without executing any code. CommonJS (`require`) is the opposite: it is resolved at runtime, paths can be dynamic expressions, and exports can be conditionally added in loops. A bundler cannot safely remove a CommonJS export without running the code first.
+
+```js
+// ESM — statically analyzable, tree-shakeable
+import { add } from './math'
+
+// CommonJS — dynamic, not tree-shakeable
+const math = require('./math')
+```
+
+This is why `lodash` (CommonJS) cannot be tree-shaken while `lodash-es` (ESM) can.
+
+### The `sideEffects` field
+
+A **side effect** in this context means any code that runs as a consequence of importing a module, regardless of whether you use what it exports. E.g.: registering a global polyfill, appending a `<style>` tag, writing to `window`.
+
+By default, bundlers must assume every module could have side effects and retain it even if nothing from it is imported. This is the safe but expensive choice.
+
+You can override this with the `sideEffects` field in `package.json`:
+
+```json
+{
+  "name": "your-library",
+  "sideEffects": false
+}
+```
+
+`false` tells bundlers that no module in this package has side effects so that every unused export can be safely removed. `lodash-es` declares this, which is why it is the preferred version for tree-shaking-aware builds.
+
+For packages that do have some side-effectful files, you can specify them as an array:
+
+```json
+{
+  "sideEffects": ["dist/*", "es/**/style/*", "*.less"]
+}
+```
+
+This is exactly what `antd` uses: CSS and Less files have side effects (they inject styles), but the component logic files do not.
+
+In Webpack's own configuration, there are two related options worth understanding:
+
+- `module.rule.sideEffects` (default: `false`) — marks the _modules processed by a rule_ as having side effects. Commonly set to `true` for CSS rules to prevent style files from being dropped
+- `optimization.sideEffects` (default: `true` in production) — tells Webpack to respect the `sideEffects` annotations from `package.json` during optimization
+
+### What kills tree shaking
+
+**Default object exports**
+
+```js
+// Not tree-shakeable: bundler must retain the whole object
+export default {
+  add(a, b) {
+    return a + b
+  },
+  subtract(a, b) {
+    return a - b
+  },
+}
+```
+
+**Class exports**
+
+```js
+// Not tree-shakeable: bundler cannot remove individual methods
+export class MathUtils {
+  add(a, b) {
+    return a + b
+  }
+  subtract(a, b) {
+    return a - b
+  }
+}
+```
+
+Webpack and Rollup only perform tree shaking on top-level `export` declarations. They cannot introspect and selectively remove methods from exported objects or classes, because those methods could be accessed via dynamic property access at runtime (`obj[someVar]()`).
+
+**Side-effectful re-exports**
+
+```js
+export function add(a, b) {
+  return a + b
+}
+export const memoizedAdd = window.memoize(add) // window.memoize is unknown — side effect
+```
+
+Because the bundler cannot know what `window.memoize` does, it must assume it has side effects and retain the whole module.
+
+### The tree-shaking-friendly pattern: atomic named exports
+
+```js
+// Preferred: each export is independently removable
+export function add(a, b) {
+  return a + b
+}
+
+export function subtract(a, b) {
+  return a - b
+}
+```
+
+Each function is a top-level named export with no side effects. Unused functions are fully eliminated. This is the pattern used by well-maintained utility libraries like `date-fns` and `lodash-es`.
+
+## `babel-plugin-import` as a fallback for CommonJS libraries
+
+When a library only ships CommonJS and tree shaking is not an option, `babel-plugin-import` provides an alternative. It is a Babel plugin originally built by the Ant Design team that rewrites named imports at compile time to direct path imports.
+
+Given this source code:
+
+```js
+import { Button, Input, TimePicker } from 'antd'
+```
+
+`babel-plugin-import` transforms it to:
+
+```js
+import _Button from 'antd/lib/button'
+import _Input from 'antd/lib/input'
+import _TimePicker from 'antd/lib/time-picker'
+```
+
+The mechanism is a Babel AST(Abstract Syntax Tree) pass. The plugin intercepts `ImportDeclaration` nodes, resolves each named specifier to its corresponding file path according to a configurable template, and rewrites the node. No runtime overhead as this is purely a compile-time transformation.
+
+Configuration in `.babelrc`:
+
+```json
+{
+  "plugins": [["import", { "libraryName": "antd", "style": "css" }]]
+}
+```
+
+This approach works for any library that ships individual files in a predictable directory structure, not just `antd`. It is a reliable fallback when the ESM path is not available, but it is more brittle than true tree shaking because it depends on the library's file organization staying stable.
+
+## Barrel files
+
+A **barrel file** is an `index.ts` (or `index.js`) that re-exports everything from a directory, giving consumers a single import path:
+
+```ts
+// components/index.ts
+export { Button } from './Button'
+export { Input } from './Input'
+export { Modal } from './Modal'
+export { DatePicker } from './DatePicker'
+// ... 50 more exports
+```
+
+Consumers then write:
+
+```ts
+import { Button } from '@/components'
+```
+
+The ergonomics are appealing, but barrel files are one of the most common causes of bundle bloat in large codebases.
+
+### Why barrel files defeat tree shaking
+
+The problem is not that barrel files exist — it is that they force the bundler to evaluate all re-exported modules before it can determine which ones you actually need. When a barrel re-exports from modules with side effects, or when those modules import from other barrels that do, the bundler must retain the entire transitive graph.
+
+The effect compounds in monorepos and component libraries where barrel files are nested:
+
+```
+pages/Dashboard.tsx
+  → imports from @/components (barrel)
+    → re-exports Modal (modal/index.ts)
+      → imports './modal-animations' (side effect: registers a global)
+```
+
+Even though `Dashboard.tsx` only needs `Button`, it ends up pulling in `modal-animations` because the bundler cannot prove the barrel chain is side-effect-free. A single barrel connecting 50 components effectively forces all 50 into the initial bundle.
+
+### Solutions
+
+**Direct imports** are the simplest fix. Import from the source file instead of the barrel:
+
+```ts
+// Before — pulls in the entire barrel
+import { Button } from '@/components'
+
+// After — only Button is evaluated
+import { Button } from '@/components/Button'
+```
+
+**`optimizePackageImports`** (Next.js 13.5+) is the zero-migration alternative. It tells Next.js to automatically rewrite barrel imports to direct path imports at build time, without requiring source changes:
+
+```js
+// next.config.js
+module.exports = {
+  experimental: {
+    optimizePackageImports: ['@/components', 'lucide-react', '@radix-ui/react-icons'],
+  },
+}
+```
+
+This is equivalent to what `babel-plugin-import` does for `antd`, but built into Next.js. Popular icon and UI libraries (`lucide-react`, `@heroicons/react`, `@radix-ui/react-icons`) are optimized by default even without configuration.
+
+**Avoid creating new barrels** for internal directories that contain many unrelated modules. Barrels are useful at true public API boundaries (e.g. the exports of a published package). However, within an application codebase they create invisible coupling between unrelated modules.
+
+| Scenario                         | Recommended approach                                              |
+| -------------------------------- | ----------------------------------------------------------------- |
+| Internal `components/` directory | Direct imports or `optimizePackageImports`                        |
+| Published package public API     | Barrel is appropriate. Mark side-effectful files in `sideEffects` |
+| Third-party CommonJS library     | `babel-plugin-import`                                             |
+
+# Controlling what loads when
+
+The previous section covered reducing what the bundler includes. This section covers **when** the browser actually fetches and executes code at runtime. There are two complementary techniques:
+
+- **Code splitting** (`splitChunks`): divide the build into cacheable chunks at build time so stable dependencies are never re-downloaded unnecessarily
+- **Dynamic import**: defer the loading of chunks until they are actually needed, keeping the initial payload small
+
+## On-demand loading vs. on-demand bundling
+
+Before diving into the technical details, it is worth clarifying two terms that are frequently conflated in the community, because there is no universally agreed-upon naming convention for them.
+
+**On-demand bundling** is a build-time concern. It means only including code in the final bundle that could actually be needed at runtime, which is achieved through `tree shaking` and techniques like `babel-plugin-import`. The bundler decides at compile time what to exclude.
+
+**On-demand loading** is a runtime concern. It means deferring the download and execution of a code module until user interaction or navigation actually requires it. It is achieved through dynamic `import()`. The browser decides at runtime what to fetch.
+
+The distinction matters because they solve different problems and operate at different points in the pipeline. On-demand bundling reduces the total amount of code ever produced and on-demand loading controls how much of that code is delivered on the initial page load. Both are necessary for a well-optimized application. Bundling without deferred loading still ships everything upfront, deferred loading without bundling just delays the download of bloated modules.
+
+## Code splitting with `splitChunks`
+
+Code splitting and dynamic import are related but distinct. Dynamic import controls _when_ code loads, code splitting controls _how_ the build is structured into chunks.
+
+The core problem splitChunks addresses: without splitting, every entry point bundles everything it needs, including shared dependencies. Two pages that both use React end up with two copies of React in the bundle. More critically, every time your application code changes, the entire bundle file must be re-downloaded by the user even if React itself hasn't changed.
+
+Code splitting solves this by separating stable dependencies from frequently-changing application code. A vendor chunk containing React and other third-party packages can be cached by the browser indefinitely (using content-hash filenames with long `Cache-Control` max-age). Only the small application chunk needs to be re-fetched on each deployment.
+
+### Webpack's automatic split conditions
+
+Webpack's `SplitChunksPlugin` (built in since Webpack 4) triggers automatically when all of the following conditions are met:
+
+- The module is shared between chunks, or comes from `node_modules`
+- The module is larger than 30 KB before minification and compression
+- The number of parallel requests for async chunks does not exceed 5
+- The number of parallel requests for initial page load does not exceed 3
+
+These defaults reflect Webpack's own research into the performance tradeoff between HTTP request overhead and bundle size savings. They should be treated as a sensible baseline, not overridden without measurement.
+
+### A common manual strategy
+
+For explicit control, a typical production configuration separates three concerns:
+
+```js
+// webpack.config.js
+module.exports = {
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+        },
+        common: {
+          name: 'common',
+          minChunks: 2,
+          chunks: 'all',
+          priority: -10,
+          reuseExistingChunk: true,
+        },
+      },
+    },
+  },
+}
+```
+
+- **`vendors` chunk**: all `node_modules` code. Changes rarely. Long cache lifetime.
+- **`common` chunk**: application code used by two or more entry points. Changes occasionally.
+- **Entry chunks**: page-specific code. Changes frequently.
+
+Each layer has a different cache invalidation frequency, which is exactly what you want.
+
+> **A word of caution**: it is tempting to tune the splitChunks thresholds. Resist doing so without profiling. Splitting too aggressively increases the number of parallel requests and HTTP round-trips, which can hurt performance, particularly on mobile or high-latency connections.
+
+## Dynamic import and on-demand loading
+
+Static `import` statements are resolved at build time. Every module reachable from an entry point is compiled into the bundle, even if that code path is never triggered during a given user session.
+
+Dynamic `import()` is available natively in all modern browsers and defers loading to runtime. It returns a `Promise` that resolves to the module's namespace object:
+
+```js
+// Loaded eagerly — always in the initial bundle
+import { heavyChart } from './chart-library'
+
+// Loaded on demand — separate chunk, fetched when called
+const { heavyChart } = await import('./chart-library')
+```
+
+### Common use cases
+
+**Route-based splitting**
+
+The most impactful application of dynamic import. Each route of a single-page application is a separate chunk that only loads when the user navigates to it. In React:
+
+```jsx
+import { lazy, Suspense } from 'react'
+
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Settings = lazy(() => import('./pages/Settings'))
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/settings" element={<Settings />} />
+      </Routes>
+    </Suspense>
+  )
+}
+```
+
+In Next.js App Router, every page in `app/` is automatically code-split. You get route-based splitting for free without any configuration.
+
+**Conditional feature loading**
+
+Some features are expensive but rarely used. Load them only when triggered:
+
+```js
+async function handleExport() {
+  const { exportToPDF } = await import('./pdf-exporter')
+  exportToPDF(data)
+}
+```
+
+The PDF export library which may be several hundred kilobytes, is never downloaded unless the user explicitly clicks "Export".
+
+### Prefetching and preloading
+
+Dynamic import defers loading until a chunk is needed. If you can predict that a chunk will be needed _soon_ (e.g. the user is on a page that commonly leads to the next one), you can hint to the browser to fetch it during idle time using webpack magic comments:
+
+```js
+// Prefetch: low-priority background fetch during idle time
+const { Dashboard } = await import(/* webpackPrefetch: true */ './pages/Dashboard')
+
+// Preload: high-priority fetch in parallel with the current chunk
+const { HeavyEditor } = await import(/* webpackPreload: true */ './HeavyEditor')
+```
+
+Webpack emits `<link rel="prefetch">` for `webpackPrefetch` and `<link rel="preload">` for `webpackPreload`. The distinction matters:
+
+| Hint       | Priority | When fetched                                | Use for                                              |
+| ---------- | -------- | ------------------------------------------- | ---------------------------------------------------- |
+| `prefetch` | Low      | Browser idle time, after current page loads | Next likely navigation                               |
+| `preload`  | High     | In parallel with the current page           | Resources the current page will definitely need soon |
+
+Use `prefetch` liberally for next-route chunks. Use `preload` sparingly as it competes with the page's critical resources and can hurt performance if overused.
+
+In Next.js, `<Link>` automatically prefetches the target route when it enters the viewport in production builds, so you get route prefetching without any configuration.
+
+# Putting it all together
+
+## How the techniques work together
+
+Tree shaking, code splitting, and dynamic import operate at different stages and address different problems. They are most effective in combination.
+
+<Mermaid
+  chart={`
+flowchart TD
+  src[Source code and dependencies]
+  src --> ts[Tree shaking]
+  ts -->|Removes unused exports from each module| sc[Code splitting]
+  sc -->|Divides output into cacheable chunks| di[Dynamic import]
+  di -->|Defers non-critical chunks to runtime| result[Optimized delivery]
+
+subgraph build[Build time]
+ts
+sc
+end
+subgraph runtime[Runtime]
+di
+end
+
+style ts fill:#3b82f6,color:#fff
+style sc fill:#8b5cf6,color:#fff
+style di fill:#10b981,color:#fff
+style result fill:#f59e0b,color:#fff
+`}
+/>
+
+A typical layered strategy:
+
+1. **Tree shaking** reduces the size of each module by eliminating dead code. This happens within chunks, so it makes every subsequent step more efficient.
+2. **splitChunks** divides the (already tree-shaken) build into stable vendor chunks and frequently-updated application chunks, maximizing cache hit rates across deployments.
+3. **Dynamic import** defers entire chunks until they are needed at runtime, shrinking the critical path for initial load.
+
+Each technique can help independently. But without tree shaking, splitChunks splits bloated chunks. Without splitChunks, dynamic import may still force re-downloading stable dependencies. Without dynamic import, even a perfectly optimized bundle loads everything at startup.
+
+## Best practices
+
+**Prefer ESM-native libraries**
+
+Use `lodash-es` instead of `lodash`. Prefer libraries that publish an `"exports"` field in `package.json` pointing to ESM files. This enables tree shaking without any additional configuration.
+
+**Declare `sideEffects` in your own packages**
+
+If you are building a library or even a large internal monorepo package, add `"sideEffects": false` to your `package.json` if the package is genuinely side-effect-free. Add the array variant if only specific files (like CSS imports) have side effects. This is opt-in information that bundlers need and cannot infer.
+
+**Export atomically**
+
+Prefer granular named exports over a single default export object or class:
+
+```js
+// Good — each function can be independently shaken
+export function formatDate(d) { ... }
+export function parseDate(s) { ... }
+
+// Avoid — bundler retains the whole object
+export default { formatDate, parseDate }
+```
+
+**Use `babel-plugin-import` for CommonJS libraries you cannot replace**
+
+If a library has no ESM build and you use only a small part of its API, `babel-plugin-import` is a practical fallback that provides most of the bundle-size benefit of tree shaking.
+
+**Split vendor from application code**
+
+Long-lived `Cache-Control` headers on vendor chunks (e.g. `max-age=31536000, immutable`) mean returning users never re-download React, lodash-es, or other stable dependencies unless their content hash changes. Application chunks, which change on every deploy, stay small.
+
+**Use dynamic import for routes and optional features**
+
+As a rule of thumb: anything the user does not see on initial page load should not be in the initial bundle. Route components, modals, export features, admin panels, and locale messages are natural candidates for lazy loading.
+
+**Do not over-split**
+
+Splitting into dozens of tiny chunks has diminishing returns. Each HTTP request has overhead. On HTTP/1.1 connections, excessive parallel requests hurt performance. The Webpack splitChunks defaults (>30 KB, ≤5 async parallel, ≤3 initial parallel) are a calibrated starting point.

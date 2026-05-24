@@ -1,4 +1,7 @@
 {
+  "web": 12,
+  "webpack": 1,
+  "performance": 1,
   "web3": 1,
   "blockchain": 1,
   "crypto": 1,
@@ -7,7 +10,6 @@
   "atomic-css": 1,
   "tailwind": 1,
   "authentication": 1,
-  "web": 11,
   "cookie": 1,
   "session": 1,
   "token": 1,
