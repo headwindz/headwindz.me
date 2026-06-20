@@ -1,0 +1,325 @@
+---
+title: Stablecoins
+date: 2026-06-20
+tags: ['web3', 'blockchain', 'crypto', 'DeFi']
+summary: What stablecoins are, who uses them and why, and how the stablecoins maintain their pegs
+---
+
+# Introduction
+
+If you have heard about Bitcoin or Ethereum, you have probably also heard that crypto prices are extremely volatile. Bitcoin can rise or fall 20% in a single day. Ethereum has dropped 50% in a week during market crashes. For anyone who has lived through that kind of volatility, the obvious question is how can crypto ever be useful for actual day-to-day transactions if the value swings so wildly?
+
+That is exactly the problem **stablecoins** are designed to solve.
+
+A stablecoin is a cryptocurrency whose value is designed to stay constant, most commonly pegged to the US dollar. One USDT is always worth approximately one dollar. Unlike Bitcoin, you would not wake up to find your USDC worth \$0.70 or \$1.30. The whole point is that it does not move.
+
+But here is what makes stablecoins interesting: they are not just digital dollars. They are dollars that run on public blockchains. That means they can be sent anywhere in the world in seconds, held in a self-custody wallet with no bank account required, used in programmable financial contracts, and combined with other on-chain protocols. It all happens without the slow settlement times, access restrictions, and intermediaries of the traditional financial system.
+
+This combination of the stability of the dollar and the programmability of crypto, is why stablecoins have grown from a niche instrument to infrastructure that processes trillions of dollars annually.
+
+If you want background on how blockchains and smart contracts work, see [Introduction to web3](/blog/introduction-to-web3) first. This post will explain the stablecoin specific concepts as they come up.
+
+# Who actually uses stablecoins
+
+Before going into technical details, it helps to understand who uses stablecoins and why. The answer is more varied than most people expect.
+
+## Crypto traders
+
+The original and still dominant use case. When a trader wants to exit a volatile position(e.g. they think Bitcoin is about to drop), they sell BTC and move into USDT or USDC. This allows them **park** value on-chain without converting back to fiat, which would require going through an exchange withdrawal, waiting for a bank transfer, and paying conversion fees. When they want to reenter the market, they simply swap the stablecoin back.
+
+This sounds simple, but it is enormously important. Before stablecoins existed, traders had to cash out to fiat and then back in, which was slow and expensive. Stablecoins made it possible to stay in the crypto ecosystem while managing risk.
+
+## People in countries with unstable currencies
+
+This is arguably the most impactful real-world use case that rarely gets covered in Western tech media.
+
+In countries like Argentina, Turkey, Nigeria and Venezuela, local currencies have lost 50–90% of their value within a few years. Inflation rates of 50% to 100% per year are not unusual. People in these countries who keep savings in their local currency watch their purchasing power evaporate in real time.
+
+For many of them, the traditional escape route of converting savings to US dollars is blocked by government capital controls, limited access to US bank accounts, or currency exchange restrictions.
+
+Stablecoins like USDT and USDC have become the dollar access layer for hundreds of millions of people who cannot access dollars through traditional means. They can convert their pesos to USDT through a peer-to-peer exchange or a local crypto platform, store the value in a self-custody wallet, and transact in dollars without needing a US bank account or government permission.
+
+## DeFi users
+
+Decentralized finance (DeFi) refers to financial services like lending, borrowing, earning interest and trading, that run on public blockchains through smart contracts with no bank or broker in the middle.
+
+Stablecoins are the foundational currency of DeFi. Almost every DeFi protocol denominate positions in stablecoins:
+
+- You can deposit USDC into a lending protocol (like Aave or Compound) and earn interest, with rates often higher than traditional savings accounts.
+- You can borrow stablecoins against crypto collateral, which is useful if you want liquidity without selling your ETH holdings.
+- You can provide liquidity to a decentralized exchange (like Uniswap or Curve) using stablecoin pairs and earn trading fees.
+
+Without stablecoins, all of this would have to be denominated in volatile assets, making it nearly impossible to reason about rates, returns, and risk.
+
+## Businesses and freelancers doing cross-border payments
+
+Sending money internationally through traditional banks is slow (2–5 business days), expensive (wire fees plus unfavorable exchange rates), and subject to intermediary banks that can hold or lose transactions. Services like Western Union charge 5–10% on remittances.
+
+Stablecoins let businesses pay overseas contractors in seconds for a fraction of a cent in network fees. A company in the United States can send $10,000 USDC to a contractor in the Philippines, and the contractor receives it in minutes and can convert it locally. No wire fees, no correspondent banks, no waiting.
+
+This is an active and growing use case among remote-first companies, crypto-native businesses, and in the gig economy.
+
+## Protocol treasuries and DAOs
+
+Decentralized Autonomous Organizations (DAOs) — the governance structures behind many DeFi protocols, often hold large treasuries. Keeping those treasuries entirely in volatile governance tokens is risky as a market crash can wipe out months of operating budget. Many DAOs hold a portion of their treasury in stablecoins to cover predictable operating costs (development, audits, grants) regardless of market conditions.
+
+# Why stablecoins matter technically
+
+Beyond specific user groups, stablecoins solve a structural problem that would otherwise make most of web3 impractical.
+
+Consider what happens when you hold volatile crypto in a DeFi protocol:
+
+- You want to earn yield on idle capital, but lending out ETH means your collateral value can drop 30% overnight and trigger automatic liquidation.
+- You want to trade between positions without converting to fiat each time, which involves identity verification, withdrawal delays, and fees.
+- You want to pay someone a specific amount, but the value of what you send shifts between the time you send it and the time they receive it.
+
+Stablecoins solve all three by giving you a stable unit of account that still lives on-chain. This unlocks the full DeFi stack:
+
+- **Lending and borrowing**: deposit stablecoins to earn yield, or borrow them against volatile collateral without selling your holdings.
+- **Liquidity provision**: stablecoin pairs (e.g., USDC/USDT) on automated market makers earn trading fees with minimal impermanent loss, since the prices of both assets barely move relative to each other.
+- **Cross-border payments**: send dollars anywhere in the world in minutes, with no correspondent banks or wire delays.
+- **On-chain payroll**: pay contractors in a predictable currency without touching the traditional banking system.
+- **Derivatives and structured products**: any on-chain financial instrument that needs a stable unit of account (e.g. options, perpetuals, structured vaults) relies on stablecoins as the settlement currency.
+
+The total stablecoin market cap has grown from under \$10 billion in early 2020 to over \$200 billion in 2025. USDT and USDC alone settle trillions of dollars in on-chain transactions annually, which is more than most traditional payment networks by volume.
+
+# The three designs
+
+There is no single stablecoin. Saying a coin is a stablecoin tells you what it does (maintains a stable price) but not _how_ it does it. The mechanism matters enormously, because it determines what risks you are taking on and what can cause the peg to break.
+
+There are three fundamentally different approaches, each making a different set of tradeoffs between trust, capital efficiency, decentralization, and resilience.
+
+A quick note on terminology before we continue: when a stablecoin **loses its peg,** it means the token's market price has drifted away from the \$1.00 target — either above (trading at \$1.05, for example) or, more dangerously, below (\$0.90 or lower). Some depegs are brief and recover within hours while others are permanent. Understanding what causes each type of depeg is central to evaluating any stablecoin.
+
+<Mermaid
+  chart={`
+flowchart TD
+  sc[Stablecoin designs]
+  sc --> fb[Fiat-backed]
+  sc --> cb[Crypto-backed]
+  sc --> ab[Algorithmic]
+  fb --> fb1[USDC, USDT, PYUSD]
+  cb --> cb1[DAI, LUSD, crvUSD]
+  ab --> ab1[UST — collapsed 2022]
+  fb1 --> fbr[Custodian risk, censorship]
+  cb1 --> cbr[Capital inefficiency, liquidation risk]
+  ab1 --> abr[Reflexivity, death spiral risk]
+`}
+/>
+
+# Fiat-backed stablecoins
+
+## How they work
+
+The simplest design: a regulated company (called the **issuer** or **custodian**) holds one real US dollar in a bank account for every token in circulation. To mint new tokens, you send dollars to the issuer and receive an equal number of tokens. To redeem, you send tokens back and receive dollars. The rule is always 1:1.
+
+The peg stays stable through a mechanism called **arbitrage**. Arbitrage just means taking advantage of a price discrepancy for profit. If USDC is trading at \$1.02 on an exchange, a trader can go directly to Circle (USDC's issuer), deposit \$1.00, get 1 USDC, and immediately sell it for \$1.02 to earn a risk-free \$0.02 profit per token. Doing this at scale pushes the price back down to \$1.00. The same works in reverse. If USDC falls to \$0.98, traders buy it cheaply on the market and redeem it with Circle for \$1.00, pushing the price back up. This two-way pressure keeps the peg anchored.
+
+<Mermaid
+  chart={`
+flowchart LR
+  u[User] -->|wire $1M USD| issuer[Issuer — Circle, Tether]
+  issuer -->|mint 1M USDC| u
+  issuer -->|hold reserves| bank[Bank / T-bills]
+  u2[User] -->|send 1M USDC| issuer
+  issuer -->|redeem $1M USD| u2
+`}
+/>
+
+## Major issuers
+
+**USDT (Tether)** is the oldest and largest stablecoin by market cap, launched in 2014. It is widely used in crypto-to-crypto trading, particularly on exchanges that lack direct fiat rails. Tether's reserve composition has historically been opaque. It has included commercial paper, secured loans, and other non-cash equivalents alongside cash and T-bills. Tether has faced regulatory scrutiny and paid fines to the CFTC and NYAG. As of 2024, Tether has shifted most reserves to US Treasuries and publishes quarterly attestations, but remains subject to more trust than USDC.
+
+**USDC (Circle)** launched in 2018 as a joint venture between Circle and Coinbase. It is the dominant regulated stablecoin, with reserves held exclusively in cash and short-term US Treasuries, attested monthly by Deloitte. USDC is native on multiple chains (Ethereum, Solana, Base, Avalanche, Arbitrum, Optimism) via Circle's Cross-Chain Transfer Protocol (CCTP), which burns and mints natively rather than using bridges.
+
+**PYUSD (PayPal)** launched in 2023, issued by Paxos on behalf of PayPal. Built for consumer use cases, integrated with PayPal's existing 400+ million account base. Fully backed by cash and T-bills.
+
+## The March 2023 USDC depeg
+
+The most significant stress event for fiat-backed stablecoins was the Silicon Valley Bank (SVB) collapse in March 2023. Circle held approximately \$3.3 billion of USDC reserves at SVB. When SVB was shut down by regulators on March 10, USDC briefly depegged to \$0.87 as the market priced in the possibility that a portion of reserves were at risk.
+
+The FDIC guaranteed all deposits the following Sunday, March 12, and USDC recovered to \$1.00. The event revealed two things: fiat-backed stablecoins carry bank counterparty risk that most users had underestimated, and the peg can be preserved even through a severe shock if the underlying claim is ultimately honored.
+
+## The censorship tradeoff
+
+The same regulatory access that makes fiat-backed stablecoins trustworthy also makes them controllable. Both USDC and USDT implement a blacklist: the issuer can freeze any address, rendering the tokens in that address unmovable and non-redeemable.
+
+Circle has used this capability at law enforcement request - for example, to freeze addresses associated with the Tornado Cash smart contracts after the OFAC sanctions in August 2022. From a DeFi composability standpoint, any protocol that accepts USDC as collateral inherits this censorship vector. A governance vote or regulator action could freeze collateral mid-position.
+
+This is not a flaw in the implementation. It is a deliberate design requirement for regulatory compliance. Developers should understand it as a feature with tradeoffs, not a bug.
+
+# Crypto-backed stablecoins
+
+## The core idea
+
+Imagine you own \$1,500 worth of ETH and you want \$1,000 in spending money, but you do not want to sell your ETH because you think it will go up in price. In the traditional financial world, you might go to a bank and take out a loan against your ETH as collateral — but no bank accepts crypto as collateral, and the process would take days.
+
+Crypto-backed stablecoins replicate this logic entirely on-chain. You deposit your ETH into a smart contract, and the contract automatically issues stablecoins to you. You get liquidity without selling. When you want your ETH back, you repay the stablecoins plus a small fee, and the contract releases your collateral.
+
+The key requirement is **overcollateralization**: you must deposit more value than you borrow. If you deposit \$1,500 of ETH, you can borrow up to \$1,000 of stablecoins (a 150% collateralization ratio). The extra \$500 acts as a safety buffer. If ETH's price drops and the buffer shrinks too much, the protocol automatically sells enough of your collateral to repay the debt and protect the stablecoin's backing. This forced sale is called **liquidation**.
+
+## MakerDAO and DAI
+
+DAI, created by MakerDAO, is the most proven crypto-backed stablecoin. It has maintained its peg through multiple severe market crashes, including the March 2020 COVID crash where ETH dropped 50% in 24 hours and remains the benchmark for decentralized stablecoin design.
+
+### Collateralized debt positions (CDPs)
+
+In Maker's system, a CDP (now called a Vault) is a smart contract position. To open a Vault:
+
+1. Deposit collateral (ETH, WBTC, staked ETH, or approved RWA).
+2. The protocol assigns a collateralization ratio based on the asset's volatility (e.g., 150% for ETH, 175% for WBTC).
+3. Borrow DAI up to the maximum ratio.
+4. Pay a **stability fee** (an annual interest rate, set by governance) that accrues on the borrowed DAI.
+5. To recover collateral, repay the DAI plus accrued stability fees.
+
+<Mermaid
+  chart={`
+flowchart LR
+  u[User] -->|deposit 1.5 ETH @ $2000 = $3000| vault[MakerDAO Vault]
+  vault -->|mint up to $2000 DAI at 150% ratio| u
+  vault -->|watch collateral price| oracle[Chainlink Oracle]
+  oracle -->|ETH price falls| liq{CR below 150%?}
+  liq -->|yes| sell[Liquidate: sell collateral to repay DAI]
+  liq -->|no| ok[Position safe]
+`}
+/>
+
+### Price stability mechanisms
+
+DAI's peg is maintained by two levers:
+
+- **Stability fee**: the interest rate on DAI debt. If DAI trades above \$1.00 (too little supply), governance can lower the stability fee to make borrowing cheaper, expanding supply. If DAI trades below \$1.00 (too much supply), governance raises the fee to incentivize debt repayment, contracting supply.
+- **DAI Savings Rate (DSR)**: a yield paid to DAI holders who deposit in the DSR contract. If DAI is trading below \$1.00, raising the DSR creates demand for DAI (holders lock it up for yield), reducing circulating supply and pushing the price up.
+
+### Multi-collateral DAI and RWA
+
+MakerDAO has expanded beyond pure crypto collateral. It now accepts USDC (through its PSM — Peg Stability Module), real-world assets (US Treasury bills held off-chain via structured vehicle), and other tokens. This improves peg stability and capital efficiency but introduces centralization risks: as of 2025, a significant portion of DAI's backing is USDC and US Treasuries, meaning DAI is not fully censorship-resistant.
+
+# Algorithmic stablecoins
+
+## The appeal
+
+Both fiat-backed and crypto-backed stablecoins require someone to lock up more value than the stablecoin is worth. Fiat-backed requires 100% off-chain reserves held in a bank. Crypto-backed requires 150% or more in on-chain collateral. Either way, you need capital sitting idle just to create the stablecoin.
+
+Algorithmic stablecoins try to escape this constraint. The idea is to maintain the peg purely through software logic and market incentives, without requiring full collateral backing. If it works, you get a stablecoin that is not controlled by any company, has no reserves that can be seized, and is capital-efficient. The appeal is obvious.
+
+The reality, as we will see, has been consistently catastrophic.
+
+## The seigniorage mechanism
+
+The dominant algorithmic design uses a two-token model:
+
+- A **stablecoin** targeting \$1.00 (e.g., UST).
+- A **volatile governance/seigniorage token** that absorbs volatility (e.g., LUNA).
+
+The mechanism:
+
+- If the stablecoin trades above \$1.00, users can burn \$1.00 of the volatile token to mint \$1.00 of the stablecoin. The minted stablecoin is then sold for profit, expanding supply and pushing the price back to \$1.00.
+- If the stablecoin trades below \$1.00, users can burn \$1.00 of the stablecoin to mint \$1.00 of the volatile token. The burned stablecoin contracts supply, while the minted volatile token is sold for profit, pushing the stablecoin back to \$1.00.
+
+<Mermaid
+  chart={`
+flowchart TD
+  above["UST > $1.00"] -->|burn LUNA, mint UST| expand[Expand UST supply]
+  below["UST < $1.00"] -->|burn UST, mint LUNA| contract[Contract UST supply]
+  expand -->|sell UST on market| peg1[Price → $1.00]
+  contract -->|LUNA supply increases| peg2[UST price → $1.00]
+`}
+/>
+
+## The UST/LUNA collapse
+
+Terra's UST and LUNA were the most prominent algorithmic stablecoin pair. At peak, UST had a market cap of ~$18 billion with the Anchor Protocol offering 20% APY on UST deposits — a yield that could only be sustained by continuous inflows of new capital, the hallmark of an unsustainable structure.
+
+In May 2022, a large holder began selling UST in size. The price fell below \$1.00. To restore the peg, holders burned UST to mint LUNA. As the LUNA supply rapidly inflated, its price fell. This triggered more panic selling of both UST and LUNA — the reflexive death spiral.
+
+<Mermaid
+  chart={`
+flowchart TD
+  sell[Large UST sell pressure] --> depeg[UST falls below \$1.00]
+  depeg --> burn[Arbitrageurs burn UST, mint LUNA]
+  burn --> inflate[LUNA supply inflates]
+  inflate --> lunafall[LUNA price falls]
+  lunafall --> panic[Market loses confidence in backing]
+  panic --> sell
+  style depeg fill:#dc2626,color:#fff
+  style panic fill:#dc2626,color:#fff
+  style lunafall fill:#dc2626,color:#fff
+`}
+/>
+
+Within 72 hours, UST fell from \$1.00 to \$0.10, LUNA fell from \$80 to near zero, and approximately \$40 billion in market value was destroyed. The event wiped out retail investors, triggered the insolvency of multiple crypto lenders (including Celsius and Three Arrows Capital), and accelerated a bear market across the entire crypto ecosystem.
+
+### Why pure algorithmic designs fail
+
+The fundamental problem is **reflexivity**. In a fiat-backed system, the peg is maintained by a claim on real assets. In a crypto-backed system, the peg is maintained by excess collateral value. In a purely algorithmic system, the peg is maintained entirely by confidence that other participants will continue to trust and use the mechanism.
+
+When confidence holds, the mechanism is self-reinforcing. When confidence breaks, the mechanism inverts: the same arbitrage that maintained the peg now accelerates its collapse. There is no external anchor to absorb the sell pressure.
+
+No purely algorithmic stablecoin has demonstrated long-term peg stability. Several have depegged and recovered. None have survived a genuine confidence crisis at scale.
+
+# Comparing the designs
+
+| Property              | Fiat-backed                    | Crypto-backed               | Algorithmic               |
+| --------------------- | ------------------------------ | --------------------------- | ------------------------- |
+| Capital efficiency    | 100% reserved                  | 150%+ overcollateralized    | Undercollateralized       |
+| Trust assumption      | Custodian solvency             | Smart contract + oracle     | Protocol confidence       |
+| Censorship resistance | Low (blacklist exists)         | Medium (oracle is a vector) | High (if purely on-chain) |
+| Peg stability         | Very high (historical)         | High (through crashes)      | Fragile under stress      |
+| Decentralization      | Low                            | High                        | Varies                    |
+| Regulatory status     | Clear (money transmitter)      | Unclear                     | Unclear / hostile         |
+| Main failure mode     | Custodian insolvency or freeze | Cascading liquidations      | Death spiral              |
+
+# Oracles: the critical dependency
+
+Crypto-backed stablecoins depend on accurate price feeds to determine collateralization ratios and trigger liquidations. These **price oracles** are a critical attack surface.
+
+An attacker who can manipulate the oracle can trick the protocol into accepting under-backed positions or triggering liquidations incorrectly. Oracle manipulation attacks have caused hundreds of millions in losses across DeFi.
+
+Robust oracle designs use:
+
+- **Chainlink**: a decentralized network of independent data providers that aggregates and signs price data. The most widely used.
+- **TWAP (time-weighted average price)**: calculated from on-chain DEX trading data over a time window. Harder to manipulate than spot prices since a sustained price distortion is required.
+- **Maker's Oracle Security Module (OSM)**: introduces a 1-hour delay between the reported price and the price used by the protocol.
+
+# Regulatory landscape
+
+Stablecoins are the most scrutinized segment of crypto by regulators, because they most directly resemble existing regulated instruments (money market funds, bank deposits, electronic money).
+
+**United States**: The Clarity for Payment Stablecoins Act (passed by the House in 2024, pending Senate as of 2025) would require payment stablecoin issuers to hold 1:1 reserves in cash or Treasury bills and register with either the Federal Reserve (for bank-affiliated issuers) or state regulators. Algorithmic stablecoins without full collateral backing would be banned for two years pending a study.
+
+**European Union**: The Markets in Crypto-Assets (MiCA) regulation took full effect in December 2024. It defines two stablecoin categories: e-money tokens (EMTs, pegged to a single fiat currency) and asset-referenced tokens (ARTs, pegged to a basket or non-fiat asset). Issuers must be authorized, hold reserves in segregated custody, and cap transaction volume. Tether initially declined to register under MiCA; several EU exchanges delisted USDT in Q4 2024.
+
+# Risks summary
+
+Understanding the risk profile of each stablecoin type is essential before using them in protocols or accepting them as payment:
+
+**Fiat-backed risks:**
+
+- Custodian insolvency (SVB in March 2023).
+- Reserve opacity (Tether's historical disclosure issues).
+- Address blacklisting (censorship by issuer or regulator).
+- Regulatory action against the issuer.
+
+**Crypto-backed risks:**
+
+- Cascading liquidations during sharp market drops.
+- Oracle manipulation or failure.
+- Smart contract bugs (code is immutable in protocols like Liquity).
+- Governance attacks (MakerDAO's governance token can be acquired to pass malicious proposals).
+
+**Algorithmic risks:**
+
+- Death spiral under any meaningful confidence crisis.
+- Unsustainable yield programs masking structural inviability.
+- No recovery mechanism once confidence is lost.
+
+# Conclusion
+
+Stablecoins are not a monolithic category. They are a spectrum of trust and capital tradeoffs:
+
+- Use **fiat-backed stablecoins** when you need predictable peg stability and are comfortable trusting a regulated issuer. USDC is the standard choice for DeFi protocols that require maximum peg reliability.
+- Use **crypto-backed stablecoins** when you want on-chain, non-custodial stability. DAI is the battle-tested choice
+- **Avoid purely algorithmic stablecoins** for any significant capital. No purely algorithmic design has survived a real confidence crisis, and the failure mode is total and rapid.
+
+As DeFi matures and regulation clarifies, the distinction between fiat-backed and crypto-backed will likely matter more, not less. Understanding which peg mechanism underlies a stablecoin and what can cause it to fail, is foundational knowledge for anyone building or investing in the web3 ecosystem.
