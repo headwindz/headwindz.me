@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blog Article Writer"
+  short_description: "Expand main ideas into comprehensive MDX blog posts"
+  default_prompt: "Expand the following main ideas into a comprehensive blog post in data/blog:"
