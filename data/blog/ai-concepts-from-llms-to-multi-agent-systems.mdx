@@ -1,0 +1,1096 @@
+---
+title: 'Demystifying modern AI: from LLMs to multi-agent systems'
+date: '2026-09-25'
+tags: ['ai', 'architecture', 'notes']
+summary: 'A comprehensive architectural breakdown of core modern AI building blocks: LLMs, workflows, agents, tools, MCP, skills, plugins, multi-agent systems, orchestrators, hooks, guardrails, and harnesses.'
+---
+
+Modern AI development has shifted rapidly from single-turn chat prompts to compound AI systems. Building reliable software with artificial intelligence requires untangling an overloaded set of terms: LLMs, workflows, agents, tools, MCP, skills, plugins, multi-agent systems, orchestrators, hooks, guardrails, and harnesses.
+
+These concepts are neither synonyms nor interchangeable buzzwords. They form a layered, composable stack where each abstraction solves a specific engineering problem across cognition, execution, packaging, interoperability, coordination, lifecycle interception, safety, and evaluation.
+
+This guide provides a rigorous architectural breakdown of all twelve concepts, maps how they relate, and presents a concrete decision framework for choosing the right abstraction for your problem.
+
+The guide is organized into three sections:
+
+1. **The twelve core building blocks**: deep dive into definition, mechanics, and concrete implementations
+2. **The unified architecture**: how these primitives connect into a cohesive system
+3. **When to use what**: a practical decision framework and trade-off matrix
+
+---
+
+# The twelve core building blocks
+
+## 1. Large language models (LLMs)
+
+### What is an LLM?
+
+A **Large Language Model (LLM)** is a foundation probabilistic token-prediction engine trained on massive text corpora. Given an input sequence of tokens (context window), it calculates the conditional probability distribution over the vocabulary to generate the most probable next token:
+
+$$P(w_t \mid w_1, w_2, \dots, w_{t-1})$$
+
+Architecturally, modern frontier LLMs are dense or mixture-of-experts (MoE) transformer decoders. They possess strong semantic understanding, pattern completion, code generation, and logical reasoning capabilities across natural language and structured formats.
+
+Crucially, an LLM is **passive, stateless, and computationally bounded**:
+
+- **Passive**: An LLM executes only when invoked. It does not initiate actions, maintain background processes, or wake itself up.
+- **Stateless**: The model has no memory across API requests. Every turn must resend the necessary history within the context window.
+- **Computationally bounded**: An LLM cannot execute real-time computation, interact with external environments, or query dynamic data outside its training weights or supplied context.
+
+```typescript
+// Minimal LLM invocation: pure text in, text out
+import { generateText } from 'ai'
+import { openai } from '@ai-sdk/openai'
+
+const { text } = await generateText({
+  model: openai('gpt-4o'),
+  prompt: 'Summarize the differences between optimistic and pessimistic locking in SQL databases.',
+})
+```
+
+### When to use raw LLMs
+
+Use a raw LLM when the task is self-contained, stateless, and strictly bounded to language transformation:
+
+- Text summarization, sentiment analysis, and style transfer
+- Entity extraction from unstructured input into structured JSON schemas
+- Translation across human languages or code dialects
+- Single-turn reasoning or question answering over static, supplied text
+
+---
+
+## 2. Workflows
+
+### What is a workflow?
+
+A **workflow** is a deterministic, predefined execution graph (typically a Directed Acyclic Graph, or DAG) that orchestrates a series of computational steps. LLMs can be called inside specific nodes of a workflow to perform bounded transformations, classifications, or extractions, but the **control flow is governed by code, not by the model**.
+
+| Dimension          | Workflow                        | Autonomous agent                    |
+| :----------------- | :------------------------------ | :---------------------------------- |
+| **Control flow**   | Hardcoded DAG / state machine   | Model-driven ReAct loop             |
+| **Determinism**    | High (fixed sequence of steps)  | Low (variable path each run)        |
+| **Latency & cost** | Predictable                     | Variable (can spiral if stuck)      |
+| **Flexibility**    | Rigid, handles expected paths   | Emergent, solves novel paths        |
+| **Failure mode**   | Explicit error at specific step | Model hallucination / infinite loop |
+
+<Mermaid
+  chart={`
+flowchart LR
+  input[Raw Document] --> step1[Node 1: OCR & Chunking]
+  step1 --> step2[Node 2: LLM Information Extraction]
+  step2 --> step3{Node 3: Deterministic Schema Validation}
+  step3 -- Valid --> step4[Node 4: Database Ingestion]
+  step3 -- Invalid --> step5[Node 5: Human Review Queue]
+`}
+/>
+
+### When to use workflows
+
+Use workflows for high-volume, mission-critical business processes with strict compliance requirements:
+
+- Invoice processing and KYC document verification pipelines
+- ETL pipelines transforming unstructured text into tabular databases
+- CI/CD build and automated deployment pipelines
+- Regulated processes where auditability requires an invariant execution sequence
+
+---
+
+## 3. Autonomous agents
+
+### What is an agent?
+
+An **agent** is an autonomous system that wraps an LLM in an iterative execution loop with access to external tools and memory to achieve a high-level goal.
+
+$$\text{Agent} = \text{LLM} + \text{Tools} + \text{Memory} + \text{Execution Loop}$$
+
+While a raw LLM answers a question, an agent pursues an objective. The user provides a target state (e.g., `Fix the failing unit tests in the authentication service`), and the agent autonomously reasons about the problem, chooses actions, inspects intermediate results, and self-corrects until the goal is achieved.
+
+### Core features of an agent
+
+1. **Autonomy**: Operates independently without requiring human guidance at every micro-step. It determines the sequence and count of operations on the fly.
+2. **Goal-based**: Driven by an explicit objective. Instead of blindly executing hardcoded procedural scripts, it evaluates whether each step brings it closer to the target state.
+3. **Adaptability**: Dynamically recovers from failures. When a tool call returns an error, a file is missing, or a hypothesis is refuted, the agent inspects the feedback, alters its plan, and tries an alternative path.
+
+### The ReAct pattern: think, plan, act, observe
+
+The fundamental cognitive pattern governing agent execution is **ReAct** (Reasoning + Acting). The agent alternates between internal deliberation and environmental interaction in a continuous cycle:
+
+<Mermaid
+  chart={`
+flowchart TD
+  goal([User Goal]) --> think[Think: Evaluate state and hypotheses]
+  think --> plan[Plan: Select next concrete action]
+  plan --> act[Act: Execute tool call]
+  act --> observe[Observe: Inspect tool execution output]
+  observe --> check{Goal achieved?}
+  check -- No: Error or next step needed --> think
+  check -- Yes: Final result ready --> done([Final Response])
+`}
+/>
+
+1. **Think (Reasoning)**: The LLM analyzes the current goal, conversation history, and prior tool outputs to synthesize an updated internal state.
+2. **Plan (Action selection)**: The model decides which tool to invoke and formats the necessary arguments.
+3. **Act (Execution)**: The host runtime executes the tool (e.g., database query, shell command, API call).
+4. **Observe (Feedback ingestion)**: The execution output is appended back into the agent context window as a new message, triggering the next reasoning cycle.
+
+```typescript
+// Conceptual implementation of an autonomous ReAct agent loop
+interface Tool {
+  name: string
+  description: string
+  execute: (args: Record<string, unknown>) => Promise<string>
+}
+
+async function runAgent(goal: string, tools: Tool[], maxIterations = 10) {
+  const messages: Array<{ role: string; content: string }> = [
+    {
+      role: 'system',
+      content: 'You are an autonomous agent. Reason, plan, and call tools to reach the goal.',
+    },
+    { role: 'user', content: goal },
+  ]
+
+  for (let i = 0; i < maxIterations; i++) {
+    // 1. Think & Plan: Call LLM with tool schemas
+    const response = await callLLMWithTools(messages, tools)
+
+    if (response.isComplete) {
+      return response.finalAnswer
+    }
+
+    // 2. Act: Execute selected tool
+    const { toolName, args } = response.selectedToolCall
+    const tool = tools.find((t) => t.name === toolName)
+    if (!tool) throw new Error(`Tool ${toolName} not found`)
+
+    // 3. Observe: Capture environmental feedback
+    const observation = await tool.execute(args)
+
+    // Feed back into loop
+    messages.push({ role: 'assistant', content: `Tool call: ${toolName}(${JSON.stringify(args)})` })
+    messages.push({ role: 'tool', content: observation })
+  }
+
+  throw new Error('Agent exceeded maximum reasoning iterations')
+}
+```
+
+### When to use agents
+
+Use agents when the solution path cannot be statically predicted at compile-time:
+
+- Interactive troubleshooting, debugging code, and bug fixing
+- Exploratory data analysis and multi-step competitive research
+- Automated incident remediation where diagnostic steps depend on telemetry
+- Operating complex developer environments (e.g., executing shell commands, running test suites, writing patches)
+
+---
+
+## 4. Tools
+
+### What are tools?
+
+**Tools** are discrete, deterministic functions exposed to an LLM with a typed interface (name, natural language description, and JSON Schema input definition).
+
+An LLM cannot directly call a function. It generates a structured text payload indicating its intent to invoke a function along with the parsed parameters. The host runtime verifies the parameters, executes the actual code, and passes the output back to the model.
+
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "query_database",
+    "description": "Execute a read-only SQL query against the read-replica analytics cluster.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "sql": {
+          "type": "string",
+          "description": "The SELECT SQL query to execute."
+        }
+      },
+      "required": ["sql"]
+    }
+  }
+}
+```
+
+### Capabilities unlocked by tools
+
+- **Real-time information retrieval**: Access live web data, private databases, or internal APIs.
+- **Deterministic computation**: Delegate math, cryptographic hashing, or sorting to a native runtime instead of relying on token approximation.
+- **State mutation**: Write files, deploy cloud infrastructure, issue GitHub pull requests, or send transactional alerts.
+
+```typescript
+// Concrete tool declaration using Vercel AI SDK
+import { tool } from 'ai'
+import { z } from 'zod'
+
+export const weatherTool = tool({
+  description: 'Get current temperature and forecast for a geographic location.',
+  parameters: z.object({
+    city: z.string().describe('City name, e.g., San Francisco'),
+    units: z.enum(['celsius', 'fahrenheit']).default('celsius'),
+  }),
+  execute: async ({ city, units }) => {
+    const res = await fetch(`https://api.weather.internal/v1?city=${city}&units=${units}`)
+    return res.json()
+  },
+})
+```
+
+### When to use tools
+
+Expose tools whenever an agent or LLM requires:
+
+- Dynamic data that changes after the model's knowledge cutoff
+- Exact arithmetic or domain logic that cannot tolerate hallucination
+- Read/write access to external software ecosystems
+
+---
+
+## 5. Model Context Protocol (MCP)
+
+### What is MCP?
+
+The **Model Context Protocol (MCP)** is an open standard designed to solve the $N \times M$ integration problem between AI clients (LLMs, IDEs, desktop agents) and external data sources or tools (databases, issue trackers, local filesystems).
+
+Without MCP, every AI platform (ChatGPT, Claude, Cursor, custom company agents) must author proprietary integrations for every tool (GitHub, Postgres, Slack, Jira). MCP standardizes this interface via a universal client-host-server protocol built over JSON-RPC 2.0.
+
+<Mermaid
+  chart={`
+flowchart LR
+  subgraph Clients[AI Applications / Hosts]
+    c1[Claude Desktop]
+    c2[Cursor IDE]
+    c3[Custom Agent Runtime]
+  end
+
+subgraph Protocol[Model Context Protocol - JSON-RPC]
+mcp[Standardized MCP Client / Server Spec]
+end
+
+subgraph Servers[MCP Servers - Tool Collections]
+s1[PostgreSQL MCP Server: 8 SQL & schema tools]
+s2[GitHub MCP Server: 14 issue & PR tools]
+s3[Local Filesystem MCP Server: 6 FS tools]
+end
+
+c1 --> mcp
+c2 --> mcp
+c3 --> mcp
+mcp --> s1
+mcp --> s2
+mcp --> s3
+`}
+/>
+
+### The relationship between MCP and tools: MCP as a standardized tool collection
+
+A common point of confusion is the distinction between a **tool** and **MCP**.
+
+Fundamentally, **an MCP server is a discoverable, standardized collection of tools** (plus resources and prompt templates) hosted outside the primary agent process:
+
+- **Tool (the atomic unit)**: A single function with a JSON Schema (e.g., `git_commit` or `read_file`). By itself, a tool is just an isolated function signature embedded in application code.
+- **MCP (the collection and protocol)**: An architectural boundary and packaging standard. An MCP server packages an entire suite of related tools (e.g., a GitHub MCP server exposes `create_issue`, `merge_pr`, `fetch_diff`, `list_commits`) and serves them over `stdio` or HTTP/SSE using standard JSON-RPC contracts.
+
+```
+┌────────────────────────────────────────────────────────┐
+│ MCP Server: github-mcp-server                          │
+│                                                        │
+│  ├── Tools (Collection of callable operations)         │
+│  │    ├── create_issue(title, body)                    │
+│  │    ├── get_pull_request_diff(pr_number)             │
+│  │    └── merge_branch(head, base)                     │
+│  │                                                     │
+│  ├── Resources (Read-only data endpoints)              │
+│  │    ├── repo://tree/main/src                         │
+│  │    └── repo://logs/ci-build-latest                  │
+│  │                                                     │
+│  └── Prompts (Predefined workflows & templates)        │
+│       └── review_pr_template(pr_id)                    │
+└────────────────────────────────────────────────────────┘
+```
+
+Instead of developers hardcoding 50 bespoke tool schemas inside their application codebase, an agent connects to an MCP server at startup, dynamically lists available tools via `tools/list`, and invokes them through `tools/call`.
+
+### Core primitives of MCP
+
+MCP exposes three fundamental capabilities from servers to clients:
+
+1. **Tools**: Executable functions callable by the model (with user approval).
+2. **Resources**: Read-only contextual data, similar to REST `GET` endpoints or virtual filesystems (e.g., file contents, server logs, database tables).
+3. **Prompts**: Pre-configured prompt templates authored by the tool provider for common workflows.
+
+```typescript
+// Example: Creating a lightweight MCP Server exposing a collection of SQLite tools
+import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js'
+
+const server = new Server(
+  { name: 'sqlite-mcp-server', version: '1.0.0' },
+  { capabilities: { tools: {}, resources: {} } }
+)
+
+// Expose a collection of tools
+server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  tools: [
+    {
+      name: 'execute_sql',
+      description: 'Run SQL query on local SQLite database',
+      inputSchema: {
+        type: 'object',
+        properties: { query: { type: 'string' } },
+        required: ['query'],
+      },
+    },
+    {
+      name: 'list_tables',
+      description: 'List all existing database tables and schema definitions',
+      inputSchema: { type: 'object', properties: {} },
+    },
+  ],
+}))
+
+const transport = new StdioServerTransport()
+await server.connect(transport)
+```
+
+### When to use MCP
+
+- Exposing enterprise data and tool suites once so all compliant AI tools across an organization can use them
+- Decoupling agent application logic from third-party API integration code
+- Running local, secure data connectors (e.g., inspecting local git repositories or SQLite stores) without passing API tokens to external SaaS vendors
+
+---
+
+## 6. Skills
+
+### What is a skill?
+
+A **skill** is a packaged, reusable unit of procedural knowledge, domain conventions, and specialized instructions that teaches an agent _how_ to accomplish a specific class of tasks effectively.
+
+While a raw tool answers _"what can I execute?"_ (e.g., `git_commit`, `run_command`), a skill answers _"how should I behave to achieve this standard?"_ (e.g., how to write an idiomatic commit message, which architectural boundaries to respect, or which edge cases to verify).
+
+Skills are typically defined as Markdown or declarative config files (such as `SKILL.md` in Claude or Codex, or semantic skills in Microsoft Semantic Kernel) containing:
+
+- Domain prompt directives and reasoning steps
+- Pre-execution validation checklists
+- Required and prohibited tools
+- Expected output schemas and formatting rules
+
+### Progressive disclosure: keeping context lean
+
+The most critical architectural feature of modern skills is **progressive disclosure**.
+
+In large codebases or enterprise environments, an agent may have access to 50+ specialized skills (e.g., security auditing, database migrations, React performance profiling, Kubernetes deployments). If an agent dumped every skill's full text into the system prompt on turn 1, it would consume 50,000+ tokens before the user even asked a question. This causes **prompt bloating**, **context exhaustion**, and severe **attention dilution** ("lost in the middle").
+
+Progressive disclosure solves this by loading skills in three progressive tiers:
+
+<Mermaid
+  chart={`
+flowchart TD
+  subgraph Tier1[Tier 1: Catalog Index - Always in Context]
+    idx[Skill Manifest: Name + 1-sentence Description <br/> ~30 tokens per skill]
+  end
+
+subgraph Tier2[Tier 2: On-Demand Activation - Loaded when Triggered]
+full[SKILL.md Body: Full Playbook, Instructions, Rules & Examples <br/> ~1,000-2,000 tokens]
+end
+
+subgraph Tier3[Tier 3: Lazy Sub-Resources - Read Only if Needed]
+ref[Supporting Assets: Schemas, Reference Docs, Scripts]
+end
+
+user([User Query: Audit authentication service]) --> match{Matches skill description?}
+Tier1 --> match
+match -- Yes: Activate skill --> Tier2
+Tier2 --> exec[Agent Execution]
+exec -.->|Read deep reference| Tier3
+`}
+/>
+
+1. **Tier 1: Catalog index (discovery metadata)**:
+   Only a compact manifest is injected into the initial system prompt. Each skill contributes only its name, file path, and a short 1–2 sentence description of when it should be used (~30 tokens per skill).
+2. **Tier 2: On-demand activation (full instructions)**:
+   When the agent receives a task that matches the skill's description (or when explicitly invoked by the user or an orchestrator), the host runtime reads the full `SKILL.md` body and appends it to the active context window.
+3. **Tier 3: Lazy sub-resource evaluation (deep references)**:
+   Complex skills often link to supporting documents, validation scripts, or schemas. These remain on disk and are only read into context if the specific subtask demands them.
+
+```markdown
+---
+name: 'security-audit-skill'
+description: 'Instructions and heuristics for auditing TypeScript codebases for OWASP Top 10 vulnerabilities. Use when reviewing code for security flaws.'
+tools: ['read_file', 'rg_search', 'run_linter']
+---
+
+# Security Audit Playbook
+
+When auditing code:
+
+1. First, search for dangerous primitives: `eval()`, `dangerouslySetInnerHTML`, and raw SQL queries.
+2. Verify all user inputs pass through a schema validator (Zod / TypeBox) before reaching database layers.
+3. Check authentication headers and token expiration handling.
+4. Categorize all findings by CVSS severity score (Critical, High, Medium, Low).
+```
+
+### When to use skills
+
+Use skills to institutionalize organizational playbooks and keep agent behavior consistent across projects:
+
+- Codifying code-review standards or documentation templates
+- Establishing runbooks for on-call triage and incident investigation
+- Teaching agents domain-specific business rules (e.g., regulatory compliance checks)
+
+---
+
+## 7. Plugins
+
+### What is a plugin?
+
+A **plugin** is a self-contained distribution and packaging mechanism that bundles tools, skills, assets, and authentication configurations into a single installable unit.
+
+Plugins bridge software systems with agent runtimes. A GitHub plugin might package:
+
+- 12 individual API tools (`create_issue`, `merge_pr`, `fetch_diff`, etc.)
+- 2 specialized skills (PR review guidelines, branch naming conventions)
+- OAuth credentials or API key configuration
+
+```json
+{
+  "name": "github-developer-pack",
+  "version": "1.2.0",
+  "description": "Comprehensive GitHub integration for coding agents",
+  "tools": ["./tools/issues.js", "./tools/pull-requests.js"],
+  "skills": ["./skills/pr-review.md", "./skills/conflict-resolution.md"],
+  "auth": {
+    "type": "oauth2",
+    "scopes": ["repo", "workflow"]
+  }
+}
+```
+
+### When to use plugins
+
+Use plugins when packaging capabilities for distribution across developers, teams, or marketplace ecosystems:
+
+- Extending agent IDEs (VS Code, Cursor, Codex) with 3rd-party services
+- Enabling end users to toggle integrations (Slack, Jira, Google Drive) on and off
+- Distributing internal tooling bundles across engineering teams
+
+---
+
+## 8. Multi-agent systems
+
+### What is a multi-agent system?
+
+A **multi-agent system (MAS)** is a collaborative architecture where multiple specialized agents work together, each contributing unique skills, tools, and domain perspectives to solve complex problems that exceed the cognitive capacity of a single monolithic agent.
+
+$$\text{Multi-Agent System} = \sum (\text{Specialized Agent}_i) + \text{Communication Protocol}$$
+
+### The primary driver: solving context explosion
+
+Why not simply build one all-powerful monolithic agent?
+
+The fundamental constraint is **context explosion** (also known as context bloating or context poisoning).
+
+As an agent works through a long-horizon task (e.g., investigating a production bug across multiple microservices), it accumulates thousands of tokens of noisy shell outputs, stack traces, AST dumps, and exploratory thoughts. In a monolithic agent, this creates four severe points of failure:
+
+1. **Attention dilution ("lost in the middle")**: Transformer attention degrades across bloated contexts. The model loses track of earlier system instructions, edge cases, and safety bounds.
+2. **Tool selection degradation**: Presenting an LLM with 50+ tool schemas simultaneously causes tool hallucination, misformatted parameters, and invalid selections.
+3. **Quadratic latency and cost**: Resending 100,000+ tokens on every turn makes every ReAct iteration progressively slower and exponentially more expensive.
+4. **Context pollution**: Errors or speculative false hypotheses generated on turn 3 persist in context on turn 20, biasing the model into circular reasoning loops.
+
+**How MAS solves context explosion**:
+
+- **Context isolation**: Each specialized sub-agent operates within its own small, pristine context window containing only the tools, skills, and system prompts relevant to its narrow mandate.
+- **Context distillation**: When a sub-agent completes its subtask, it returns only a concise, high-level summary or final artifact (such as a unified diff or verified conclusion) back to the parent agent. Thousands of tokens of noisy intermediate command outputs are immediately discarded.
+
+```
+Monolithic Agent Context (Bloated & Poisoned):
+[System Prompt] + [50 Tools] + [Turn 1 Tool Output (4k tokens)] + [Turn 2 Log Dump (15k tokens)] ... -> 120k tokens
+
+MAS Context Isolation:
+Supervisor Context: [Goal] + [Task Decomposition] + [Worker 1 Distilled Summary (200 tokens)] -> 2k tokens
+  ├── Worker 1 Context (Isolated): [Filesystem Tools] + [Local Search] -> Complete -> Returns 200 tokens
+  └── Worker 2 Context (Isolated): [Testing Tools] + [Run Test Suite] -> Complete -> Returns 150 tokens
+```
+
+### The engineering trade-offs of MAS
+
+While MAS solves context explosion, it introduces significant engineering complexity:
+
+- **Coordination overhead**: Building reliable inter-agent message formats, serialization schemas, and communication channels.
+- **Compounding latency**: Sequential agent handoffs introduce multiple separate LLM round trips, multiplying wall-clock response times.
+- **Cascading errors & drift**: If Sub-agent A generates a flawed distilled summary, Sub-agent B accepts it as ground truth and builds on bad assumptions without access to the discarded raw logs.
+- **System deadlocks & loops**: Without strict termination conditions, two agents can debate endlessly or pass tasks back and forth in an infinite loop.
+
+### Sub-agent orchestration patterns
+
+There are five major topological patterns for orchestrating sub-agents:
+
+<Mermaid
+  chart={`
+flowchart TD
+  subgraph Pattern1[1. Hierarchical Supervisor]
+    s1[Supervisor] --> w1[Worker A]
+    s1 --> w2[Worker B]
+    w1 -->|Summary| s1
+    w2 -->|Summary| s1
+  end
+
+subgraph Pattern2[2. Sequential Pipeline]
+p1[Planner] -->|Specs| p2[Coder]
+p2 -->|Code| p3[Reviewer]
+end
+
+subgraph Pattern3[3. Peer Debate / Critic]
+c1[Generator Agent] <-->|Drafts & Critiques| c2[Critic / Verifier]
+end
+
+subgraph Pattern4[4. Shared Blackboard]
+b1[Worker A] --> bb[(Shared State Board)]
+bb --> b2[Worker B]
+end
+
+subgraph Pattern5[5. Dynamic Fork-Join]
+lead[Main Agent] -->|Fork in parallel| f1[Investigator 1]
+lead -->|Fork in parallel| f2[Investigator 2]
+f1 --> join([Join & Reconcile])
+f2 --> join
+end
+`}
+/>
+
+1. **Hierarchical supervisor-worker (hub-and-spoke)**:
+   A central supervisor agent decomposes the goal, spawns specialized child agents, passes targeted sub-prompts, and aggregates their distilled summaries. Workers never communicate directly with one another.
+2. **Sequential pipeline / chaining (handoff)**:
+   Agents pass work as a structured baton along an assembly line (e.g., _Architect_ $\rightarrow$ _Developer_ $\rightarrow$ _Tester_ $\rightarrow$ _Technical Writer_). Each agent refines the output of the predecessor.
+3. **Peer collaboration & debate (generator-critic)**:
+   Two specialized agents work in an iterative loop. One agent generates candidate solutions (e.g., code patches), while an adversarial critic agent evaluates edge cases, security flaws, or test failures. They iterate until the critic approves or a turn threshold is reached.
+4. **Event-driven blackboard / shared memory (swarm)**:
+   Agents do not invoke each other directly. Instead, they read from and publish to a centralized shared state board or message bus. Agents subscribe to task topics and claim subtasks matching their capabilities.
+5. **Dynamic fork-join (scatter-gather / parallel delegation)**:
+   When an agent encounters independent sub-problems (e.g., searching three separate repositories or testing four hypotheses), it dynamically forks parallel worker agents, awaits their completion, and merges the disjoint write sets.
+
+### When to use multi-agent systems
+
+- Complex software development spanning distinct stages (architecture, coding, test execution, documentation)
+- Tasks with natural boundaries that benefit from parallel investigation across large codebases
+- Systems where context explosion degrades single-agent reasoning over long execution horizons
+
+---
+
+## 9. Orchestrators
+
+### What is an orchestrator?
+
+The **orchestrator** is the centralized coordination engine that governs multi-agent topologies, workflow execution, state persistence, and resource allocation.
+
+While individual agents execute bounded loops, the orchestrator sits outside them:
+
+- **Routing**: Inspects incoming tasks and assigns them to the appropriate agent or workflow.
+- **State & memory management**: Maintains global execution state, tracks conversation history, and synchronizes shared memory across agents.
+- **Concurrency & scaling**: Manages parallel execution, task timeouts, retries, and rate limits.
+- **Conflict resolution**: Arbitrates disagreements when two agents produce contradictory conclusions or require the same exclusive lock.
+
+```typescript
+// Architectural skeleton of a multi-agent orchestrator
+class Orchestrator {
+  private registry: Map<string, SpecializedAgent> = new Map()
+  private sharedContext: Map<string, unknown> = new Map()
+
+  registerAgent(role: string, agent: SpecializedAgent) {
+    this.registry.set(role, agent)
+  }
+
+  async executeMission(goal: string): Promise<MissionResult> {
+    const planner = this.registry.get('planner')!
+    const plan = await planner.execute({ goal })
+
+    for (const step of plan.steps) {
+      const worker = this.registry.get(step.assignedRole)
+      if (!worker) throw new Error(`Unassigned role: ${step.assignedRole}`)
+
+      const stepResult = await worker.execute({
+        task: step.description,
+        context: this.sharedContext.get(step.dependsOn),
+      })
+
+      this.sharedContext.set(step.id, stepResult)
+    }
+
+    const synthesizer = this.registry.get('synthesizer')!
+    return synthesizer.execute({ history: Array.from(this.sharedContext.entries()) })
+  }
+}
+```
+
+### When to use an orchestrator
+
+Implement an orchestrator whenever your architecture spans:
+
+- More than two collaborating agents
+- Asynchronous task queues with checkpointing, pause, or resume requirements
+- Human-in-the-loop approvals interrupting long-running agent operations
+
+---
+
+## 10. Hooks
+
+### What are hooks?
+
+**Hooks** are deterministic, lifecycle interception points that allow host applications to inject custom logic before, during, or after key agent events.
+
+An LLM is inherently probabilistic, non-deterministic, and black-box. **Hooks provide the deterministic software boundaries** required to observe, inspect, mutate, or abort agent operations. Similar to Git hooks, Webhooks, or React lifecycle methods, agent hooks give software engineers total programmatic control over an agent's execution lifecycle.
+
+<Mermaid
+  chart={`
+flowchart LR
+  up[User Prompt] -->|beforePrompt| hp[Input Hook: Scrub PII & Sanitize]
+  hp --> agent[Agent Reasoning]
+  agent -->|beforeToolCall| ht[Tool Hook: Auth Check & Sandbox Gate]
+  ht --> tool[Execute Tool]
+  tool -->|afterToolCall| htr[Output Hook: Truncate & Format]
+  htr --> agent
+  agent -->|afterModelCall| ho[Model Hook: Check Hallucinations & Leaks]
+  ho --> res([Final Response])
+`}
+/>
+
+### Common agent lifecycle hooks
+
+Modern agent frameworks (such as AI SDK, LangChain, or custom enterprise runtimes) expose hooks across the execution lifecycle:
+
+| Lifecycle Hook    | Event Trigger                           | Primary Use Cases                                                 |
+| :---------------- | :-------------------------------------- | :---------------------------------------------------------------- |
+| `beforePrompt`    | Before user prompt enters context       | PII redaction, prompt injection detection, token normalization    |
+| `beforeModelCall` | Right before issuing request to LLM API | Dynamic prompt injection, context window compaction, cache lookup |
+| `afterModelCall`  | Immediately after model returns tokens  | Telemetry logging, toxicity filtering, JSON syntax repair         |
+| `beforeToolCall`  | Model requests a tool invocation        | Permission checks, argument sanitization, human approval gating   |
+| `afterToolCall`   | Host runtime finishes tool execution    | Normalizing outputs, masking secrets, caching tool results        |
+| `onAgentSpawn`    | Sub-agent or worker is initialized      | Allocating sandbox containers, inheriting parent budgets          |
+| `onError`         | Tool failure or model timeout occurs    | Retry scheduling, fallback model invocation, error reporting      |
+
+### Code implementation: a lifecycle hook registry
+
+```typescript
+// Concrete implementation of an agent lifecycle hook registry
+type HookFn<T> = (context: T) => Promise<T | void>
+
+class AgentHookRegistry {
+  private beforeToolCallHooks: HookFn<{ toolName: string; args: any }>[] = []
+  private afterToolCallHooks: HookFn<{ toolName: string; result: any }>[] = []
+
+  onBeforeToolCall(fn: HookFn<{ toolName: string; args: any }>) {
+    this.beforeToolCallHooks.push(fn)
+  }
+
+  async triggerBeforeToolCall(toolCall: { toolName: string; args: any }) {
+    for (const hook of this.beforeToolCallHooks) {
+      await hook(toolCall)
+    }
+  }
+}
+
+// Registering hooks for security, governance, and logging
+const hooks = new AgentHookRegistry()
+
+// 1. Security enforcement hook (Guardrail)
+hooks.onBeforeToolCall(async ({ toolName, args }) => {
+  if (toolName === 'execute_bash' && args.cmd.includes('rm -rf /')) {
+    throw new Error('Blocked by security hook: destructive command pattern detected.')
+  }
+})
+
+// 2. Budget and telemetry hook
+hooks.onBeforeToolCall(async ({ toolName }) => {
+  console.log(`[Telemetry] Agent invoking tool: ${toolName}`)
+})
+```
+
+### When to use hooks
+
+Hooks are the foundational layer for:
+
+- Implementing deterministic guardrails outside the model
+- Emitting distributed tracing and OpenTelemetry metrics for every tool invocation
+- Enforcing token, cost, and rate-limit budgets across long-running agents
+- Injecting human-in-the-loop approvals before sensitive state mutations
+
+---
+
+## 11. Guardrails
+
+### What are guardrails?
+
+**Guardrails** are programmable safety mechanisms, validation rules, and policy layers that evaluate inputs, intermediate actions, and outputs to prevent AI systems from taking inappropriate, insecure, or out-of-bounds actions.
+
+Guardrails ensure agents operate within strictly defined business, security, and ethical boundaries.
+
+### Why prompts are not guardrails
+
+A pervasive architectural anti-pattern in AI engineering is relying on system prompts as security controls:
+
+> _"You are a helpful assistant. You must NEVER run destructive shell commands, and you must NEVER reveal internal customer database records."_
+
+**Prompt-based safety is fundamentally unreliable in production**:
+
+1. **Vulnerability to prompt injection**: Indirect prompt injections hidden inside external data (e.g., a malicious comment in a GitHub issue, text scraped from a webpage, or a row in a customer database) can instruct the model to ignore previous system instructions.
+2. **Probabilistic execution**: LLMs are statistical token predictors, not deterministic logic engines. Even with a 99% compliance rate, an agent executing 1,000 tool operations will violate prompt instructions 10 times. In enterprise software, a 1% failure rate for unauthorized data deletion is intolerable.
+3. **Context dilution**: As conversation history grows into tens of thousands of tokens, system prompt instructions placed at the beginning suffer from attention degradation.
+4. **Zero physical enforcement**: A prompt instruction cannot revoke a database user's `DROP` privileges, kill a runaway bash process, or isolate a socket connection.
+
+Real safety requires **deterministic code execution outside the model**.
+
+### Implementing guardrails via hooks
+
+Because prompts cannot enforce safety, **guardrails are typically implemented directly inside lifecycle hooks**:
+
+<Mermaid
+  chart={`
+flowchart LR
+  subgraph Agent Runtime
+    p[User Input] --> bph[Hook: beforePrompt]
+    bph -->|1. Input Guardrail: PII & Injection Filter| llm[LLM Reasoning]
+    llm --> bth[Hook: beforeToolCall]
+    bth -->|2. Execution Guardrail: Permissions & Sandbox| tool[Tool Execution]
+    tool --> ath[Hook: afterToolCall]
+    ath -->|Sanitize output| llm
+    llm --> amh[Hook: afterModelCall]
+    amh -->|3. Output Guardrail: Hallucination & Leak Check| out[User Response]
+  end
+`}
+/>
+
+1. **Input guardrails (hooked at `beforePrompt`)**:
+   - Detect and neutralize prompt injections and jailbreaks before tokens enter the model context.
+   - Redact personally identifiable information (PII) before network transmission to external model providers.
+2. **Execution / tool guardrails (hooked at `beforeToolCall`)**:
+   - Validate tool parameters against strict deterministic schemas (e.g., ensuring SQL queries are strictly `SELECT` statements).
+   - Enforce authorization policies (e.g., verifying the current user session has permissions to invoke `refund_customer`).
+   - Sandbox filesystem paths and shell commands to prevent directory traversal or privilege escalation.
+3. **Output guardrails (hooked at `afterModelCall`)**:
+   - Verify generated answers against retrieved source documents to prevent hallucinations.
+   - Scan responses for leaked API keys, tokens, or confidential data.
+   - Validate structured output format compliance (e.g., Zod schema parsing) before passing payloads to downstream microservices.
+
+```typescript
+// Implementing a multi-tier guardrail via beforeToolCall hook
+async function guardrailToolHook(toolCall: { toolName: string; args: any }, userRole: string) {
+  // 1. Role-based access control guardrail
+  const privilegedTools = ['drop_database_table', 'issue_refund', 'deploy_to_production']
+  if (privilegedTools.includes(toolCall.toolName) && userRole !== 'admin') {
+    throw new SecurityException(`Guardrail Violation: ${toolCall.toolName} requires admin role.`)
+  }
+
+  // 2. Command pattern guardrail
+  if (toolCall.toolName === 'execute_bash') {
+    const prohibitedPatterns = [/rm\s+-rf/, /chmod\s+777/, />\s*\/dev\/sd/, /curl.*\|\s*sh/]
+    if (prohibitedPatterns.some((pattern) => pattern.test(toolCall.args.cmd))) {
+      throw new SecurityException('Guardrail Violation: Prohibited destructive bash command.')
+    }
+  }
+}
+```
+
+### When to use guardrails
+
+Guardrails are non-negotiable in production:
+
+- Any customer-facing application interacting with public users
+- Any agent with write, execute, or financial mutation privileges
+- Regulated industries (finance, healthcare, legal) with statutory privacy and audit obligations
+
+---
+
+## 12. Harnesses
+
+### What is a harness?
+
+In classic software engineering, a test harness is a collection of software and test data configured to run a program unit under varying conditions while monitoring its behavior and outputs.
+
+In modern agentic AI, an **AI harness** (frequently termed an **agent harness**, **runtime harness**, or **evaluation harness**) is the operational scaffolding, containment environment, and testbed that hosts, instantiates, context-provisions, observes, sandboxes, and evaluates an AI agent or model.
+
+$$\text{Harness} = \text{Environment Provisioning} + \text{Context Scaffolding} + \text{Execution Sandbox} + \text{Evaluation Engine}$$
+
+If the agent is the driver and tools are the steering wheel and pedals, the **harness is the chassis, telemetry rig, and proving ground**. The agent focuses solely on reasoning and choosing actions; the harness is responsible for setting up the external reality the agent perceives, enforcing operational limits, and verifying whether the agent's work actually solved the problem.
+
+### Core capabilities of an AI harness
+
+An agent harness fulfills four core engineering functions:
+
+1. **Environment provisioning and sandboxing**:
+   - Spawns isolated, reproducible workspaces (e.g., ephemeral Docker containers, microVMs, git worktrees, or restricted local scratch directories).
+   - Enforces filesystem read/write boundaries and network isolation policies to prevent runaway agents from corrupting host environments or exfiltrating data.
+
+2. **Context injection and prompt scaffolding**:
+   - Assembles and injects the baseline context before the agent's first turn: system prompts, workspace path definitions, environment variables, tool declarations, repo-level instructions (such as `AGENTS.md`), and available skills.
+   - Shields the agent loop from manual setup boilerplate while ensuring predictable, reproducible initial state.
+
+3. **Runtime governance and telemetry**:
+   - Enforces execution budgets: maximum reasoning iterations (turns), token consumption limits, wall-clock timeouts, and financial cost caps.
+   - Captures high-fidelity execution traces: recording every thought, proposed tool call, tool output, and intermediate artifact for replay, debugging, and post-mortem analysis.
+
+4. **Automated verification and evaluation (eval harness)**:
+   - In benchmark and testing modes (such as SWE-bench, GAIA, or internal regression testbeds), the harness executes deterministic assertions after the agent concludes its run.
+   - Runs test runners (`pytest`, `jest`, `pnpm test`), compiles code, checks git diffs, or runs an LLM-as-a-judge grader to generate an objective pass/fail verdict.
+
+<Mermaid
+  chart={`
+flowchart TD
+  task([Task / Benchmark Prompt]) --> harness
+
+subgraph harness[AI Runtime & Evaluation Harness]
+prov[1. Workspace Provisioning: Git Worktree & Sandbox]
+ctx[2. Context Injection: Repo files, AGENTS.md, Tool schemas]
+
+    subgraph runtime[3. Sandboxed Execution Boundary]
+      agent[Agent ReAct Loop: LLM + Tools]
+    end
+
+    telemetry[4. Telemetry & Budget Governor: Tokens, Timeouts, Logs]
+    eval[5. Verification Suite: Unit tests, Git diffs, Grader model]
+
+end
+
+prov --> ctx
+ctx --> runtime
+runtime --> telemetry
+runtime --> eval
+eval --> verdict([Evaluation Verdict: Pass / Fail & Benchmark Score])
+`}
+/>
+
+### The evaluation and runtime loop
+
+Below is a conceptual implementation of an evaluation and runtime harness running an agent against a sandboxed git repository and verifying the fix with automated tests:
+
+```typescript
+import { execSync } from 'child_process'
+import { runAgent } from './agent'
+
+interface HarnessConfig {
+  taskPrompt: string
+  repoPath: string
+  testCommand: string
+  maxTurns: number
+  tokenBudget: number
+}
+
+interface BenchmarkResult {
+  passed: boolean
+  totalTurns: number
+  tokensUsed: number
+  patch: string
+  logs: string[]
+}
+
+async function runInHarness(config: HarnessConfig): Promise<BenchmarkResult> {
+  // 1. Provision isolated git worktree
+  const worktreePath = `/tmp/agent-worktrees/${Date.now()}`
+  execSync(`git worktree add ${worktreePath} HEAD`, { cwd: config.repoPath })
+
+  const telemetry = { tokens: 0, turns: 0, logs: [] as string[] }
+
+  try {
+    // 2. Inject context and run agent within execution sandbox
+    const agentResult = await runAgent({
+      goal: config.taskPrompt,
+      cwd: worktreePath,
+      maxTurns: config.maxTurns,
+      tokenBudget: config.tokenBudget,
+      onStep: (step) => {
+        telemetry.turns++
+        telemetry.tokens += step.tokenUsage
+        telemetry.logs.push(`[Turn ${telemetry.turns}] ${step.summary}`)
+      },
+    })
+
+    // 3. Extract generated patch
+    const patch = execSync('git diff', { cwd: worktreePath }).toString()
+
+    // 4. Run deterministic verification suite
+    let passed = false
+    try {
+      execSync(config.testCommand, { cwd: worktreePath, stdio: 'pipe' })
+      passed = true
+    } catch {
+      passed = false
+    }
+
+    return {
+      passed,
+      totalTurns: telemetry.turns,
+      tokensUsed: telemetry.tokens,
+      patch,
+      logs: telemetry.logs,
+    }
+  } finally {
+    // Teardown worktree and sandbox
+    execSync(`git worktree remove --force ${worktreePath}`, { cwd: config.repoPath })
+  }
+}
+```
+
+### When to use a harness
+
+A harness is essential in four primary engineering scenarios:
+
+- **Benchmarking and evaluation**: Measuring agent accuracy, tool-calling precision, and completion rates across standardized suites (e.g., SWE-bench, HumanEval, GAIA) or proprietary test sets.
+- **Safe agent execution**: Running developer coding agents (such as Codex, SWE-agent, or Claude Code) in contained environments where untrusted tool execution (shell commands, scripts) cannot damage host machines.
+- **CI/CD regression testing**: Testing prompt, model, or tool changes against a deterministic testbed before shipping agent updates to production.
+- **Trajectory collection for post-training**: Capturing complete, reproducible action trajectories and feedback loops for reinforcement learning (RLHF/RLAIF) or supervised fine-tuning.
+
+---
+
+# How the concepts connect: the unified architecture
+
+Understanding modern AI requires seeing how these twelve pieces fit together in a compound system:
+
+<Mermaid
+  chart={`
+flowchart TB
+  subgraph Harness[Runtime, Sandbox & Evaluation Harness]
+    subgraph Control[Control & Interception Layer]
+      hooks[Hooks: Lifecycle Interception Points]
+      gr[Guardrails: Input, Execution & Output Validation]
+      hooks --> gr
+    end
+
+    subgraph Orchestration[Orchestration & Coordination Layer]
+      orch[Orchestrator: Routing & State Management]
+      wf[Workflows: Deterministic DAGs]
+      mas[Multi-Agent System: Context Isolation]
+    end
+
+    subgraph Execution[Agent Execution Layer]
+      agent1[Specialized Agent A]
+      agent2[Specialized Agent B]
+      react[ReAct Loop: Think - Plan - Act - Observe]
+      llm[LLM: Cognitive Engine]
+    end
+
+    subgraph Capability[Capability & Packaging Layer]
+      plugins[Plugins: Distribution Bundles]
+      skills[Skills: Progressive Disclosure Playbooks]
+      mcp[MCP: Standardized Tool Collections]
+      tools[Tools: Concrete Executable Functions]
+    end
+
+    subgraph Verification[Verification & Evaluation Layer]
+      eval[Eval Engine: Test Suites, Diffs & Telemetry]
+    end
+
+end
+
+subgraph External[External Environment]
+apis[External APIs]
+dbs[Databases]
+env[Filesystem / OS]
+end
+
+Control -.-> Orchestration
+Control -.-> Execution
+Control -.-> Capability
+
+orch --> wf
+orch --> mas
+mas --> agent1
+mas --> agent2
+
+agent1 --> react
+react --> llm
+react --> skills
+react --> tools
+
+plugins --> skills
+plugins --> mcp
+mcp --> tools
+tools --> apis
+tools --> dbs
+tools --> env
+
+Execution --> eval
+`}
+/>
+
+### The conceptual hierarchy
+
+1. **Cognition**: The **LLM** is the foundational reasoning engine.
+2. **Predictability**: When steps must be deterministic rather than autonomous, code orchestrates LLMs in a **workflow**.
+3. **Autonomy**: When the path cannot be predefined, an LLM drives its own iterative ReAct loop as an **agent**.
+4. **Execution**: Agents and workflows take actions through **tools**.
+5. **Standardization**: Tools and resources are aggregated into discoverable collections via the **Model Context Protocol (MCP)**.
+6. **Behavior**: Agents follow procedural expertise and heuristics codified into **skills**, revealed progressively to save context.
+7. **Distribution**: Tools, MCP configs, and skills are bundled into installable **plugins**.
+8. **Scale & context isolation**: To solve context explosion across complex tasks, coordinate multiple specialized agents in a **multi-agent system**.
+9. **Supervision**: The **orchestrator** governs routing, state, concurrency, and communication across agents and workflows.
+10. **Lifecycle interception**: **Hooks** intercept agent events to allow deterministic control over probabilistic execution.
+11. **Protection**: **Guardrails** (implemented inside hooks) enforce security, authorization, and output safety outside the model.
+12. **Containment and evaluation**: The **harness** provisions the isolated sandbox, injects initial context, measures resource usage, and evaluates agent performance against deterministic benchmarks.
+
+---
+
+# When to use what: practical decision framework
+
+Choosing the right abstraction prevents over-engineering and eliminates runaway system complexity.
+
+## Architectural comparison matrix
+
+| Concept          | Primary purpose                              | Determinism | Autonomy       | Complexity  |
+| :--------------- | :------------------------------------------- | :---------- | :------------- | :---------- |
+| **LLM**          | Next-token prediction & reasoning            | Low-Medium  | None (passive) | Low         |
+| **Workflow**     | Predictable, multi-step pipeline             | High        | Low            | Medium      |
+| **Agent**        | Open-ended goal achievement via feedback     | Low         | High           | Medium-High |
+| **Tool**         | Deterministic capability execution           | High        | None           | Low         |
+| **MCP**          | Universal tool collections & resources       | High        | None           | Medium      |
+| **Skill**        | Domain guidelines & progressive playbooks    | Medium      | Low            | Low         |
+| **Plugin**       | Packaging & capability distribution          | N/A         | N/A            | Medium      |
+| **Multi-agent**  | Solves context explosion via specialists     | Low-Medium  | Very High      | High        |
+| **Orchestrator** | Coordinating agents, workflows, and state    | High        | N/A            | High        |
+| **Hooks**        | Deterministic lifecycle event interception   | High        | None           | Medium      |
+| **Guardrails**   | Enforcing security and safety boundaries     | High        | None           | Medium      |
+| **Harness**      | Runtime scaffolding, sandboxing & evaluation | High        | None           | Medium-High |
+
+## Decision flowchart
+
+When designing a feature, use this decision path to pick the simplest viable architecture:
+
+1. **Does the task require real-world actions or dynamic external data?**
+   - _No_: Use a raw **LLM** (prompt engineering + structured outputs).
+   - _Yes_: Proceed to Step 2.
+2. **Is the execution path fixed and predictable?**
+   - _Yes_: Build a **workflow** (code pipeline calling LLMs at specific nodes with **tools**).
+   - _No_: You need an **agent** (an LLM in an autonomous ReAct loop).
+3. **Does the task risk context explosion or require distinct domains of expertise?**
+   - _No_: Use a single **agent** equipped with relevant **skills** (via progressive disclosure) and **tools**.
+   - _Yes_: Build a **multi-agent system** coordinated by an **orchestrator** using an appropriate topology (supervisor, pipeline, or debate).
+4. **How are tools and skills provided and distributed?**
+   - If exposing a reusable collection of tools and resources across different clients: serve them via an **MCP server**.
+   - If distributing a pre-packaged bundle of tools, MCP configs, and skills: distribute as a **plugin**.
+5. **How do you intercept, monitor, and secure execution?**
+   - Attach lifecycle **hooks** (`beforePrompt`, `beforeToolCall`, `afterModelCall`) to enforce deterministic **guardrails**, logging, and budget limits outside the model. Never rely on prompts alone for safety.
+6. **How do you benchmark, isolate, and test the system?**
+   - Build an **evaluation and runtime harness** to sandbox execution, inject reproducible context, enforce resource limits, and run automated regression testbeds.
+
+---
+
+# Summary
+
+The AI landscape can appear overwhelming when treated as an undifferentiated cloud of terminology. By breaking the system down into its proper architectural layers, the boundaries become distinct:
+
+- The **LLM** provides intelligence.
+- **Workflows** provide determinism and structure.
+- **Agents** provide autonomy and goal-driven problem solving.
+- **Tools** provide capability.
+- **MCP** provides standardized, reusable collections of tools and context.
+- **Skills** provide methodology, loaded via progressive disclosure.
+- **Plugins** provide distribution and packaging.
+- **Multi-agent systems** solve context explosion through specialization.
+- **Orchestrators** provide coordination and state governance.
+- **Hooks** provide deterministic lifecycle interception.
+- **Guardrails** provide safety, trust, and alignment enforced in code.
+- **Harnesses** provide runtime containment, telemetry, and empirical evaluation.
+
+High-leverage engineering is not about using the most complex system possible; it is about choosing the simplest abstraction capable of solving the task reliably.
