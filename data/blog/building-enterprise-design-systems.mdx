@@ -1,0 +1,451 @@
+---
+title: 'Building enterprise design systems: from design patterns to frontend architecture'
+date: 2026-10-18
+tags: ['architecture', 'react', 'css', 'web']
+summary: 'How to build and maintain an enterprise design system: shared patterns, component APIs, tokens, themes, documentation, and upgrades across product teams.'
+---
+
+Suppose three product teams need a date picker and start with the same library. A few months later, one has added date ranges, another has patched keyboard navigation, and the third has copied the component to change its styling. An upgrade now means checking three implementations and preserving each team's changes.
+
+A design system gives these teams a place to share the component and agree on how it should behave, how it can vary, and who maintains it. The Figma library and npm package carry those decisions into design and code. Keeping the decisions aligned as products change is part of maintaining the system.
+
+This article follows those decisions into frontend architecture: what to share, where to allow variation, and how to get changes into consuming applications. Examples from [Arco Design](https://arco.design/), ByteDance's open-source design system, illustrate specific choices along the way.
+
+# Why share a design system?
+
+When teams build similar interfaces independently, they repeat more than the implementation. Each team reviews the same interactions, tests the same keyboard behavior, and works out how to apply the brand. Sharing those decisions and their implementation lets teams reuse that work and carry improvements across products.
+
+## Spend less time rebuilding familiar interactions
+
+A new reporting workflow needs decisions about filters, permissions, and what to show when there are no results. It can often reuse the date picker and dialog behavior from elsewhere in the product, including keeping keyboard focus inside an open modal.
+
+Shared controls leave more time for those product decisions. Even if an experiment gets discarded, the team has spent less time rebuilding controls that other products already use.
+
+## Make common behavior dependable
+
+A shared dialog can return focus to its trigger when it closes and respond consistently to keyboard dismissal. A tested theme gives teams a consistent starting point for color contrast. A fix to the shared implementation reaches applications when they adopt the release, so each team does not have to diagnose and patch the same problem.
+
+There is a cost to standardization, too. A component API that fits a settings page may be awkward in a dense trading interface. The system needs documented ways to extend a component, so a specialized layout does not require maintaining a separate implementation.
+
+## Agree on names and defaults
+
+Design handoffs get easier when names carry the same meaning in design files and code. A Figma property `size="large"` can map to `<Button size="large">`; `color.fill.secondary` can map to `--color-fill-secondary`. The mapping needs to be documented and maintained.
+
+Shared interaction rules also help users move between products. Having to relearn a date format or keyboard shortcut can be more disruptive than seeing a slightly different shade of blue. Decide which behaviors should stay consistent before trying to make every screen look identical.
+
+## Roll out shared changes
+
+A versioned token package lets teams distribute a brand refresh or dark-mode update through a dependency upgrade. Each application still needs to adopt and check the release: typography or spacing changes can break layouts even when component APIs stay the same.
+
+Versioning, visual checks, and a clear support window belong in the plan from the start.
+
+---
+
+# What belongs in the system?
+
+Start with the pieces teams repeatedly need to agree on. Tokens and components get most of the attention, but documentation and tooling determine whether those pieces stay useful.
+
+## Design tokens
+
+Tokens give design values names that can travel between tools and platforms. Instead of repeating `#165DFF`, a component refers to a role such as the primary action background.
+
+Three layers are useful once the system needs multiple themes. Each answers a different question:
+
+| Layer     | Question                          | Example                     |
+| :-------- | :-------------------------------- | :-------------------------- |
+| Global    | What values are available?        | `color.blue.600`            |
+| Semantic  | What is this value for?           | `color.action.background`   |
+| Component | Where does this component use it? | `button.primary.background` |
+
+A component token can reference a semantic token, which in turn references a palette value. Changing the semantic mapping lets a theme reuse the same component styles. The token pipeline and theme example below show how those references reach CSS.
+
+## UI components
+
+A component API should make its behavior predictable. Developers using it need to know which props—its configuration inputs—control state, supply labels, and handle errors. They also need documented ways to customize its appearance without relying on internal markup that may change between releases.
+
+The work behind each component varies considerably. A `Badge` mostly needs styling and content rules. A `Select` needs keyboard handling, focus management, and selection state. A `Table` adds sorting, filtering, selection, and sometimes virtualization: rendering only the rows near the visible area. Those differences affect how much testing and ongoing maintenance each component needs.
+
+## Icons and assets
+
+Icons help users recognize actions and scan dense interfaces: search, download, warning, and success should have familiar visual cues across products. A shared icon set gives teams an agreed symbol for each meaning, avoiding different icons for the same action or the same icon for unrelated actions.
+
+Consistent drawing areas and stroke weights also help icons sit comfortably beside text and controls. Generate framework components from the SVG sources so teams can reuse them. For example, Arco exposes React icons through `@arco-design/web-react/icon`, avoiding copied SVG markup scattered through applications.
+
+For icons that follow the surrounding text or status color, use `currentColor` in their SVG fills and strokes. The icon then uses the CSS text color applied to it, including a color inherited from its button:
+
+```tsx
+<Button icon={<IconSearch />}>Search</Button>
+```
+
+Here `IconSearch` comes from Arco's icon package.
+
+Document icon meaning and labeling as well as appearance. An icon-only action needs an accessible name; a decorative icon beside a text label should not be announced a second time. Color can reinforce a status, but a label or recognizable symbol should communicate its meaning too.
+
+## Patterns that span components
+
+A form can use the right inputs and still handle errors badly. An error-recovery pattern describes how the page preserves entered values, associates each error with its field, and moves focus after a failed submission. It captures decisions that no individual input can make for the whole form.
+
+Searchable tables need the same kind of agreement. When a filter changes, the page must decide whether to reset pagination, clear selected rows, or disable a batch action. Document those transitions in an example teams can adapt; a screenshot shows the layout but leaves the behavior unspecified.
+
+## Documentation
+
+An API reference tells developers which props exist. Documentation should also explain when to use a dialog instead of a drawer, how to label a destructive action, and how to recover from an error. Include layout examples, keyboard expectations, and copy that teams can reuse.
+
+Document awkward combinations, too. A dropdown inside a modal needs rules for where its popup renders, how it stacks above the modal, and how focus moves between them. Increasing `z-index` alone will not resolve all three.
+
+## Tooling
+
+Add tooling where it removes recurring manual work:
+
+- **Figma libraries and plugins**: Synchronizing tokens directly between design files and Git repositories.
+- **Interactive documentation portal**: Live sandboxes where developers can tweak props, inspect generated code, and test accessibility.
+- **Linting & enforcement**: Custom ESLint rules to flag hardcoded colors and deprecated component props, with documented exceptions.
+- **Automated codemods**: Migration scripts (`jscodeshift`) that automatically rewrite code when breaking API changes are introduced.
+
+---
+
+# Separate behavior from appearance
+
+A control's behavior and appearance change for different reasons. Keyboard navigation may need a bug fix across every product, while a new brand may need different colors in just one. Keeping those responsibilities separate lets teams make either change without copying the whole component.
+
+Tabs illustrate the distinction. A user switches between related views, with an active tab connected to its panel. The functional pattern defines focus movement, keyboard navigation, selection, and the relationships exposed to assistive technology. The visual treatment defines the type, spacing, colors, and active indicator. A brand refresh can change that indicator from an underline to a filled background while keeping the interaction familiar.
+
+Functional patterns describe what users can do and how an interaction behaves. Perceptual patterns describe how it looks and feels. In code, those responsibilities often fall into three layers:
+
+<Mermaid
+  chart={`
+flowchart TD
+  behavior["Behavior: state, keyboard, focus"] --> component["Styled component"]
+  theme["Appearance: tokens and visual states"] --> component
+  component --> page["Product screen"]
+  product["Composition: content and business rules"] --> page
+`}
+/>
+
+Behavior and appearance meet in the shared component; task-specific content and business rules stay with the product.
+
+The component connects these layers through an explicit API. A styled tabs component can reuse the same behavior with different tokens; the product supplies labels and panel content. A product-specific permission check belongs in the application or a domain component, rather than becoming a special case in the shared tabs implementation.
+
+This separation helps reviewers choose the relevant checks. A new brand color needs theme and visual checks, including contrast. A keyboard change needs interaction and accessibility checks across the styled variants. Documentation should make clear which parts products can customize and which behaviors the shared component owns.
+
+The layers still affect each other. A compact select may reuse the same selection behavior, but reducing spacing changes the area users can click or tap, how text is truncated, and the number of visible options. Test the finished combination as well as its individual parts.
+
+---
+
+# Putting the pieces together
+
+For a new system, I would start with a small package structure and one consuming application. That gives the architecture a real test before more components and tooling are added.
+
+## Package boundaries
+
+A monorepo keeps related packages in one repository; pnpm workspaces can manage their dependencies. Start with tokens, styled components, and documentation. The structure below shows where icons, primitives, and migration tools can live as the system grows. Add Turborepo when caching build results and scheduling dependent tasks would save useful work:
+
+```
+design-system/
+├── packages/
+│   ├── tokens/            # Raw JSON tokens + Style Dictionary transforms
+│   ├── icons/             # Raw SVG assets + icon generation build pipeline
+│   ├── primitives/        # Headless, unstyled accessible UI components
+│   ├── react/             # Styled React components (@my-ds/react)
+│   ├── eslint-plugin/     # Linter rules to enforce system adoption
+│   └── codemods/          # Automated AST upgrade scripts
+├── apps/
+│   ├── docs/              # Next.js / Contentlayer documentation website
+│   └── storybook/         # Component isolation & visual regression sandbox
+├── package.json
+├── pnpm-workspace.yaml
+└── turbo.json
+```
+
+### Why separate `tokens` and `primitives` from `react`?
+
+- **Platform independence**: `tokens` can be consumed by iOS, Android, email templates, and web apps without pulling in React.
+- **Explicit framework boundaries**: Separating behavior from styling does not remove framework dependencies. Headless React components still use React. Token data and state-transition logic can be shared where practical, while React and Vue still need their own rendering, events, refs, and lifecycle integration.
+
+## Choosing primitives
+
+Headless primitives supply interaction behavior while leaving visual styling to the consuming application. Before building a control, check how much behavior an existing primitive can cover. Styling a dropdown usually takes less work than implementing its keyboard and focus behavior.
+
+- **Overlays and complex controls**: Prefer established primitives when their behavior fits your requirements. [Radix Primitives](https://www.radix-ui.com/primitives/docs/overview/introduction) provides React components with interaction behavior; [Floating UI](https://floating-ui.com/docs/getting-started) provides positioning utilities and, in its React package, interaction hooks. Positioning alone does not implement an accessible dialog or combobox.
+- **Simple controls and layout**: Prefer native elements for buttons and inputs, adding tokens and a focused API. Build custom behavior only when the native control cannot meet the requirement.
+
+### Decide what to own
+
+| Approach                                   | Good fit                                                  | Ongoing responsibility                                                   |
+| :----------------------------------------- | :-------------------------------------------------------- | :----------------------------------------------------------------------- |
+| Existing styled library plus a brand layer | Most workflows fit an established library                 | Theme integration, upgrades, and product-level accessibility             |
+| Headless library plus custom styles        | Brand and composition need more flexibility               | Styling, API adapters, and integration tests                             |
+| Custom primitives                          | Documented requirements cannot be met through composition | Behavior, assistive technology testing, browser support, and maintenance |
+
+Start with a real product workflow and record where the existing solution fails. A custom component needs a named owner and a maintenance budget, not just a different appearance.
+
+## Controlled and uncontrolled state
+
+A form control can let the parent application own its value or store that value internally. In controlled mode, it reads the parent's `value` prop and reports user changes through `onChange`. In uncontrolled mode, it initializes internal state from `defaultValue`. Keep this choice consistent across controls so initialization and reset behave predictably:
+
+<Mermaid
+  chart={`
+flowchart TD
+  action["User changes the selection"] --> mode{"Who owns the value?"}
+  mode -->|Controlled| notify["Component calls onChange"]
+  notify --> parent["Parent updates value"]
+  parent --> render["Component renders the new value"]
+  mode -->|Uncontrolled| local["Component updates internal state"]
+  local --> render
+`}
+/>
+
+In controlled mode, the parent decides whether to update the value. In uncontrolled mode, the component stores the new value itself.
+
+Both modes can report changes through `onChange`. The distinction is whether the parent must supply a new `value` before the visible selection changes. Updating `defaultValue` after initialization does not reset an uncontrolled control.
+
+```tsx
+<Select value={department} onChange={setDepartment} />
+<Select defaultValue="infra" />
+```
+
+These are alternative usages. Keep the chosen mode stable for the component's lifetime, and define reset behavior separately. A shared hook can enforce the contract; Arco's [`useMergeValue`](https://github.com/arco-design/arco-design/blob/main/components/_util/hooks/useMergeValue.ts) is one implementation to study.
+
+## Composing forms
+
+Composition means building a larger component from parts that consumers can arrange. Arco's `Form.Item`, for example, keeps a field's label and configuration beside its input, without requiring the form to accept a prop for every possible field layout:
+
+```tsx
+<Form form={form}>
+  <Form.Item field="username" label="Username">
+    <Input />
+  </Form.Item>
+</Form>
+```
+
+## Building tokens
+
+Choose one authoritative token source and generate downstream formats. A small web-only system can begin with CSS variables. When several tools or platforms need the same values, a token build makes the transformations explicit:
+
+<Mermaid
+  chart={`
+flowchart TD
+  source["Versioned token source"] --> validate["Validate types and resolve aliases"]
+  validate --> build["Style Dictionary transforms"]
+  build --> css["CSS variables for web styles"]
+  build --> js["JavaScript values and TypeScript declarations"]
+  build --> native["Platform-specific outputs when needed"]
+`}
+/>
+
+The same token source can produce several outputs; each platform receives the format it needs.
+
+For cross-tool exchange, the [DTCG 2025.10 format](https://www.designtokens.org/tr/2025.10/format/) defines token types and values. It is a Community Group specification, not a W3C Standard. A dimension token is enough to illustrate the shape:
+
+```json
+{
+  "space": {
+    "$type": "dimension",
+    "$value": { "value": 16, "unit": "px" }
+  }
+}
+```
+
+A CSS transform can turn this token into `--space: 16px`. An alias is a reference to another token, so resolving aliases requires the complete token set. The build may preserve those links as CSS variable references when configured to do so.
+
+With Style Dictionary v5, instantiate `new StyleDictionary(config)` and await `buildAllPlatforms()`. Configure only the outputs consumers need: `css/variables` for web styles, and JavaScript plus companion declaration formats when code needs the values. The [migration guide](https://styledictionary.com/versions/v4/migration/) and [format reference](https://styledictionary.com/reference/hooks/formats/predefined/) cover the build configuration.
+
+### Decide how themes are applied
+
+A theme groups values for a brand, color mode, or density setting. Decide which choices are fixed for an application build and which users can change while the page is open. Compiled styles work for fixed values; CSS custom properties let components pick up runtime changes through normal CSS inheritance.
+
+Arco illustrates this combination: Less produces stylesheets, while components also reference variables such as `--color-primary-6`. Its dark-mode selector can be activated with `document.body.setAttribute('arco-theme', 'dark')`. DesignLab adds a distribution workflow: configure theme values in an editor, publish a versioned theme package, and import it in consuming applications. The broader decision is how approved design values reach products, whether through a generated package or another token pipeline.
+
+Document the supported combinations, such as a brand in light and dark modes. Define which values take precedence when themes overlap, so a product team can tell what an update will change before adopting it.
+
+### Follow a token through a scoped theme
+
+The palette provides raw values, the semantic layer chooses a value for each theme, and the component consumes that role. Here is the path for a primary button:
+
+<Mermaid
+  chart={`
+flowchart TD
+  palette["Palette: blue 600 / blue 300"] --> light["Light theme: action background = blue 600"]
+  palette --> dark["Dark theme: action background = blue 300"]
+  light --> alias["Component alias: button background = action background"]
+  dark --> alias
+  alias --> button["Button style uses the component alias"]
+`}
+/>
+
+Light and dark themes change the semantic mapping while the button keeps the same CSS rule.
+
+The corresponding CSS can stay small. Palette definitions are omitted here so the theme boundary is visible:
+
+```css
+[data-theme='light'] {
+  --action-bg: var(--blue-600);
+}
+[data-theme='dark'] {
+  --action-bg: var(--blue-300);
+}
+[data-theme] {
+  --button-bg: var(--action-bg);
+}
+.button-primary {
+  background: var(--button-bg);
+}
+```
+
+Declare the component alias at each theme boundary. If `--button-bg` were declared only on an ancestor, it would resolve `--action-bg` there. Changing `--action-bg` in a nested theme would not update that inherited alias.
+
+### Keep overlays inside the intended theme
+
+A React portal renders content at a different location in the document's element tree, or DOM. CSS inheritance follows that tree, not the React component hierarchy. A dialog opened from a dark panel can therefore inherit light colors if its portal renders under the light page body:
+
+<Mermaid
+  chart={`
+flowchart TD
+  body["Page body: light theme"] --> panel["Panel: dark theme"]
+  panel --> trigger["Dialog trigger"]
+  panel --> host["Portal host inside panel"]
+  host --> correct["Dialog inherits dark tokens"]
+  body --> outside["Default body-level portal"]
+  outside --> mismatch["Dialog inherits light tokens"]
+  style correct fill:#166534,color:#fff
+  style mismatch fill:#9f1239,color:#fff
+`}
+/>
+
+The two branches show alternative DOM locations for the same dialog. Its rendered location determines which theme it inherits.
+
+Choose a host inside the themed region, or apply the same theme selectors and token overrides to a host under `document.body`. [Radix Dialog's portal container](https://www.radix-ui.com/primitives/docs/components/dialog) is one API for choosing that DOM location.
+
+A host inside the panel inherits its theme, but an ancestor's clipping or CSS transforms may constrain the overlay. A themed host under the body avoids those ancestors. Check both overlay placement and theme inheritance when choosing the host.
+
+Also check what a provider actually changes. Arco's React [`ConfigProvider` theme implementation](https://github.com/arco-design/arco-design/blob/main/components/ConfigProvider/index.tsx) writes colors to `document.body`; nesting providers does not create isolated CSS theme scopes.
+
+## Packaging for consumers
+
+Test the published package from an application that imports it. Check whether importing one component pulls in every stylesheet, whether React has been bundled into the library, and whether the build preserves client directives such as `'use client'`.
+
+### Output formats
+
+Prefer ECMAScript modules (ESM) for modern applications. Add CommonJS, the older Node.js module format, when a supported consumer needs it, with matching TypeScript declarations for each format. Define the package entry points and dependency expectations:
+
+| Package setting    | Purpose                                                               |
+| :----------------- | :-------------------------------------------------------------------- |
+| `exports`          | Expose the JavaScript entry, its declarations, and a public CSS entry |
+| `peerDependencies` | Declare the React versions consumers must provide                     |
+| `sideEffects`      | Preserve style imports and any JavaScript with initialization effects |
+| Build externals    | Keep React and its subpath imports out of the library bundle          |
+
+For example, consumers should be able to import the component and its stylesheet through stable public paths:
+
+```tsx
+import { Button } from '@my-ds/react'
+import '@my-ds/react/css'
+```
+
+### Check the built output
+
+- Preserve CSS and Less imports in `sideEffects`. Audit JavaScript modules before declaring them free of side effects; registration code needs explicit treatment.
+- Declare React as a peer dependency and configure the build tool to externalize `react`, `react-dom`, and their subpath imports. Peer declarations alone do not prevent bundling.
+- Inspect a small consumer build: named ESM imports do not guarantee that CSS is split per component.
+
+## Testing shared behavior
+
+A regression in a shared component can affect many products, so tests need to cover how the component behaves as well as how it looks.
+
+Use unit and interaction tests, such as Vitest with React Testing Library, for user events, controlled and uncontrolled state, and keyboard behavior. For a labelled select, focus the trigger, press Enter, and check that the listbox opens. Test selection and focus restoration separately so a failure points to the behavior that broke.
+
+Run automated accessibility checks with axe in component tests and real browsers. The [axe-core documentation](https://github.com/dequelabs/axe-core) notes that color-contrast checks do not work under JSDOM, the simulated DOM often used in unit tests. Include manual keyboard and screen-reader checks of complete workflows; an automated scan cannot establish conformance on its own.
+
+Visual regression tests compare screenshots to detect unintended changes. Playwright and Storybook can cover hover, focus, disabled, and dark-mode states on each pull request. Review the differences: a screenshot comparison detects changed pixels but cannot decide whether the change is appropriate.
+
+## Server rendering and theme initialization
+
+Treat server rendering as a consumer requirement. [Radix supports server rendering](https://www.radix-ui.com/primitives/docs/guides/server-side-rendering), but interactive components still need client-side event handling. In the [Next.js App Router](https://nextjs.org/docs/app/getting-started/server-and-client-components), keep client boundaries around interactive entry points instead of making the entire library a client module. Ensure the build preserves those directives.
+
+Avoid reading `window`, `document`, or `localStorage` during server rendering. Derive an explicit theme from a cookie when the server can access the preference; otherwise use a framework-supported theme initialization strategy before paint. For a system preference, CSS `prefers-color-scheme` can provide the initial appearance. Keep the initial client render consistent with server markup, and test hard reloads for theme flashes and hydration errors.
+
+Publish a server-rendered consumer example alongside Storybook. Include an interactive control, a themed portal, and a persisted theme preference so package and hydration regressions surface before release.
+
+---
+
+# Keeping the system usable
+
+The package can be well designed and still lose adoption. A missing variant, an unanswered issue, or an expensive upgrade gives a product team a reason to copy a component locally. Once that copy starts changing, the next system fix no longer reaches it.
+
+## Ownership and adoption
+
+Assign each stable component an engineering owner and a design owner. Publish its maturity, supported environments, accessibility expectations, and support window. Product teams need a contribution path with a review deadline; otherwise local forks become the fastest way to ship.
+
+Track which applications use supported versions and how long upgrades take. Local overrides and recurring accessibility defects reveal problems the shared system has not solved. Usability testing of common tasks adds another view: a widely adopted component can still be difficult to use.
+
+Use that evidence to prioritize fixes. Review components with no clear owner or active use case before deciding whether to maintain, replace, or retire them.
+
+## When to add a prop or feature
+
+A request for a new prop often starts with one screen. Before adding it to the shared API, ask whether it represents a reusable component capability or a product-specific arrangement. Every prop becomes something to document, test in combination with other props, and support during upgrades.
+
+Use the kind of change to choose the extension point:
+
+- A visual choice such as compact density belongs in a named variant or token when its meaning is consistent across products.
+- A reusable behavior, such as a clearable selection, may justify a prop with a defined state and event contract.
+- A custom header, footer, or action area usually fits a slot—a place for consumer-provided content—or a child component better than several booleans that rearrange the internals.
+- Business rules, such as who can approve an invoice, belong in a product component composed from shared controls.
+
+For example, `showExportButton`, `showOwnerFilter`, and `showApprovalAction` would turn a shared `Table` into a particular product's toolbar. Keep the table focused on data presentation and selection, and compose the toolbar beside it. A selection feature belongs in the table API when it needs access to the table's row state.
+
+Ask for concrete usage examples and check whether existing parts can express them. Requests from independent consumers are evidence that a feature belongs in the shared system, but an accessibility fix should not have to wait for a second request. Before accepting a feature, identify its owner, valid combinations, and failure states. If those combinations are difficult to explain, a separate component or a smaller composable part may be easier to support.
+
+## Preventing component divergence
+
+Make it practical to request changes before adding rules against local alternatives:
+
+- **Linting guardrails**: Write custom ESLint rules to warn developers when they use inline colors (`color: '#165DFF'`) instead of design tokens, with exceptions for charts, third-party integrations, and system internals. Keep native HTML available when the shared component does not fit the task.
+- **Contribution proposals**: Give product teams a documented process for requesting components or variants. If several products need a timeline, the core team can compare their requirements and decide which behavior to share.
+
+## Breaking changes and automated migrations
+
+An upgrade that requires editing 40 files competes with product work. Migration support makes that cost easier for teams to justify.
+
+Whenever breaking changes are introduced:
+
+1. Mark old APIs with `@deprecated` in TypeScript docstrings.
+2. Publish a support window, provide compatibility shims where feasible, and pilot the migration in one consuming app.
+3. Ship an automated **codemod** script using `jscodeshift`.
+
+Show the intended API change before explaining the automation:
+
+```tsx
+// Before
+<Button type="danger">Delete</Button>
+// After
+<Button status="danger">Delete</Button>
+```
+
+A codemod rewrites source code automatically. To make this change safely, it must check where `Button` was imported from and whether a local variable shadows that name. Matching the JSX name alone could change an unrelated component:
+
+<Mermaid
+  chart={`
+flowchart TD
+  find["Find a Button usage"] --> binding{"Imported from the intended package?"}
+  binding -->|No| unchanged["Leave unchanged"]
+  binding -->|Yes| safe{"Literal danger value, no conflicts or spreads?"}
+  safe -->|Yes| rewrite["Rename type to status"]
+  safe -->|No| review["Report for manual review"]
+  rewrite --> verify["Review diff and run consumer checks"]
+  review --> verify
+`}
+/>
+
+Only supported, unambiguous usages are rewritten automatically; uncertain cases need manual review.
+
+An import alias should still match; a local variable with the same name should not. Skip boolean attributes, expression values, unsupported namespace imports, spreads, and existing `status` props unless the transform explicitly handles them. Use fixtures for each case, and verify that running the migration twice produces no further changes.
+
+Pilot the migration in one application, review the diff, and compare affected screens before rolling it out to more teams.
+
+---
+
+# Where I would start
+
+Pick one workflow that two product teams already share, such as a searchable table with an edit form. Build it with the proposed tokens and components, then try changing its theme and upgrading its package version. Note where the product teams need local overrides or clearer documentation.
+
+Use the difficulties in that workflow to choose the next piece of shared work. Each abstraction should solve a problem the teams can describe and have an owner who can respond when their requirements change.

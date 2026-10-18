@@ -1,0 +1,3 @@
+[mcp_servers.claude-mcp-api]
+type = "http"
+url = "https://claude-mcp-api.ml.goodnotes.com/mcp"
