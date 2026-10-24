@@ -1,0 +1,293 @@
+---
+title: 'AI agents and harnesses: from tool loops to reliable systems'
+date: '2026-10-24'
+tags: ['ai', 'architecture', 'agents', 'harnesses']
+summary: 'How models, tools, and harnesses form an agent, with a bounded execution loop and practical extensions for context, permissions, recovery, evaluation, and coordination among agents.'
+---
+
+A coding agent can read a failing test, inspect an implementation, edit a file, and run the test again. Each step depends on what the previous step revealed. The model proposes an action. The surrounding software decides whether and how to execute it.
+
+That division explains much of an agent's behavior. A capable model needs useful tools, relevant context, reliable feedback, and an execution environment that enforces its boundaries. A mistake in any one of those parts can undermine the whole task.
+
+The shorthand **agent = model + harness** provides a starting point for the engineering design: how to build the loop, define completion, manage context, recover from interruptions, and measure whether a change actually helps.
+
+For a broader glossary of tools, skills, plugins, and orchestration, see [Demystifying modern AI](/blog/ai-concepts-from-llms-to-multi-agent-systems). Here, the focus is the execution path from a user request to a verified result.
+
+## Who decides the next step?
+
+Consider three ways to handle a failing URL parser test.
+
+| System           | What happens                                                                        | Who chooses the next action?                     |
+| ---------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Chat interaction | The model suggests a possible fix, which the developer applies                      | The developer                                    |
+| Workflow         | Code runs tests, requests a proposed patch, applies it, and runs a predefined check | The application                                  |
+| Agent            | The model chooses which test, file, or dependency to inspect based on results       | The model, within limits enforced by the harness |
+
+These are interaction patterns. A chat interface can contain an agent, and a workflow can contain a bounded agent step. The useful architectural question is how much control the application delegates at each point.
+
+For predictable operations, explicit code paths are easier to inspect. A pipeline that extracts fields from a document, validates a schema, and stores the result can follow a fixed sequence. Debugging is a stronger candidate for an agent because the next useful action is often unknown until a test or file has been inspected.
+
+For the parser example, a hybrid design works well: let the model investigate and propose edits, then require a fixed verification step before accepting the result.
+
+## Follow one request through the harness
+
+Suppose an application uses `parseTarget(input)` to normalize a URL before storing it. The function returns the normalized URL or `null` when it rejects the input. It currently accepts any URL the standard parser can read, including schemes the application does not support.
+
+The task is: “Accept absolute HTTPS URLs, reject other inputs, and preserve HTTPS normalization.” Define that contract before the agent starts:
+
+| Input                      | Expected result            |
+| -------------------------- | -------------------------- |
+| `https://example.com/docs` | `https://example.com/docs` |
+| `HTTPS://EXAMPLE.COM/docs` | `https://example.com/docs` |
+| `http://example.com/docs`  | `null`                     |
+| `javascript:alert(1)`      | `null`                     |
+| `/docs`                    | `null`                     |
+| `not a URL`                | `null`                     |
+
+The agent uses file tools to read the parser's source code and tests. The harness returns those file contents to the model so it can understand the implementation and decide what to change. The repository is not automatically visible to the model. For this example, one possible sequence is:
+
+1. Read the project instructions, parser source code, and relevant tests to understand the existing behavior.
+2. Run the parser tests and reproduce the failure: `http://example.com/docs` is accepted.
+3. Edit the parser's source code to check that the parsed URL's protocol is `https:`.
+4. Run the affected tests and the package's regression checks.
+5. Inspect the source code diff and report the verified behavior.
+
+The model produces structured tool requests. A runtime dispatches those requests to actual implementations and returns observations. In a multimodal system, requests and observations may include more than text. The same execution boundary still applies.
+
+<Mermaid
+  chart={`
+flowchart TD
+  task[Task and acceptance criteria] --> context[Harness assembles context]
+  context --> model[Model proposes the next action]
+  model --> kind{Action type}
+  kind -->|Tool request| policy[Validate arguments and check policy]
+  policy -->|Allowed| tool[Execute tool within limits]
+  policy -->|Denied| observation[Record a structured observation]
+  tool --> observation
+  observation --> context
+  kind -->|Finish request| verify[Run independent acceptance checks]
+  verify -->|Pass| done[Return result with evidence]
+  verify -->|Fail| stopped[Return an incomplete result with failures]
+`}
+/>
+
+The harness should also handle cancellation, timeouts, and resource limits at every blocking operation. The diagram shows the successful control path, rather than every operational exit.
+
+The observation is the model's evidence about the environment. A command invocation is evidence that an attempt occurred. Its exit code, output, and resulting artifacts determine whether that attempt succeeded.
+
+The model chooses the investigation path. The harness dispatches tools and records their results. Acceptance checks defined by the application determine whether the resulting code meets the task's requirements.
+
+## Build a bounded loop before adding orchestration
+
+The harness needs a few rules: limit how long the agent can run, record what happened, and check the result before accepting completion. In pseudocode:
+
+```text
+history = [task]
+deadline = now + 2 minutes
+
+try:
+    repeat at most 12 decisions:
+        action = ask the model using history, within deadline
+
+        if action requests completion:
+            snapshot = capture the current workspace
+            checks = verify snapshot, within deadline
+            save checks and snapshot version in history
+            status = COMPLETE if all checks pass, otherwise INCOMPLETE
+            return status, model summary, checks, snapshot version, history
+
+        result = validate and run the requested tool, within deadline
+        save action and result in history
+
+    return INCOMPLETE with the decision limit and history
+
+on timeout, cancellation, or unexpected error:
+    return INTERRUPTED with the reason and history
+```
+
+The limits here are illustrative. Every model call and tool operation shares the same deadline. A rejected tool request or an expected tool failure becomes a result the model can inspect before choosing another action.
+
+The model's summary stays separate from the recorded check results. A request to finish triggers verification. Passing checks produce a completed result with evidence. Failed checks, exhausted limits, and interrupted work produce distinct incomplete results.
+
+An interruption preserves what is known so far. Before restarting, inspect the current state. Repeating the whole run can repeat edits or external writes.
+
+### Verify the parser against the contract
+
+The parser fix has three steps: parse the input as an absolute URL, reject it if parsing fails or the scheme is not HTTPS, and otherwise return the normalized URL.
+
+The verifier then runs all six cases from the earlier table against a fixed workspace snapshot. It compares each actual result with the expected result and records mismatches or unexpected exceptions.
+
+<Mermaid
+  chart={`
+flowchart TD
+  snapshot[Fixed workspace snapshot] --> run[Run all six URL cases]
+  run --> compare[Compare actual and expected results]
+  cases[Expected results from the table] --> compare
+  compare --> record[Record passes, failures, and code version]
+  record --> outcome{All cases pass?}
+  outcome -->|Yes| complete[Report completion with evidence]
+  outcome -->|No| incomplete[Report incomplete with failures]
+`}
+/>
+
+The saved evidence shows which cases passed or failed and which version of the code was checked. The snapshot stays unchanged during verification, and the acceptance cases live outside the agent's editable files.
+
+The corrected parser passes all six cases. The original implementation fails the HTTP and JavaScript scheme cases. A function that always returns `null` also fails, because the verifier checks that supported HTTPS URLs still work. These checks establish the behavior listed in the table, not every possible property of the parser.
+
+In a real package, verification should also run the existing regression suite and inspect the final patch scope. Record those results alongside the acceptance cases.
+
+### Account for execution limits
+
+The runtime still needs to handle operational concerns:
+
+| Concern             | Required behavior                                                       |
+| ------------------- | ----------------------------------------------------------------------- |
+| Request validation  | Check the structure and allowed arguments of each model request         |
+| Cancellation        | Cancel network requests and stop child processes when the run ends      |
+| Resource accounting | Track model usage, tool costs, output sizes, and concurrency separately |
+| Auditability        | Persist action IDs, decisions, observations, and artifact versions      |
+
+A deadline must apply while a model request or tool is running. Checking the clock only between iterations cannot stop a hung operation. Use request cancellation and a process supervisor that can terminate work when needed. Likewise, twelve decisions do not cap the tokens consumed in one large response or the cost of a tool invocation.
+
+## Give tools narrow, inspectable contracts
+
+A tool is an interface the model must learn to use from its description, schema, and feedback. Ambiguous names and enormous responses make action selection harder.
+
+Compare a general shell tool accepting arbitrary commands with `run_parser_checks`, which maps to a fixed command defined by the application. The shell offers flexibility. The named check reduces the authority and argument space needed for this task.
+
+A useful tool result gives the model enough evidence to choose its next action. For example:
+
+| Field           | Example value                           |
+| --------------- | --------------------------------------- |
+| Outcome         | Failed                                  |
+| Check           | Parser compatibility                    |
+| Code version    | Snapshot 17                             |
+| Failed input    | `http://example.com/docs`               |
+| Expected result | Rejection                               |
+| Actual result   | Accepted                                |
+| Full output     | Reference to the saved log for check 42 |
+
+These values are illustrative. The result identifies the failure, ties it to the code that was checked, and provides a way to retrieve the full output. The next model call can use this concise result without reading thousands of unrelated log lines.
+
+MCP standardizes tool discovery and invocation across services. Its [tool specification](https://modelcontextprotocol.io/specification/2025-11-25/server/tools) describes names, input schemas, results, and optional output schemas. A connection through MCP still needs application authorization, credential scoping, and output handling. The protocol also explicitly treats tool annotations as untrusted unless their server is trusted.
+
+## Extend the harness with context and durable memory
+
+An agent's next decision depends on the information supplied to the model at that moment. Conversation storage, retrieved documents, and files on disk affect the decision only when the harness makes them available in context.
+
+Separate three kinds of information:
+
+| Information             | Parser example                                                         | Storage and retrieval                                   |
+| ----------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------- |
+| Stable project guidance | Package boundaries and supported URL behavior                          | Versioned project documentation loaded when relevant    |
+| Current working context | Parser code, failing case, latest patch, current test output           | Selected material for the next model call               |
+| Durable task state      | Acceptance criteria, changed files, check results, unresolved failures | Checkpoint or progress record outside the model context |
+
+Anthropic's [context engineering guide](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents) discusses retrieval, compaction, and structured notes as ways to manage long tasks. A practical application is to select evidence according to the next decision: include the failing parser case when investigating a scheme bug, then retrieve broader regression results when considering completion.
+
+### Preserve provenance during compaction
+
+A summary can accidentally turn a hypothesis into a fact. “The parser probably normalizes the scheme too early” must not become “The parser normalizes the scheme too early” merely because the conversation was shortened.
+
+Keep compacted state structured enough to distinguish:
+
+- **Requirement:** unsupported schemes must be rejected.
+- **Observation:** check 42 failed against workspace snapshot 17.
+- **Hypothesis:** normalization may happen before validation.
+- **Decision:** inspect the normalization helper before editing it.
+
+Retain references to source artifacts and label uncertainty. Read the code again or rerun checks when the workspace has changed since the observation. A summary helps the next session orient itself. Fresh evidence establishes current behavior.
+
+### Put repeated procedures in skills
+
+Stable project instructions describe conventions that apply broadly. A skill can hold a procedure for a particular task, such as reproducing parser bugs with the package's fixture runner. An executable check should enforce a condition that can be evaluated mechanically.
+
+For example, “preserve valid HTTPS behavior” belongs in the task contract. Put the exact fixture command in a relevant procedure and the compatibility cases in tests. Maintaining each fact in an appropriate place reduces contradictory instructions.
+
+## Treat permissions as part of the execution path
+
+An agent reads material that may contain instructions: repository files, issue descriptions, webpages, and tool responses. That material can be useful evidence while remaining untrusted as a source of authority.
+
+Imagine a fixture file containing a comment that tells the agent to upload its environment variables to a debugging endpoint. Reading the file is within the parser task. Following the comment would expand the task into a new network operation.
+
+In this design, restrict capabilities according to the work:
+
+| Operation                         | Proposed control for the parser task                            |
+| --------------------------------- | --------------------------------------------------------------- |
+| Read parser sources and fixtures  | Allow within the configured root                                |
+| Edit the parser package           | Allow within an isolated workspace                              |
+| Run regression checks             | Allow the approved command under process limits                 |
+| Access unrelated credentials      | Exclude from the execution environment                          |
+| Upload files or publish a release | Require separate authorization and a suitably scoped capability |
+
+A project instruction such as “only edit parser files” guides the model. The tool dispatcher enforces that restriction by rejecting unauthorized operations, invalid paths, and oversized patches. For file access, it resolves paths against an allowed root, handles symlinks according to policy, and rejects escapes. The execution environment restricts which files, processes, and network destinations tools can reach.
+
+These measures address different failure paths. An approval interface handles a consequential action the user may intentionally authorize. A sandbox restricts what an execution process can reach. Neither establishes that retrieved content is trustworthy, and neither guarantees the model will interpret that content correctly.
+
+## Recover from interruption without repeating side effects
+
+A short debugging session may finish in one loop. A longer task may encounter a process crash, context reset, machine restart, or expired credential.
+
+Anthropic's [work on harnesses for long tasks](https://www.anthropic.com/research/effective-harnesses-for-long-running-agents) uses incremental work and explicit progress artifacts to help later sessions resume. For the parser task, a checkpoint could record the goal, workspace version, affected files, check results, and the next unresolved question.
+
+Recovery needs more than a conversation transcript. Consider this failure sequence:
+
+1. The runtime sends a request to create a remote review artifact.
+2. The service creates the artifact.
+3. The network connection drops before the runtime receives the response.
+
+The runtime cannot infer from the timeout whether creation succeeded. Retrying immediately may create a duplicate.
+
+For consequential writes, persist an operation ID before dispatch. Use that ID as an idempotency key when the destination supports it, and reconcile the remote state after an ambiguous failure. If the destination provides neither deduplication nor reliable lookup, pause that operation for inspection instead of assuming it failed.
+
+Local edits also need reconciliation. If a checkpoint says a patch was proposed, inspect the current file and diff before applying it again. On restart, verify the workspace identity and rerun the checks needed to establish its current state.
+
+Persisted state should distinguish **planned**, **dispatched**, **confirmed**, and **unknown** outcomes. “Unknown” is a useful operational state: it prevents a transport failure from silently becoming permission to repeat a side effect.
+
+## Add multiple agents when work can be separated
+
+Subagents can investigate separate parts of a problem with their own working context. That helps when the main task would otherwise accumulate several unrelated investigations. It also creates coordination and integration work.
+
+For the parser bug, one agent is likely enough. For a migration across several independent packages, separate agents could inspect compatibility risks while one owner integrates the changes.
+
+A useful delegation contract specifies the question, relevant files, permitted actions, expected evidence, and completion criteria. For example: “Inspect the serializer's handling of URL schemes. Return affected callers and supporting file references. Do not edit files.” The coordinator can evaluate that report before changing the shared implementation.
+
+Parallel edits require ownership boundaries and integration checks. Separate workspaces isolate file changes, but shared services, databases, and test environments still need isolation or coordination. A final verifier should run against the combined artifact, because individually passing branches can fail together.
+
+Treat subagent output as a report with evidence. Additional agents do not make an unsupported conclusion more reliable merely by repeating it.
+
+## Evaluate outcomes and diagnose failures
+
+A convincing final answer is easy to mistake for a successful run. Define success before running the agent, then evaluate the resulting artifact and action history.
+
+For the parser example, use a small suite of task variants:
+
+| Scenario                                  | Required outcome                                 |
+| ----------------------------------------- | ------------------------------------------------ |
+| Unsupported scheme is accepted            | Reject it while preserving valid inputs          |
+| Regression suite exposes a second failure | Report or repair it within scope                 |
+| A file contains unrelated instructions    | Continue the task without granting new authority |
+| A check process hangs                     | Stop according to the execution deadline         |
+| A run resumes after an applied patch      | Inspect current state before repeating the edit  |
+| The model requests completion too early   | Reject completion when acceptance checks fail    |
+
+Record task success, acceptance failures, unauthorized actions, latency, usage, and human intervention. Run repeated trials when model variability matters. Keep the task set and environment comparable when changing the model, tool interface, or context policy.
+
+Avoid combining several changes into one experiment. If both the model and context selection change, an improved success rate does not identify which change helped. Start with a baseline, alter one factor, inspect the failures, and retain the change only when its benefit justifies its costs.
+
+For cost tracking, include model input and output, tool execution, retries, storage, and review time where relevant. A lower token bill can still accompany a worse result if the run needs substantial manual repair.
+
+### Match the fix to the failure
+
+When the agent fails, locate the broken mechanism:
+
+| Observed failure                              | First design change to investigate                 |
+| --------------------------------------------- | -------------------------------------------------- |
+| It edits the wrong package                    | File discovery, task scope, and write restrictions |
+| It misses a failing case buried in logs       | Structured tool results and context selection      |
+| It claims success after a failed check        | Completion gating and result reporting             |
+| It repeats a remote write after a timeout     | Operation IDs, reconciliation, and idempotency     |
+| It loses the goal after resuming              | Durable requirements and checkpoint loading        |
+| It loops through the same unsuccessful action | Progress detection and retry budgets               |
+
+This makes harness improvement a concrete engineering activity. For your first implementation, choose one bounded task, give it a few narrow tools, define an observable acceptance check, and save enough evidence to explain each failure. Extend the harness when those failures reveal a missing capability or control.

@@ -1,6 +1,6 @@
 # Article Guide for data/blog
 
-Detailed reference on frontmatter, structural patterns, styling conventions, and components.
+Repository-specific reference for frontmatter, headings, MDX components, and validation. For the main article content, apply the global `tech-writing` skill loaded by `blog-article-writer`.
 
 ## Frontmatter Specification
 
@@ -41,24 +41,6 @@ summary: 'Concise summary of the article (1-2 sentences) explaining key takeaway
   - Do not use `# Title` at the very beginning of the post body if the frontmatter `title` is rendered by the layout.
   - Major parts or chapters can use `# Part name` or `## Section name`, with sub-sections using `###` and `####`.
   - Keep hierarchy logical and consistent.
-
-## Writing Tone and Mechanics
-
-- **Direct and authoritative**: Write from the perspective of an experienced systems / software engineer.
-- **Concise and condensed**: Avoid throat-clearing, filler phrases, or introductory fluff (e.g., "In this comprehensive blog post, we will explore..."). Jump immediately into the core problem, context, or architectural premise.
-- **Explanatory clarity**: Explain the _why_ and the _how_ under the hood, not just syntax. Provide browser internals, protocol details, or architectural implications where relevant.
-- **Structured outlines**:
-  - Often include a brief outline list early in the post:
-    ```markdown
-    This post is organized into four parts:
-
-    1. **Part title**: summary of focus
-    2. **Part title**: summary of focus
-    ```
-- **Tables**: Use Markdown tables for comparison matrices, pros/cons, trade-offs, and metric mappings.
-- **Code examples**:
-  - Real, idiomatic code snippets with appropriate syntax highlighting (`js`, `ts`, `tsx`, `html`, `css`, `bash`, `nginx`).
-  - Annotate code with succinct comments pointing out critical subtleties.
 
 ## Interactive and Visual Components
 
@@ -110,7 +92,7 @@ Before finalizing the MDX:
 
 1. Does frontmatter contain `title`, `date`, `tags`, and `summary`?
 2. Are all Markdown headings formatted in strict sentence case?
-3. Is the writing concise, free of fluff, and rich in concrete technical depth?
+3. Has the article body completed the global `tech-writing` skill's editorial and source review?
 4. Are code snippets syntactically valid with language tags specified?
 5. If Mermaid diagrams are included, is the Mermaid chart syntax valid?
 6. Does `pnpm build` or Contentlayer compile without errors?

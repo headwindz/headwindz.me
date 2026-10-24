@@ -1,39 +1,36 @@
 ---
 name: blog-article-writer
-description: Expand outlines, notes, or main ideas into comprehensive, publication-ready technical MDX blog posts matching the style, formatting, and conventions of data/blog.
+description: Expand outlines, notes, or main ideas into publication-ready technical MDX blog posts in data/blog, using the user's global tech-writing skill for article content and this skill for repository conventions and validation.
 ---
 
 # Blog Article Writer
 
-Expand article topics, outlines, or raw technical notes into structured, in-depth MDX articles following the conventions of the `data/blog` directory.
+Create technical MDX articles for `data/blog`. Use the user's global `tech-writing` skill for the main article content; this skill handles blog-specific formatting, integration, and validation.
 
-## Core Workflow
+## Required writing skill
 
-1. **Analyze input and determine scope**
-   - Extract key technical concepts, arguments, comparisons, and practical applications from the prompt.
-   - Select appropriate tags (aligning with existing tags in `app/tag-data.json` when possible).
-   - Formulate a clean, descriptive title in **sentence case**.
-   - Determine file path: `data/blog/<slug>.mdx` using kebab-case.
+Before outlining, drafting, or revising the article body, read and apply `~/.codex/skills/tech-writing/SKILL.md` (expand `~` to the user's home directory). If the session's available-skills catalog gives a different location for the user's global `tech-writing` skill, use that location.
 
-2. **Structure the article**
-   - Begin with required frontmatter (`title`, `date`, `tags`, `summary`).
-   - Write an immediate, engaging technical lead paragraph setting up the problem or architecture without filler or throat-clearing.
-   - Optional: include an upfront part-by-part outline if the article has multiple chapters or major parts.
-   - Break down the core concepts into logical sections with clear hierarchy (`##`, `###`).
-   - Ground abstract theory with real-world code snippets, configuration examples, and comparison tables.
-   - Where visual clarity helps (e.g. protocol flows, lifecycles, pipelines), use `<Mermaid chart={`...`} />` diagrams.
-   - Conclude with actionable takeaways, architectural trade-offs, or a concise summary.
+Use `tech-writing` as the source of truth for the body's structure, explanations, examples, evidence and citations, voice, prose, visuals, and editorial review. Read its supporting references when its instructions call for them. Do not duplicate its writing rules here or impose a fixed outline, length, or conclusion.
 
-3. **Writing and style rules**
-   - **Sentence case headers strictly required**: Only the first letter of each heading is capitalized (e.g., `## Under the hood`, `### Cache invalidation and revalidation`). Proper nouns and acronyms (like `JavaScript`, `React`, `HTTP`, `PWA`, `CSS`) retain their capitalization. Never use title case for headings.
-   - **Condensed, direct sentences**: Eliminate fluff, unnecessary adverbs, and conversational meta-announcements.
-   - **Concrete over generic**: Show real code, configurations, performance metrics, and browser/system mechanics rather than high-level generalities.
+Keep the user's requested scope and audience. Apply the repository's frontmatter, sentence case, MDX, and component conventions when integrating the content.
 
-4. **Detailed conventions reference**
-   - For complete details on frontmatter schemas, Mermaid usage, demos, and checklists, read [references/article_guide.md](references/article_guide.md).
+## Core workflow
 
-5. **Validation and compilation**
-   - Verify that all frontmatter fields adhere to Contentlayer types.
-   - Verify headings adhere to sentence case.
-   - Check that Mermaid code blocks and code syntax blocks are valid.
-   - Test by running or checking the Contentlayer build (`pnpm build` or dev server logs).
+1. **Determine scope and destination**
+   - Use `tech-writing` to establish the article's purpose and develop its main content from the supplied topic, notes, or sources.
+   - Select appropriate tags, aligning with `app/tag-data.json` when possible.
+   - Choose a sentence case title and a kebab-case path: `data/blog/<slug>.mdx`.
+
+2. **Draft and integrate the article**
+   - Follow `tech-writing` for outlining, drafting, and reviewing the body.
+   - Add required frontmatter: `title`, `date`, `tags`, and `summary`.
+   - Use sentence case headings; preserve capitalization for proper nouns and acronyms.
+   - Use the site's `<Mermaid chart={`...`} />` component for suitable diagrams and existing MDX components or demos when relevant.
+   - Consult [references/article_guide.md](references/article_guide.md) for frontmatter details, heading conventions, and component syntax.
+
+3. **Review and validate**
+   - Complete the editorial and source review required by `tech-writing`.
+   - Verify frontmatter against Contentlayer types and headings against sentence case conventions.
+   - Check code examples and Mermaid syntax, and inspect rendered visuals when present.
+   - Verify compilation with `pnpm build` or Contentlayer/dev server logs.

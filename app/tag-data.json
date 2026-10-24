@@ -1,9 +1,9 @@
 {
-  "architecture": 2,
+  "architecture": 3,
   "react": 4,
   "css": 5,
   "web": 13,
-  "ai": 1,
+  "ai": 2,
   "notes": 5,
   "web3": 2,
   "blockchain": 2,
@@ -41,5 +41,7 @@
   "general": 1,
   "nginx": 1,
   "web-server": 1,
-  "devops": 1
+  "devops": 1,
+  "agents": 1,
+  "harnesses": 1
 }
