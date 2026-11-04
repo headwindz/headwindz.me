@@ -2,7 +2,7 @@
 title: How to fix duplicate svg id collisions in React
 tags: [web, svg, react]
 date: 2025-10-12
-summary: Learn how to identify and resolve duplicate SVG ID collisions when using multiple SVGs in your web applications, with practical solutions using SVGR, runtime transformations, and best practices.
+summary: Prevent duplicate SVG IDs in React with useId, and learn when simplifying an icon can remove the need for IDs.
 ---
 
 When building modern web applications, you'll often import SVG files as React components for icons, illustrations, or graphics. However, a common but subtle issue arises when using multiple instances of SVGs that contain same internal id: **duplicate id collisions**. This problem can cause visual glitches, broken gradients, incorrect clip paths, and accessibility issues. In this post, I'll explain what causes these collisions and show you multiple ways to fix them.
@@ -57,10 +57,10 @@ function IconWithGradient() {
 }
 ```
 
-For React 17 or earlier, you can use a custom hook:
+For a controlled client-only React 17 application, a counter can distinguish instances within one module. It does not provide stable server/client IDs, and independently bundled copies can have separate counters. Do not use this fallback for server rendering or hydration; prefer an explicit ID supplied by the caller in that setting. [React useId](https://react.dev/reference/react/useId) handles matching IDs when the server and client trees agree.
 
 ```tsx
-import { useRef, useEffect } from 'react'
+import { useRef } from 'react'
 
 let idCounter = 0
 
@@ -93,7 +93,7 @@ function IconWithGradient() {
 
 ## Solution 2: inline svgs without ids
 
-For simple svgs, consider removing id entirely and using inline styles or direct references:
+If a solid fill meets the design requirement, removing the gradient also removes its ID reference. This changes the appearance. It is not an equivalent repair for an icon that must keep its gradient:
 
 ```tsx
 // Instead of using url(#gradient)
@@ -127,7 +127,9 @@ For simple svgs, consider removing id entirely and using inline styles or direct
 
 # Conclusion
 
-Duplicate svg id collisions are a subtle but important issue in modern web development. While the browser won't throw errors, the visual and accessibility implications can impact user experience. By understanding this issue and implementing one of these solutions, you'll avoid confusing bugs and create more robust applications.
+SVG IDs belong to the document, so each rendered icon needs unique IDs for its definitions and matching references. Use `useId` in reusable React components to keep those references tied to the correct instance. If the design works without gradients or filters, simplifying the SVG can remove the need for IDs altogether.
+
+Test several instances together, including hidden-icon states and server rendering where supported. A single icon can look correct while duplicate IDs break another instance elsewhere on the page.
 
 # References
 

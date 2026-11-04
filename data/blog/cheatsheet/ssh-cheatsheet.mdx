@@ -14,7 +14,7 @@ SSH is commonly used for:
 - Tunneling and port forwarding
 - Deployment and automation
 
-## Basic SSH Commands
+## Basic SSH commands
 
 Connect to a remote server:
 
@@ -40,7 +40,7 @@ Run a command remotely:
 ssh remote_host command -with -flags
 ```
 
-## Advanced SSH Usage
+## Advanced SSH usage
 
 Dynamic port forwarding (SOCKS proxy on localhost:9999):
 
@@ -64,11 +64,11 @@ Local system has a cryptographic key pair - public key and private key. The serv
    ```bash
    ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
    ```
-2. Copy your public key to the server:
+2. Copy your public key to the server (`ssh-copy-id` must be installed on your local machine):
    ```bash
    ssh-copy-id username@remote_host
    ```
-3. Verify that your public key is in `~/.ssh/authorized_keys` on the server.
+3. In a separate terminal, connect with `ssh -i ~/.ssh/id_rsa username@remote_host` (substitute the key you generated). Confirm that you reach the intended account using the key. A key passphrase prompt unlocks the local key. It is different from the remote account password. Keep your existing session open while checking a new login method.
 
 **Security tip:** Never share your private key. Keep it secure and consider using a passphrase.
 
@@ -77,14 +77,14 @@ Local system has a cryptographic key pair - public key and private key. The serv
 Instead of annoyingly typing
 
 ```bash
-ssh root@11.111.222.333 -p 2333
+ssh root@203.0.113.10 -p 2333
 ```
 
 We can actually set the ssh config in `~/.ssh/config` with
 
 ```bash
 Host remoteServer           # host name alias that is easy to memorize
-HostName 11.111.222.333     # host ip or host name
+HostName 203.0.113.10     # host ip or host name
 User root                   # user
 Port 2333                   # port
 IdentityFile ~/.ssh/id_rsa  # private key location

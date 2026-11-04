@@ -5,7 +5,7 @@ tags: ['web', 'webpack', 'performance']
 summary: 'A deep dive into the key techniques for performance optimization: how to measure with Core Web Vitals and DevTools. Performance optimization with tree shaking, code splitting, and dynamic import.'
 ---
 
-JavaScript is the most expensive resource shipped to the browser. Unlike images, which only consume bandwidth, JavaScript must be downloaded, parsed, compiled, and executed before it does anything useful. Every step on the critical path costs time that users feel directly.
+A large JavaScript payload costs more than download time: the browser must parse, compile, and execute it. Images also need decoding, memory, and rendering work. Start by finding which resource or main-thread task delays the user action you care about, then choose a change that addresses that delay.
 
 This post is organized into four parts:
 
@@ -34,20 +34,25 @@ CLS measures unexpected visual shifts. While less directly tied to bundle size, 
 
 FCP is when the browser renders the first pixel of actual content. Render blocking `<script>` tags in `<head>` without `async` or `defer` delay FCP outright.
 
-**TTI (Time to Interactive)**
+**INP (Interaction to Next Paint)**
 
-TTI marks when the page is reliably interactive. The main thread is quiet and can respond to user input within 50 ms. A large synchronous bundle, even one that loads quickly, delays TTI because the browser is tied up parsing and executing it.
+INP measures responsiveness across interactions during a page visit. Long tasks, expensive event handlers, and rendering work can delay the next paint after an interaction. INP joined LCP and CLS as a Core Web Vital in March 2024. [INP and Core Web Vitals](https://web.dev/blog/inp-cwv-march-12).
+
+**TBT (Total Blocking Time), a laboratory diagnostic**
+
+TBT sums the blocking portions of long main-thread tasks during a page-load measurement. It helps diagnose JavaScript load cost in Lighthouse, but it is not a replacement for measuring real interactions in the field. TTI is a historical metric removed from Lighthouse 10. [Lighthouse 10 changes](https://developer.chrome.com/blog/lighthouse-10-0).
 
 ### How bundle size maps to metrics
 
-| Metric | Primary bundle size impact                                     |
-| ------ | -------------------------------------------------------------- |
-| LCP    | Large render-blocking bundles delay the first meaningful paint |
-| FCP    | Synchronous scripts in `<head>` stall initial render           |
-| TTI    | Any large bundle delays the quiet main-thread state            |
-| CLS    | Dynamic script-injected content without reserved dimensions    |
+| Metric | Primary bundle size impact                                      |
+| ------ | --------------------------------------------------------------- |
+| LCP    | Large render-blocking bundles delay the first meaningful paint  |
+| FCP    | Synchronous scripts in `<head>` stall initial render            |
+| INP    | Expensive tasks delay handling and painting interactions        |
+| TBT    | Long tasks during the lab page-load trace block the main thread |
+| CLS    | Dynamic script-injected content without reserved dimensions     |
 
-## Diagnosing with DevTools and Lighthouse
+## Diagnosing with DevTools and lighthouse
 
 **Identify the bottleneck before you optimize.** Every technique in this post has a cost: added build complexity, delayed module loading and more brittle imports. Applying them without measurement means you are paying those costs blindly, possibly on code paths that are not even slow. The bottleneck is rarely where you expect it to be.
 
@@ -64,17 +69,17 @@ Skipping steps 1–2 and jumping straight to step 3 is the most common performan
 
 Lighthouse is the starting point. Open Chrome DevTools → **Lighthouse** tab, select **Performance** category, and run an audit. The report gives you:
 
-- Scored metrics (LCP, FCP, TTI, CLS)
+- Lab performance metrics such as LCP, FCP, Speed Index, TBT, and CLS; collect field LCP, INP, and CLS separately
 - **Opportunities**: actionable items such as "Reduce unused JavaScript", "Eliminate render-blocking resources", and "Avoid serving legacy JavaScript"
 - **Diagnostics**: supporting data like main-thread work breakdown and network request counts
 
 ### Network tab
 
-The Network tab shows what is actually downloaded. Filter by **JS** to see your chunks. Key things to look for:
+The Network tab shows what Is actually downloaded. Filter by **JS** to see your chunks. Key things to look for:
 
 - **Chunk sizes**: any individual file over 500 KB (uncompressed) is a candidate for splitting or lazy loading
 - **Request count on initial load**: excessive parallelism has its own cost. Too many small chunks can hurt HTTP/1.1 sites
-- **Cache headers**: chunks with content hash filenames should have long `max-age` values. If they don't, code splitting provides no cache benefit
+- **Cache headers**: chunks with content hash filenames should have long `max-age` values. Choose freshness and revalidation rules that suit the deployment; splitting alone does not establish cache behavior
 - **Waterfall**: scripts that block DOMContentLoaded appear before the blue line. Move them to `async`/`defer` or lazy load them
 
 ### Performance tab (flame chart)
@@ -126,15 +131,15 @@ This section covers **build-time** techniques to ensure unused code never makes 
 
 Tree shaking is dead-code elimination at build time. The bundler analyzes which exported symbols are actually imported and used, then excludes unused ones from the final output. The name comes from the idea of shaking a dependency tree until dead branches fall off.
 
-### Why tree shaking requires ESM
+### Why ESM helps tree shaking
 
-Tree shaking only works with **ES Modules (ESM)**. The reason is that ESM has statically deterministic semantics:
+ES Modules expose static imports and exports, which makes unused-code analysis more predictable. Bundlers can optimize some CommonJS patterns too, but dynamic exports and `require` calls limit what they can safely infer. For static ESM imports:
 
 - `import` paths must be string literals (not runtime variables)
 - `import` statements must appear at the top level (not inside `if` blocks or functions)
 - imported bindings are immutable and cannot be reassigned at runtime
 
-These constraints allow a bundler to construct the full dependency graph at compile time without executing any code. CommonJS (`require`) is the opposite: it is resolved at runtime, paths can be dynamic expressions, and exports can be conditionally added in loops. A bundler cannot safely remove a CommonJS export without running the code first.
+These constraints allow a bundler to construct the full dependency graph at compile time without executing any code. CommonJS (`require`) is the opposite: it is resolved at runtime, paths can be dynamic expressions, and exports can be conditionally added in loops. A bundler must retain behavior it cannot safely analyze.
 
 ```js
 // ESM — statically analyzable, tree-shakeable
@@ -144,11 +149,11 @@ import { add } from './math'
 const math = require('./math')
 ```
 
-This is why `lodash` (CommonJS) cannot be tree-shaken while `lodash-es` (ESM) can.
+Prefer `lodash-es` when using an ESM-aware build, and inspect the output rather than assuming every import form produces the same bundle.
 
 ### The `sideEffects` field
 
-A **side effect** in this context means any code that runs as a consequence of importing a module, regardless of whether you use what it exports. E.g.: registering a global polyfill, appending a `<style>` tag, writing to `window`.
+A **side effect** in this context means any code that runs as a consequence of importing a module, regardless of whether you use what It exports. E.g.: registering a global polyfill, appending a `<style>` tag, writing to `window`.
 
 By default, bundlers must assume every module could have side effects and retain it even if nothing from it is imported. This is the safe but expensive choice.
 
@@ -171,11 +176,11 @@ For packages that do have some side-effectful files, you can specify them as an 
 }
 ```
 
-This is exactly what `antd` uses: CSS and Less files have side effects (they inject styles), but the component logic files do not.
+A package may use an allowlist like this when its published structure includes those paths: CSS and Less files have side effects (they inject styles), but the component logic files do not.
 
 In Webpack's own configuration, there are two related options worth understanding:
 
-- `module.rule.sideEffects` (default: `false`) — marks the _modules processed by a rule_ as having side effects. Commonly set to `true` for CSS rules to prevent style files from being dropped
+- `module.rules[].sideEffects` (an optional rule-level override) — marks the _modules processed by a rule_ as having side effects. Commonly set to `true` for CSS rules to prevent style files from being dropped
 - `optimization.sideEffects` (default: `true` in production) — tells Webpack to respect the `sideEffects` annotations from `package.json` during optimization
 
 ### What kills tree shaking
@@ -287,7 +292,7 @@ import { Button } from '@/components'
 
 The ergonomics are appealing, but barrel files are one of the most common causes of bundle bloat in large codebases.
 
-### Why barrel files defeat tree shaking
+### When barrel re-exports retain extra code
 
 The problem is not that barrel files exist — it is that they force the bundler to evaluate all re-exported modules before it can determine which ones you actually need. When a barrel re-exports from modules with side effects, or when those modules import from other barrels that do, the bundler must retain the entire transitive graph.
 
@@ -300,7 +305,7 @@ pages/Dashboard.tsx
       → imports './modal-animations' (side effect: registers a global)
 ```
 
-Even though `Dashboard.tsx` only needs `Button`, it ends up pulling in `modal-animations` because the bundler cannot prove the barrel chain is side-effect-free. A single barrel connecting 50 components effectively forces all 50 into the initial bundle.
+Even though `Dashboard.tsx` only needs `Button`, it ends up pulling in `modal-animations` because the bundler cannot prove the barrel chain is side-effect-free. A barrel alone does not force every component into the output. Retained side effects and the dependency graph determine which modules survive optimization; verify with the production bundle analyzer.
 
 ### Solutions
 
@@ -362,14 +367,9 @@ Code splitting solves this by separating stable dependencies from frequently-cha
 
 ### Webpack's automatic split conditions
 
-Webpack's `SplitChunksPlugin` (built in since Webpack 4) triggers automatically when all of the following conditions are met:
+Webpack's `SplitChunksPlugin` groups modules according to chunk selection, size thresholds, shared use, and request limits. Defaults differ by version and mode. Current webpack documentation lists production defaults including `minSize: 20000`, `maxAsyncRequests: 30`, `maxInitialRequests: 30`, and `chunks: 'async'`; these are not universal performance targets.
 
-- The module is shared between chunks, or comes from `node_modules`
-- The module is larger than 30 KB before minification and compression
-- The number of parallel requests for async chunks does not exceed 5
-- The number of parallel requests for initial page load does not exceed 3
-
-These defaults reflect Webpack's own research into the performance tradeoff between HTTP request overhead and bundle size savings. They should be treated as a sensible baseline, not overridden without measurement.
+Check the [SplitChunksPlugin reference](https://webpack.js.org/plugins/split-chunks-plugin/) against your installed version. In Next.js or another framework, inspect its generated configuration before assuming standalone webpack defaults apply.
 
 ### A common manual strategy
 
@@ -479,7 +479,7 @@ Webpack emits `<link rel="prefetch">` for `webpackPrefetch` and `<link rel="prel
 | `prefetch` | Low      | Browser idle time, after current page loads | Next likely navigation                               |
 | `preload`  | High     | In parallel with the current page           | Resources the current page will definitely need soon |
 
-Use `prefetch` liberally for next-route chunks. Use `preload` sparingly as it competes with the page's critical resources and can hurt performance if overused.
+Prefetch likely next-route chunks when the expected benefit justifies bandwidth and device costs. Use `preload` sparingly as it competes with the page's critical resources and can hurt performance if overused.
 
 In Next.js, `<Link>` automatically prefetches the target route when it enters the viewport in production builds, so you get route prefetching without any configuration.
 
@@ -558,4 +558,10 @@ As a rule of thumb: anything the user does not see on initial page load should n
 
 **Do not over-split**
 
-Splitting into dozens of tiny chunks has diminishing returns. Each HTTP request has overhead. On HTTP/1.1 connections, excessive parallel requests hurt performance. The Webpack splitChunks defaults (>30 KB, ≤5 async parallel, ≤3 initial parallel) are a calibrated starting point.
+Splitting into dozens of tiny chunks has diminishing returns. Each HTTP request has overhead. On HTTP/1.1 connections, excessive parallel requests hurt performance. Use your installed bundler's defaults as a baseline, then measure representative page loads and navigations before changing request or size thresholds.
+
+# Conclusion
+
+Start with a slow user experience you can measure, then trace it to the resources and browser work responsible. Tree shaking reduces unused code, code splitting organizes delivery and reuse, and dynamic import delays optional features until they are needed. Choose the technique that addresses the bottleneck you found.
+
+After each change, inspect the generated bundles and measure again under comparable conditions. Check initial loading, later interactions, and repeat visits so an improvement on one path does not hide a regression on another. Keep the changes that make the experience faster for the people using the application.

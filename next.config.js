@@ -70,9 +70,6 @@ module.exports = () => {
     reactStrictMode: true,
     trailingSlash: false,
     pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
-    eslint: {
-      dirs: ['app', 'components', 'layouts', 'scripts'],
-    },
     images: {
       remotePatterns: [
         {
@@ -81,6 +78,20 @@ module.exports = () => {
         },
       ],
       unoptimized,
+    },
+    async redirects() {
+      return [
+        {
+          source: '/blog/css-select-properties',
+          destination: '/blog/controlling-text-selection-and-clicks-with-css',
+          permanent: true,
+        },
+        {
+          source: '/blog/pwa-and-service-workers',
+          destination: '/blog/introduction-to-pwa',
+          permanent: true,
+        },
+      ]
     },
     async headers() {
       return [

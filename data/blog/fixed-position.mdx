@@ -28,15 +28,11 @@ The following properties, when set to values other than their defaults, will cre
 
 **Try it yourself**: Scroll the page and observe the fixed box. With the checkbox enabled, it's positioned relative to the wrapper box (with `transform: translateX(0)`) rather than the viewport. Toggle the checkbox to see the difference.
 
-## Why this happens: The CSS specification
+## Why this happens: the CSS specification
 
-This behavior exists because these properties create a **new stacking context** and force the browser to establish a new containing block. The browser needs to:
+Specific CSS properties establish a containing block for fixed-position descendants. For example, a non-`none` transform creates a local coordinate system, so a fixed child is positioned against that ancestor instead of the viewport.
 
-1. Apply transformations/filters in a specific rendering order
-2. Create a new coordinate system for the transformed/filtered content
-3. Maintain proper layering and paint order
-
-When an element creates a stacking context, fixed-positioned descendants are rendered within that context, making them relative to the transformed ancestor instead of the viewport.
+A containing block and a stacking context are different concepts. Some properties create both, but creating a stacking context alone is not enough: `opacity: 0.5` changes stacking without making the ancestor the containing block for fixed descendants. See [how containing blocks are established](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Display/Containing_block).
 
 ## Practical use cases
 
@@ -86,7 +82,7 @@ If your fixed element isn't staying at the viewport edge, check all ancestors fo
 
 ## Best practices
 
-1. **Be intentional**: Only add `transform` or similar properties when you need the containing block behavior
+1. **Be intentional**: When adding transforms or filters for a visual effect, check whether their containing-block behavior also changes fixed descendants
 2. **Document it**: Comment your CSS when intentionally creating a new containing block
 3. **Test thoroughly**: Check fixed positioning behavior at different scroll positions and viewport sizes
 

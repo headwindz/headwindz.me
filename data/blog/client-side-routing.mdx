@@ -7,9 +7,9 @@ summary: A comprehensive guide to client-side routing, covering the differences 
 
 # What is client-side routing?
 
-Client-side routing is a technique used in single page applications (SPAs) where page navigation is handled entirely by JavaScript without triggering a full browser reload. This approach provides a faster, more seamless user experience compared to traditional server-side navigation.
+Client-side routing updates an application's view and URL without replacing the whole document. A router can fetch additional data or code as needed. The transition cost depends on those requests and the work required to render the next view.
 
-## How next.js Link component works
+## How next.js `Link` component works
 
 In next.js, the `Link` component enables client-side navigation between pages:
 
@@ -26,11 +26,11 @@ function Navigation() {
 }
 ```
 
-When users click these links, Next.js handles the navigation using JavaScript instead of making a full HTTP request to the server. This means:
+For an internal client navigation, Next.js updates the route without replacing the whole HTML document. It may still request route data or server-rendered payloads. This can provide:
 
 - No full page reload
 - Faster page transitions
-- Preserved JavaScript state
+- Preserved state in shared layouts and components that remain mounted; route components can still reset
 - Better user experience
 
 ## How to verify client-side navigation
@@ -49,7 +49,7 @@ There's a simple way to verify that client-side navigation is working:
 
 If the background color persists, it confirms that the browser is not performing full page reloads and client-side navigation is indeed working!
 
-### Additional Validation Methods
+### Additional validation methods
 
 - **Network Tab**: Watch the Network tab in dev tools. With client-side routing, you'll see XHR/Fetch requests for data instead of full HTML document requests
 - **Loading Indicator**: The browser's native loading spinner in the address bar won't appear during client-side navigation
@@ -101,7 +101,7 @@ window.location.hash = '#/about'
 
 [Try hash routing demo](https://codesandbox.io/s/hashhistory-vwk9n)
 
-### Html5 history api Routing
+### Html5 history api routing
 
 The history api provides methods to manipulate the browser's session history without reloading the page:
 
@@ -140,7 +140,7 @@ window.addEventListener('popstate', (event) => {
 
 ## Server configuration for history api routing
 
-When using html5 history api routing, your server must be configured to serve the main `index.html` file for all routes. Otherwise, direct navigation to routes like `/about` will result in a 404 error.
+For a static, client-rendered SPA, configure the server to fall back to `index.html` for application routes so direct visits can reach the client router. The examples below describe that deployment model. A server-rendered framework such as Next.js handles route requests through its own server or supported hosting setup. Do not replace those handlers with a blanket SPA fallback.
 
 ### Webpack dev server for local development settings
 

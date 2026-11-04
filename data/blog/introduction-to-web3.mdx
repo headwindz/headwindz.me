@@ -7,18 +7,18 @@ summary: A developer-friendly introduction into web3.
 
 # Introduction
 
-If you have ever lost a social media account, had a payment frozen by a platform, or watched a game shut down and take your purchases with it, you have already felt the problem that web3 is trying to solve: you do not actually own the things you think you own online.
+A platform can suspend an account, freeze access, or shut down a service. Some Web3 applications try to reduce dependence on a single operator by letting users control on-chain assets with their own keys. That raises a practical question: which rights and operations remain available if the original service disappears?
 
-Web3 is a broad term for a set of technologies that aim to fix this by moving control away from centralized companies and toward individuals. At its core, it is about shifting who holds the keys literally. Instead of trusting a platform to store your data and honor your access, you hold cryptographic proof of ownership directly. Interactions happen on public networks with rules enforced by code, not by a corporation's terms of service.
+Web3 is a broad label for applications built around shared protocols, cryptographic authorization, and distributed records. A key can authorize actions on an account; it does not automatically grant copyright, preserve an off-chain file, or remove administrator powers. This introduction traces a transaction and then examines the dependencies around it.
 
 Two words come up constantly in web3 and are worth defining upfront:
 
-- **Trustless**: you do not need to trust a company or person to act honestly. The math and the protocol enforce the rules.
-- **Permissionless**: anyone can participate, build, or transact without needing approval from a gatekeeper.
+- **Trustless**: some trust in an operator is replaced by verifiable protocol rules. Users still rely on assumptions about software, consensus, keys, and any external inputs.
+- **Permissionless**: the protocol permits participation without an operator individually approving each user; particular frontends, issuers, and regulated services can still restrict access.
 
 # From web2 to web3: the ownership problem
 
-In web2, platforms own your data. You produce content, but the platform controls it. The platforms can throttle, delete, or ban you. If the platform shuts down, your audience and creative work disappear with it. Your digital identity is rented, not owned.
+In many Web2 services, a platform controls account access, distribution, and the database used by the application. Users can still own copyright in their work, and portability varies by service. The problem here is dependence on an operator, not a universal claim that platforms legally own everything users create.
 
 Web3 aims to change that by moving critical state(e.g. assets, identity, permissions) onto public, permissionless ledgers. The core principle is straightforward: **users should own their data and digital assets, not platforms**.
 
@@ -34,19 +34,19 @@ flowchart LR
   subgraph web3["Web3"]
     u2([User]) -->|holds private key| w[Wallet]
     w -->|writes to| bc[(Blockchain)]
-    bc -->|app queries| a[App is just an interface]
+    bc -->|app queries| a[App reads records; off-chain dependencies remain]
   end
 `}
 />
 
-# Decentralization vs Distribution
+# Decentralization vs distribution
 
 These two terms are often confused.
 
-- **Distributed**: computation is spread across multiple nodes, but a central coordinator still assigns work and holds authority. The goal is parallelism and scale.
-- **Decentralized**: there is no central authority. All nodes are peers, and the system runs on **consensus**. The goal is removing single points of control and failure.
+- **Distributed**: computation or data is spread across multiple nodes. Authority can be centralized or decentralized.
+- **Decentralized**: decision-making authority is spread across participants instead of resting with one operator. The degree of decentralization depends on which decisions and dependencies are being examined.
 
-A traditional financial system illustrates the difference. Banks are distributed: many branches, many ATMs, but the central bank and regulatory bodies remain the authority. A decentralized system would have no such authority. Instead, every participant holds a copy of the ledger and collectively decides which transactions are valid.
+A centrally operated service can distribute its database across regions while retaining one owner of access policy. A public blockchain can distribute validation and block production among participants, although participants have different roles and need not all retain a complete history. Distribution concerns placement; decentralization concerns authority.
 
 The tradeoff is real: decentralization buys censorship resistance and fault tolerance, but at the cost of coordination overhead and throughput.
 
@@ -54,11 +54,11 @@ The tradeoff is real: decentralization buys censorship resistance and fault tole
 
 ## Hash function
 
-A hash function maps arbitrary input to a fixed length output. It has three critical properties:
+A cryptographic hash function maps arbitrary input to a fixed length output. It has three critical properties:
 
 - **One-way (preimage resistance)**: given a hash output, it is computationally infeasible to recover the original input. You cannot reverse it.
 - **Deterministic**: the same input always produces the same output.
-- **Avalanche effect**: a single bit change in the input produces a completely different output. There is no way to tweak an input to nudge the hash in a desired direction.
+- **Avalanche effect**: a single bit change in the input produces a completely different output. There is no known practical shortcut for finding inputs that meet Bitcoin's hash target.
 
 Bitcoin uses _SHA-256_. To illustrate: `SHA256("hello") = 2cf24db...` and `SHA256("hellp") = ffc9e3f...` — two inputs that differ by one character produce entirely unrelated hashes.
 
@@ -93,9 +93,9 @@ The critical question is: if there is no central authority, how do nodes agree o
 
 In a decentralized network, you cannot assume all nodes are online, **honest**, or responsive. Blindly accepting every submitted transaction would let anyone fabricate balances. Requiring unanimous agreement from every node does not scale. Nodes also lack intrinsic motivation to verify transactions that do not involve them.
 
-Adding transaction fees as incentives helps, but without a cost to verification, a bad actor can spin up many nodes, rubber-stamp invalid transactions, and collect fees. The system needs a mechanism where **honest participation is costly** and therefore credible, while dishonest participation is economically irrational.
+Creating many node identities does not make an invalid transaction acceptable: full nodes independently enforce validity rules. The harder question is selecting a shared history when several valid candidate blocks compete. A permissionless design also needs resistance to an actor manufacturing identities to gain influence.
 
-This is fundamentally a game theory problem. The solution must create a situation — a Nash equilibrium, in game theory terms — where no individual participant can improve their outcome by cheating. The cost of attacking the system must exceed the reward, and honest behavior must be the rational default.
+Consensus combines validation rules, network assumptions, chain selection, and incentives. Rewards and penalties can make attacks expensive, but do not prove that every attacker must find an attack irrational. An attacker may have external incentives or access to resources the simplified model omits.
 
 <Mermaid
   chart={`
@@ -104,7 +104,7 @@ flowchart TD
   n --> b[Adversarial nodes exist]
   n --> c[Asynchronous comms]
   a & b & c --> d[Cannot rely on trust]
-  d --> e[Consensus must be incentive-compatible]
+  d --> e[Consensus depends on explicit rules and assumptions]
   style d fill:#dc2626,color:#fff
   style e fill:#16a34a,color:#fff
 `}
@@ -124,9 +124,9 @@ Key properties:
 
 #### Why "waste" is the point
 
-If casting a vote is free, votes can be manufactured. PoW makes voting expensive. A miner must spend real resources (hardware, electricity) to earn the right to propose a block. This ensures that the majority of block proposals come from participants with real economic skin in the game.
+If casting a vote is free, votes can be manufactured. PoW ties block-production influence to verifiable work. A miner must spend real resources (hardware, electricity) to earn the right to propose a block. This ensures that the majority of block proposals come from participants with real economic skin in the game.
 
-The result: block production rights are distributed in proportion to compute power, and manipulating the ledger requires outspending all other miners combined.
+The result: block production rights are distributed in proportion to compute power, while sustained majority hash power can support censorship and reorganizations of valid history. It cannot authorize invalid signatures or arbitrary coin creation.
 
 ## Bitcoin: putting it all together
 
@@ -140,7 +140,7 @@ When a miner successfully finds a valid hash and produces a block, the protocol 
 
 ### Halving and fixed supply
 
-The initial block reward was 50 BTC. Every 210,000 blocks (~4 years), it halves. The current reward is 3.125 BTC. The geometric series converges to **21 million** — the hard cap on total Bitcoin supply. At the current schedule, the last Bitcoin will be mined around 2140.
+The initial block subsidy was 50 BTC. It halves every 210,000 blocks, approximately four years at the target block interval. The subsidy after the April 2024 halving is 3.125 BTC per block; miners can also collect transaction fees. The issuance schedule approaches the familiar 21-million-BTC limit. [Bitcoin issuance rules](https://developer.bitcoin.org/devguide/block_chain.html).
 
 ### Difficulty adjustment
 
@@ -148,7 +148,7 @@ To keep the block interval stable at approximately 10 minutes, the network autom
 
 ### Price discovery
 
-Bitcoin had no market price at launch. The first recorded real-world transaction was on May 22, 2010, when Laszlo Hanyecz paid 10,000 BTC for two pizzas. From that point, price reflects the market's consensus on Bitcoin's value: a function of scarcity, network effects, and growing adoption.
+A monetary issuance rule does not establish a market price. Buyers and sellers set prices through trades, influenced by expected use, scarcity, liquidity, risk, and speculation. These market judgments are separate from the consensus rules that validate a transaction.
 
 ## A transaction end to end
 
@@ -158,7 +158,7 @@ Here is how a typical Bitcoin transaction works:
 
 2. **Initiate transfer**: the sender signs a transaction transferring BTC to the recipient's address and broadcasts it to the network.
 
-3. **Mempool**: the transaction enters the mempool — a pool of unconfirmed transactions visible to all nodes.
+3. **Mempool**: peers may accept the transaction into their local mempools. Nodes can have different policies and different sets of unconfirmed transactions.
 
 4. **Mining**: miners select transactions from the mempool, package them into candidate blocks, and begin computing hashes. Different miners can choose different transaction sets, but every proposed block must satisfy consensus rules and be independently verifiable.
 
@@ -188,7 +188,7 @@ The transaction walkthrough above glossed over wallets. Wallet choice is one of 
 The most important distinction:
 
 - **Custodial wallet**: a third party (usually a centralized exchange like Coinbase or Binance) holds your private keys on your behalf. You authenticate with a username and password. Convenient, but you are trusting the custodian. If they are hacked, insolvent, or freeze your account, you may not be able to access your funds.
-- **Non-custodial wallet**: you hold your own private keys. No third party involved. You bear full responsibility for security.
+- **Non-custodial wallet**: you hold your own private keys. The user controls signing, but may still depend on wallet software, RPC services, and applications. Key custody and service dependencies are separate questions.
 
 The maxim in the space: **"not your keys, not your coins."** Multiple exchange collapses (Mt. Gox, FTX) have illustrated what happens when custodians fail.
 
@@ -214,7 +214,7 @@ flowchart TD
 `}
 />
 
-For most users: custodial exchange for active trading, non-custodial hardware wallet for long-term storage.
+Choose custody according to the operations you need, the recovery process you understand, and the risks you can manage. Neither custody model removes all failure modes.
 
 ## Seed phrases
 
@@ -227,9 +227,9 @@ This means:
 
 Security practices that follow from this:
 
-- Write the seed phrase on paper (or metal). Never type it into any website or app.
+- Write the seed phrase on paper (or metal). Enter it only into the trusted wallet recovery process you intentionally selected; never provide it to support agents, unsolicited sites, or messages.
 - Store multiple copies in separate physical locations.
-- A seed phrase entered into any internet-connected device should be treated as compromised.
+- Restoring a seed into an online wallet changes its exposure. A hardware-wallet recovery process normally keeps the seed entry on the device; follow the device's documented process.
 
 # Forks, the longest chain rule, and double spending
 
@@ -239,17 +239,17 @@ Two miners can find valid blocks at nearly the same time, creating a temporary f
 
 ## Why tampering fails
 
-Each block stores the hash of the previous block. Modifying any historical block changes its hash, which breaks the link to the next block, and so on. To tamper with a past transaction, an attacker must re-mine every subsequent block, which is an exponentially harder task as the chain grows.
+Each block commits to its predecessor. Changing historical contents breaks those commitments, so a competing valid history must redo the relevant proof of work and satisfy the chain-selection rule. More confirmations increase a minority attacker's difficulty of catching up under the model's assumptions; the hash links alone do not make recomputation grow exponentially with the number of blocks.
 
 ## The 51% attack
 
-The 51% attack is the most discussed theoretical threat to proof-of-work blockchains. Understanding it precisely matters, both for evaluating Bitcoin's security and for understanding why it has never succeeded on a large network.
+The 51% attack is the most discussed theoretical threat to proof-of-work blockchains. Understanding it precisely matters, both for evaluating Bitcoin's security and for separating the attack's capabilities from its economic feasibility.
 
 ### How it works, step by step
 
 1. The attacker secretly acquires more than 50% of the network's total hash rate.
 2. While the public chain continues to grow normally, the attacker mines a **private shadow chain** in secret, starting from some block in the past.
-3. On the public chain, the attacker makes a large purchase. For example, buys $10 million of goods or withdraws from an exchange.
+3. On the public chain, the attacker makes a large purchase. For example, buys \$10 million of goods or withdraws from an exchange.
 4. Once the goods are delivered or the withdrawal confirmed, the attacker releases the shadow chain. Because it was mined with majority hash power, it is longer than the public chain and will have accumulated more proof of work.
 5. All honest nodes follow the longest chain rule and switch to the attacker's chain. The purchase transaction, which existed on the old public chain, no longer exists. The attacker keeps both the goods and the coins.
 
@@ -277,29 +277,27 @@ Note over Attacker: Attacker has goods AND coins back
 It is important to be precise about the limits of the attack:
 
 - **Can do**: reverse the attacker's own recent transactions (double spending), censor specific transactions from being included in blocks, disrupt the network by refusing to extend any valid chain.
-- **Cannot do**: steal coins from addresses the attacker does not control, forge signatures, create coins out of thin air, or alter transactions in older buried blocks (re-mining the entire history would require more computation than the attack is worth).
+- **Cannot do**: forge valid signatures for keys the attacker does not control, spend arbitrary other users' outputs, or make full nodes accept coin creation that violates their rules. Deeper reorganizations are more costly, rather than cryptographically impossible merely because the blocks are old.
 
 The attack window is also time limited. The attacker must maintain majority hash rate continuously for the duration of the reorg. The deeper into history they want to reach, the more blocks they must re-mine in secret before revealing their chain, therefore requiring sustained majority power for longer.
 
-### Why it has not happened to Bitcoin
+### Cost and incentives
 
-The cost to acquire 51% of Bitcoin's hash rate is staggering. As of 2025, Bitcoin's hash rate exceeds 700 exahashes per second. Replicating that requires billions of dollars of ASIC hardware and ongoing electricity costs measured in millions per day. Even if an attacker could afford the hardware, the attack would require months of coordination, and any detectable accumulation of hash power would alert the market before it could be exploited.
+Maintaining a competitive private chain requires hash power, electricity, and time while the public chain continues to grow. Costs depend on hardware availability, energy prices, attack duration, and access to rented or already-controlled capacity. Do not infer a universal dollar threshold from a chain's market capitalization.
 
-There is also a game theoretic self-defeat mechanism: a successful 51% attack would shatter confidence in Bitcoin and crash the price. The attacker, by definition holding massive Bitcoin denominated infrastructure, would be destroying the value of their own investment. The rational actor cannot profit from succeeding.
+Smaller PoW networks have experienced successful reorganizations and double spends. Ethereum Classic's 2020 attacks are one example. ETC used Ethash then and later changed to Etchash; it is not a SHA-256 mining chain. [ECIP-1099 describes that transition](https://ecips.ethereumclassic.org/ECIPs/ecip-1099).
 
-### Smaller chains are genuinely vulnerable
-
-This calculus does not hold for small PoW chains. **Ethereum Classic (ETC)** suffered three 51% attacks in August 2020 alone, with attackers double spending millions of dollars. The reason: ETC shares the same SHA-256-family mining hardware as larger chains, so attackers can rent hash power from services like NiceHash for hours at a time, execute a double-spend on an exchange, and profit before the network detects the reorg. For any PoW chain with less than a few billion dollars of hash rate securing it, the 51% attack is not theoretical but a recurring practical threat.
+Economic incentives can discourage attacks, but “a rational attacker cannot profit” is too strong. Damage to market confidence is only one term in an attacker's incentives. The protocol's actual validation and chain-selection rules remain the starting point. [Bitcoin block-chain guide](https://developer.bitcoin.org/devguide/block_chain.html).
 
 # Ethereum and smart contracts
 
-Bitcoin is a decentralized settlement layer for value transfer. Ethereum extends the blockchain model with a critical addition: **smart contracts** — programs deployed and executed directly on the blockchain. Unlike Bitcoin's scripting system, Ethereum smart contracts are Turing-complete, meaning they can express any computation, from simple token transfers to complex financial logic. Think of them as vending machines that run on the blockchain: you put in the right inputs, and the contract executes automatically, with no human able to interfere.
+Bitcoin is a decentralized settlement layer for value transfer. Ethereum extends the blockchain model with a critical addition: **smart contracts** — programs deployed and executed directly on the blockchain. Unlike Bitcoin's scripting system, Ethereum smart contracts are Turing-complete, meaning they can express any computation, from simple token transfers to complex financial logic. Think of them as vending machines that run on the blockchain: you put in the right inputs, and the contract executes automatically, subject to the deployed code and any administrator or upgrade permissions.
 
 ## What is a smart contract
 
 A smart contract is code stored on the blockchain. Its deployed bytecode is immutable, but many production systems use explicit upgrade patterns (for example, proxy architectures) with predefined governance controls. It executes deterministically: given the same inputs, every node produces the same output. This makes it a **trust-minimized, self-enforcing agreement**.
 
-Example: two parties bet on tomorrow's weather. Traditionally, a trusted third party holds the stake. With a smart contract, both parties deposit funds into the contract. An **oracle** feeds the weather result, and the contract automatically pays the winner. No intermediary, no possibility of bias.
+Example: two parties bet on tomorrow's weather. Traditionally, a trusted third party holds the stake. With a smart contract, both parties deposit funds into the contract. An **oracle** feeds the weather result, and the contract automatically pays the winner. The contract can apply a payout rule, but it still depends on the oracle's data and update process. Incorrect or manipulated weather data can produce an incorrect payout.
 
 ## Why this matters
 
@@ -364,9 +362,9 @@ flowchart LR
 
 Key practical differences for developers:
 
-- **Finality**: PoS Ethereum achieves economic finality in ~12 minutes via Casper FFG checkpointing. PoW Bitcoin uses probabilistic finality (more confirmations = more security).
+- **Finality**: Under normal conditions, PoS Ethereum finalizes checkpoints in roughly two epochs (about 13 minutes) via Casper FFG checkpointing. PoW Bitcoin uses probabilistic finality (more confirmations = more security).
 - **Energy**: PoS uses ~99.95% less energy than PoW, removing a major political and regulatory friction point for institutional adoption.
-- **Validator set**: ~1 million validators as of 2025, making Ethereum's validator set one of the most decentralized consensus layers in existence.
+- **Validator set**: distinguish validator records from independent operators. A large record count alone does not establish decentralized control.
 
 # The web3 ecosystem
 
@@ -380,11 +378,11 @@ Volatility is Bitcoin and Ethereum's biggest barrier to everyday use. A currency
 
 ### The three designs
 
-**Fiat-backed** (USDC, USDT, PYUSD): each token is redeemable 1:1 for a dollar held in a traditional bank account or short-term treasuries. The issuer (Circle for USDC, Tether for USDT) publishes regular attestations of its reserves. This design is simple, battle tested, and has never lost its peg under normal conditions. The tradeoff is trust: the issuer can freeze individual addresses, and regulators can compel them to do so. In March 2020, Centre (then USDC's governing body) blacklisted an address at law enforcement request, demonstrating that fiat-backed stablecoins are programmable censorship tools as much as they are programmable money.
+**Fiat-backed** (for example USDC or USDT): an issuer holds reserves and offers redemption under its terms. Reserve composition, eligibility, freezing powers, and settlement arrangements differ. The target market price is not guaranteed: USDC depegged during the March 2023 banking stress. [Circle's account](https://www.circle.com/pressroom/3-3-billion-of-usdc-reserve-risk-removed-dollar-de-peg-closes).
 
-**Crypto-backed** (DAI, LUSD): overcollateralized with volatile crypto assets. A user locks 150 dollars of ETH to mint 100 dollars of DAI. The overcollateralization buffer absorbs price swings. If the collateral value falls below a liquidation threshold (e.g., 150%), the protocol automatically sells the collateral to cover the debt, protecting the peg. Fully onchain and non-custodial, but capital inefficient. 1 dollar of DAI requires more than 1 dollar of locked collateral. MakerDAO's DAI has maintained its peg through multiple severe market crashes, validating the model's resilience at the cost of efficiency.
+**Crypto-backed**: a borrower deposits collateral into a contract and issues stablecoins against it. If the position falls below its liquidation threshold, the protocol can sell collateral to cover debt. Ratios and asset eligibility are protocol-specific. DAI has also used centralized stablecoins and real-world assets as backing, so “crypto-backed” is not a guarantee of purely decentralized collateral.
 
-**Algorithmic** (historical example: UST/LUNA): attempts to maintain the peg through market incentives and protocol controlled supply expansion/contraction, without full collateral backing. The mechanism typically relies on a paired volatile token to absorb price pressure. When confidence holds, the system is self-reinforcing. When confidence breaks, the mechanism goes into reverse: falling stablecoin price triggers minting of the volatile token, which dilutes its value, which further erodes confidence, resulting in a reflexive death spiral. The UST/LUNA collapse in May 2022 is the canonical case: $40 billion in value was destroyed in 72 hours. No purely algorithmic stablecoin has demonstrated long term stability.
+**Algorithmic** (historical example: UST/LUNA): incentives expand or contract token supply to target a price, sometimes relying on a paired volatile token rather than fully external reserves. In a confidence crisis, redemption into more volatile tokens can accelerate dilution and selling. UST's May 2022 collapse illustrates this failure mode; it does not establish a universal theorem about every design labeled algorithmic.
 
 <Mermaid
   chart={`
@@ -401,20 +399,20 @@ flowchart TD
 
 ### Peg mechanics
 
-Regardless of design, all stablecoins rely on arbitrage to enforce the peg. If USDC trades at 0.99, arbitrageurs buy it and redeem at the issuer for 1.00, profiting 0.01 and pushing the price back up. If it trades at 1.01, they mint new USDC at 1.00 and sell into the market, pushing the price back down. The peg holds as long as arbitrageurs trust and can access the redemption mechanism.
+Regardless of design, many stablecoin designs use arbitrage around issuance or redemption to support the peg. If USDC trades at 0.99, arbitrageurs buy it and redeem at the issuer for 1.00, profiting 0.01 and pushing the price back up. If it trades at 1.01, they mint new USDC at 1.00 and sell into the market, pushing the price back down. This pressure depends on access, confidence, fees, liquidity, and settlement timing; it is not a guarantee.
 
-This is why the fiat-backed peg is the most robust: the redemption path (token → issuer → real dollars) is transparent and legally enforceable. Crypto-backed pegs rely on smart contract liquidation logic. Algorithmic pegs rely on market participants continuing to believe the volatile token has value — a belief that can evaporate rapidly.
+For any stablecoin, examine the redemption path: who can use it, what assets are delivered, how long it takes, and which permissions can halt it. The [stablecoin guide](/blog/web3-stablecoins) compares these mechanisms and their failure conditions.
 
 ### Why stablecoins matter
 
 Stablecoins are the lifeblood of DeFi. Most lending, borrowing, and liquidity provision uses them as a unit of account. They are also increasingly significant outside DeFi:
 
 - Businesses in high inflation economies use USDC for dollar savings without a bank account
-- International remittances settle in seconds for cents rather than days for dollars. As of 2025, stablecoin transaction volume regularly exceeds that of Visa on a monthly basis, making them one of the most concretely useful applications that web3 has produced.
+- Cross-border transfers can move value on-chain outside banking hours. Compare the full route, including purchase, transfer, compliance, exchange, and cash-out costs, rather than treating on-chain settlement as the whole payment.
 
 ## Scaling challenges
 
-The core tension is the **blockchain trilemma**: decentralization, security, and scalability, only two can be fully achieved at the same time. Bitcoin processes ~7 transactions per second with 10 minute finality. Ethereum L1 handles ~15-30 TPS. For real time, high throughput applications, this is insufficient.
+The **blockchain trilemma** is a useful way to discuss tensions among decentralization, security, and scalability, not a proof that exactly two properties can be achieved. Block interval, transaction throughput, confirmation, and finality measure different things; for example, Bitcoin's target 10-minute block interval is not deterministic finality.
 
 Layer 2 (L2) solutions address this by moving execution off the main chain while periodically anchoring the results back to L1. The key insight is that L1 does not need to re-execute every transaction, it only needs to verify that a batch of transactions was executed correctly.
 
@@ -438,13 +436,13 @@ Optimistic rollups (Arbitrum, Optimism, Base) execute transactions off-chain and
 
 The 7-day challenge window is the main tradeoff: withdrawals from an optimistic rollup back to L1 take 7 days to finalize unless you use a third-party liquidity provider who fronts you the funds immediately and waits out the window themselves. For most applications this is acceptable. For high-frequency arbitrage or cross-chain settlement it is not.
 
-In practice, fraud proofs have almost never been successfully submitted on major optimistic rollups. The economic deterrent (honest nodes monitor the chain and the sequencer has a large bonded stake) has been sufficient. But the security model is contingent on at least one honest verifier being active at all times.
+An optimistic rollup depends on its implemented proof system, data availability, and an honest party being able to challenge invalid state claims within the allowed window. Check the actual deployment and upgrade permissions rather than inferring security from whether a dispute has occurred.
 
-### ZK rollups
+### Zk rollups
 
-ZK rollups (zkSync, Starknet, Polygon zkEVM, Scroll) take a different approach: every batch is accompanied by a **zero-knowledge validity proof** — a cryptographic proof that the new state root is the correct result of executing all the transactions in the batch. L1 verifies the proof, not the transactions themselves. If the proof is valid, the state transition is final immediately. No challenge window.
+ZK rollups (zkSync, Starknet, Polygon zkEVM, Scroll) take a different approach: every batch is accompanied by a **zero-knowledge validity proof** — a cryptographic proof that the new state root is the correct result of executing all the transactions in the batch. L1 verifies the proof, not the transactions themselves. Proof verification establishes the validity of the claimed transition under the proof system. Proof production, L1 inclusion, and L1 finality still take time; no fraud-challenge window is required.
 
-This gives ZK rollups near-instant finality and a stronger security model. There is no need to trust that someone is watching for fraud. The tradeoffs are on the engineering side: generating ZK proofs is computationally intensive, and building a ZK-compatible EVM (zkEVM) is significantly harder than building an optimistic EVM-equivalent. The ecosystem is earlier and tooling is less mature than optimistic rollups as of 2025.
+This removes reliance on an optimistic fraud-challenge window, but does not make all settlement stages instantaneous. There is no need to trust that someone is watching for fraud. The tradeoffs are on the engineering side: generating ZK proofs is computationally intensive, and building a ZK-compatible EVM (zkEVM) is significantly harder than building an optimistic EVM-equivalent. The ecosystem is earlier and tooling is less mature than optimistic rollups as of 2025.
 
 <Mermaid
   chart={`
@@ -457,7 +455,7 @@ flowchart LR
   subgraph zk["ZK Rollup"]
     z1[Execute off-chain] --> z2[Generate validity proof]
     z2 --> z3[Post proof + state root to L1]
-    z3 --> z4[Finalized immediately on proof verification]
+    z3 --> z4[Proof verified; wait for L1 settlement finality]
   end
 `}
 />
@@ -468,7 +466,7 @@ State channels (Lightning Network on Bitcoin, payment channels) are a different 
 
 The limitation is the setup. You need a pre-funded channel with each counterparty, or a routing network of connected channels. This works well for repeated bilateral interactions (e.g., micropayments between two services), but does not generalize to arbitrary smart contract execution.
 
-### Choosing an L2
+### Choosing an l2
 
 For most Ethereum developers today, the practical choice is between optimistic and ZK rollups:
 
@@ -479,9 +477,9 @@ The L2 landscape is evolving rapidly. [L2Beat](https://l2beat.com) provides real
 
 ## Bridge risk
 
-Moving assets between chains requires a **bridge** — a contract that locks tokens on the source chain and mints equivalent tokens on the destination chain. Bridges are consistently the highest value attack surface in web3.
+A **bridge** coordinates value or messages across chains. Lock-and-mint is one design; burn-and-mint and liquidity-based transfers use different mechanisms. Bridges are consistently the highest value attack surface in web3.
 
-> **Caution**: The majority of all DeFi exploit losses to date have come from bridge hacks, not L1 or L2 exploits. Bridges concentrate custody risk in a single contract, present complex cross-chain state synchronization problems, and are often operated by small teams under significant time pressure to ship.
+> **Caution**: A bridge adds assumptions about message verification, custody, administrators, and both chains' finality. Audit scope and incident history matter, but an audit or insurance product does not guarantee recovery.
 
 Practical implications for developers:
 
@@ -506,7 +504,7 @@ Today, frontier AI models are controlled by a small number of labs. A decentrali
 
 ### Oracles and data provenance
 
-AI models are only as good as their training data. Onchain data provenance, recording the origin, transformation history, and licensing terms of datasets as immutable ledger entries, creates accountability that is impossible with centralized data pipelines. Combined with cryptographic attestations of model training, this could enable auditable AI systems where regulators, users, or counterparties can verify exactly what data shaped a model's behavior.
+AI models are only as good as their training data. Onchain data provenance, recording the origin, transformation history, and licensing terms of datasets as immutable ledger entries, can make commitments and provenance records independently inspectable. Those records still need a trustworthy connection to the actual dataset; centralized pipelines can also maintain signed audit logs. Combined with cryptographic attestations of model training, this could enable auditable AI systems where regulators, users, or counterparties can verify exactly what data shaped a model's behavior.
 
 # Tradeoffs and risks
 
@@ -522,7 +520,7 @@ Layer 2 solutions improve throughput substantially. Arbitrum and Base regularly 
 
 The **immutability** property that makes blockchains trustworthy, is also what makes mistakes catastrophic. A bug in a deployed smart contract cannot be silently patched the way a web server can push a hotfix. It requires either a governance controlled upgrade mechanism (which exists in many production protocols but reintroduces a trust vector), or accepting that the vulnerable code will remain exploitable indefinitely.
 
-The track record is sobering. The [DAO hack in 2016](https://en.wikipedia.org/wiki/The_DAO) drained 60 million from a smart contract through a reentrancy vulnerability and required a controversial hard fork to recover funds. The [Ronin bridge hack in 2022](https://www.coindesk.com/tech/2022/03/29/axie-infinitys-ronin-network-suffers-625m-exploit/) lost 625 million via compromised validator keys. The [Wormhole bridge exploit](https://rekt.news/wormhole-rekt/) lost 320 million through a signature verification flaw. In all cases, the code did exactly what it was written to do — the human error was in the writing.
+The track record is sobering. The [DAO hack in 2016](https://en.wikipedia.org/wiki/The_DAO) drained 60 million from a smart contract through a reentrancy vulnerability and required a controversial hard fork to recover funds. The [Ronin bridge hack in 2022](https://www.coindesk.com/tech/2022/03/29/axie-infinitys-ronin-network-suffers-625m-exploit/) lost 625 million via compromised validator keys. The [Wormhole bridge exploit](https://rekt.news/wormhole-rekt/) lost 320 million through a signature verification flaw. In all cases, the code did exactly what It was written to do — the human error was in the writing.
 
 For developers: formal verification, extensive auditing by multiple independent firms, timelocked upgrades, and bug bounty programs are not optional for high value contracts. They are table stakes.
 
@@ -540,23 +538,21 @@ The legal status of tokens, DeFi protocols, DAOs, and NFTs varies dramatically a
 
 ## Speculation and scams
 
-The permissionless nature of token creation has produced an ecosystem where predatory projects far outnumber legitimate ones. Common attack patterns:
+Open token creation makes it possible to launch a project without advance platform review. Readers should recognize several recurring abuse patterns without assuming that this article measures their prevalence:
 
 - **Rug pull**: developers raise funds, then drain the liquidity pool and disappear. The token becomes worthless instantly.
 - **Pump and dump**: coordinated buying inflates a token's price; insiders sell at the peak while retail investors hold the bag.
 - **Honeypot contracts**: tokens that allow buying but not selling — the contract's transfer function reverts for non-owner addresses.
 - **Phishing**: fake wallet interfaces, malicious token approvals, and impersonated support channels targeting private keys and seed phrases.
 
-The absence of consumer protection is intentional. It is the same property that enables permissionless innovation. Users who lose funds to scams have no recourse. The practical defense is the same as in any information security context: verify everything, trust nothing by default, and treat any unexpected urgency or too-good-to-be-true opportunity as a red flag.
+Recovery depends on the custody arrangement, available evidence, jurisdiction, counterparties, and enforcement. An on-chain transfer may be difficult to reverse, but that does not establish that every victim has no legal recourse. Treat unexpected urgency, impersonation, and requests for secret keys as signals to stop and verify the operation.
 
 # Conclusion
 
-Web3 is not a replacement for the internet you already use. It is a new layer underneath it. One that handles a specific set of problems that centralized systems are structurally unable to solve: trustless coordination between parties who do not know each other, verifiable ownership of digital assets, and permissionless access to financial infrastructure.
+Web3 combines shared ledgers, cryptographic authorization, and programmable contracts to let participants verify and act on shared state. These mechanisms can reduce dependence on a platform operator, while introducing responsibilities around keys, transaction costs, contract behavior, and the systems connecting the chain to the outside world.
 
-The core ideas are not complicated once you trace them to their roots. Hash functions make data tamper-evident. Linked blocks make tampering exponentially expensive. Proof of work and proof of stake make dishonest participation economically irrational. Private keys give individuals direct ownership without intermediaries. Smart contracts replace trusted third parties with auditable code. Everything else — DeFi, NFTs, DAOs, L2s, stablecoins — is built on top of these primitives.
+To assess a Web3 application, trace one operation: who signs, who validates it, which state becomes public, and which services or administrators can still affect the result. Then ask what remains usable if the original frontend disappears.
 
-The tradeoffs are real and worth taking seriously. Onchain systems are slower, more expensive, and harder to use than centralized alternatives. Bugs are permanent. Regulatory clarity is incomplete. The space still attracts far more speculation than genuine use. A healthy relationship with web3 means understanding what it is actually good for, rather than treating it as either a revolution that changes everything or a scam that changes nothing.
+That separates a verifiable on-chain record from broader claims about ownership, safety, or decentralization. The [stablecoin guide](/blog/web3-stablecoins) applies the same questions to a particular payment mechanism.
 
-Web3 is a powerful new tool in the software stack. It is not a panacea, but it is a significant addition to the toolbox for building applications that require trust minimization, censorship resistance, and decentralized coordination. The best way to understand it is to build with it, experiment with it, and see firsthand what it can do — and what it cannot.
-
-Let's BUIDL!
+[Further reading on ZK-rollup settlement](https://ethereum.org/developers/docs/scaling/zk-rollups/).

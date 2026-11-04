@@ -5,23 +5,21 @@ summary: A guide to understanding third-party cookies, their security implicatio
 tags: [web, security, cookies, privacy]
 ---
 
-# Introduction
-
-Third-party cookies have been a cornerstone of web tracking and cross-site functionality for decades, but they're rapidly being phased out by major browsers. Understanding how they work, when to use them, and their alternatives is crucial for modern web development.
-
-**Key topics covered:**
-
-- What third-party cookies are and how they differ from first-party
-- Security attributes (HttpOnly, Secure, SameSite)
-- CORS requirements for cross-origin cookies
-- Privacy-preserving alternatives
-
 # What are third-party cookies?
 
-A **cookie** is associated with a domain. The classification depends on the relationship between the cookie's domain and the current page:
+A cookie's host scope determines where it can be sent. Whether its use is first-party or third-party depends on the site of the top-level page and the request context, not simply whether two hostnames differ.
 
-- **First-party cookie**: Domain matches the page you're viewing (e.g. cookie from `example.com` on `example.com`)
-- **Third-party cookie**: Domain differs from the page (e.g. cookie from `analytics.com` on `example.com`)
+An **origin** consists of scheme, host, and port. For the cookie contexts discussed here, a **site** uses the scheme and registrable domain. These HTTPS examples illustrate the distinction:
+
+| Page                      | Request destination           | Relationship              |
+| ------------------------- | ----------------------------- | ------------------------- |
+| `https://app.example.com` | `https://app.example.com/api` | Same origin and same site |
+| `https://app.example.com` | `https://api.example.com`     | Cross-origin, same-site   |
+| `https://app.example.com` | `https://widget.example.org`  | Cross-origin, cross-site  |
+
+Cookies used by an embedded service on a different site are commonly called third-party cookies. Sharing a parent-domain cookie between same-site subdomains does not by itself make that cookie third-party. See [same-site versus same-origin](https://web.dev/articles/same-site-same-origin).
+
+Diagnose cookie failures in four parts: host/path scope, SameSite eligibility, the request's credentials mode, and browser privacy policy. For script access to a cross-origin response, check CORS as well.
 
 # Viewing cookies in chrome
 
@@ -34,15 +32,15 @@ A **cookie** is associated with a domain. The classification depends on the rela
 
 # Common use cases
 
-**Third-party cookies enable:**
+Some integrations have used third-party cookies for:
 
-- Cross-site authentication (SSO - Single Sign-On)
+- Embedded or silent sign-in checks; redirect-based SSO does not inherently require third-party cookies
 - Embedded content (social media widgets, payment forms)
 - Analytics and tracking
 - Advertising and retargeting
 - Shopping cart persistence across domains
 
-**Example scenario**: You visit `shop.example.com`, add items to cart, then navigate to `blog.example.com`. Third-party cookies can maintain your cart state across these subdomains if configured correctly.
+**Example scenario**: A payment widget at `payments.example.org` is embedded on `shop.example.com`. Its cookies are being used in a cross-site context. By contrast, an HTTPS cart shared between `shop.example.com` and `blog.example.com` is a same-site subdomain case; it needs the appropriate cookie host scope, not third-party status.
 
 # Cookie security attributes
 
@@ -79,7 +77,7 @@ Set-Cookie: authToken=xyz789; Secure
 **Important**:
 
 - Required for production environments
-- Doesn't work on `http://localhost` (use `https://localhost` for testing)
+- Browsers make a localhost exception to the usual HTTPS requirement. Verify your browser and use HTTPS for production-like cross-site testing
 - Mandatory when using `SameSite=None`
 
 ## Domain
@@ -87,11 +85,11 @@ Set-Cookie: authToken=xyz789; Secure
 Specifies which hosts can receive the cookie:
 
 ```bash
-# Only example.com
-Set-Cookie: id=1; Domain=example.com
+# Host-only cookie: only the host that set it
+Set-Cookie: id=1; Path=/
 
-# example.com and all subdomains (*.example.com)
-Set-Cookie: id=1; Domain=.example.com
+# Parent domain and its subdomains; a leading dot is ignored
+Set-Cookie: id=1; Domain=example.com; Path=/
 ```
 
 **Key differences:**
@@ -121,11 +119,11 @@ Set-Cookie: token=abc; SameSite=Strict|Lax|None
 
 **SameSite values:**
 
-| Value             | Behavior                                         | Use Case               |
-| ----------------- | ------------------------------------------------ | ---------------------- |
-| **Strict**        | Never sent cross-site                            | High-security sessions |
-| **Lax** (default) | Sent on top-level navigation (links, not embeds) | Most websites          |
-| **None**          | Always sent cross-site (requires `Secure`)       | Embedded iframes, SSO  |
+| Value             | Behavior                                                           | Use Case               |
+| ----------------- | ------------------------------------------------------------------ | ---------------------- |
+| **Strict**        | Never sent cross-site                                              | High-security sessions |
+| **Lax** (default) | Same-site requests and cross-site top-level safe-method navigation | Most websites          |
+| **None**          | Eligible cross-site, subject to browser policy (`Secure` required) | Embedded iframes, SSO  |
 
 **Detailed examples:**
 
@@ -142,7 +140,7 @@ Set-Cookie: widget_state=collapsed; SameSite=None; Secure
 
 # CORS and third-party cookies
 
-Cross-origin resource sharing (CORS) is essential for third-party cookies to work:
+CORS governs whether a script may read a cross-origin response. For a credentialed cross-origin `fetch`, allow the specific requesting origin and credentials. This is separate from whether cookies are eligible to be sent. Images, iframe navigations, and top-level navigations do not all use the same CORS response-access rules. A simple cross-origin request can be sent even when its response is hidden from the calling script.
 
 ## Preflight requests
 
@@ -186,21 +184,17 @@ fetch('https://api.example.com/data', {
 
 # Requirements for third-party cookies
 
-For cookies to be sent cross-origin, ALL of the following must be true:
+For a cross-origin Fetch request, check the applicable conditions below. SameSite requirements depend on whether the request is also cross-site.
 
 ## 1. Browser settings
 
-**Chrome/Edge**: Settings → Privacy and security → Third-party cookies → "Allow third-party cookies"
+Privacy behavior varies by browser, mode, user setting, and whether storage is partitioned. Test with the default settings of the browsers you support instead of asking users to allow tracking globally.
 
-**Note**: Many browsers now block third-party cookies by default:
-
-- Safari: Blocked by default (Intelligent Tracking Prevention)
-- Firefox: Blocked by default (Enhanced Tracking Protection)
-- Chrome: Phasing out by 2024-2025
+Chrome did not complete the previously announced blanket phaseout in 2024–2025. On 22 April 2025, Google said it would maintain its user-choice approach. Safari restricts third-party cookies, while Firefox's Total Cookie Protection partitions cookies by top-level site. Treat this as dated policy context, not a promise about every browser configuration. [Google's announcement](https://privacysandbox.google.com/blog/privacy-sandbox-next-steps), [Firefox Total Cookie Protection](https://support.mozilla.org/en-US/kb/introducing-total-cookie-protection-standard-mode).
 
 ## 2. Server configuration
 
-**Set correct `SameSite` attribute:**
+**For a cookie that needs cross-site eligibility, set `SameSite=None; Secure`. Same-site subdomain requests do not inherently require `None`:**
 
 ```bash
 Set-Cookie: auth=token123; SameSite=None; Secure; HttpOnly
@@ -242,9 +236,9 @@ fetch('https://api.example.com/user', {
 
 **Credentials options:**
 
-- `'omit'`: Never send cookies (default for cross-origin)
-- `'same-origin'`: Send cookies only to same origin
-- `'include'`: Always send cookies (required for third-party)
+- `'omit'`: Do not send cookies or accept response cookies.
+- `'same-origin'` (default): Use credentials only for same-origin requests.
+- `'include'`: Allow credentials for cross-origin requests too. Cookie scope, SameSite, and browser privacy restrictions still apply.
 
 **Axios:**
 
@@ -281,12 +275,12 @@ xhr.send()
 
 **Checklist:**
 
-1. ✅ Is `SameSite=None` set? (required for cross-origin)
+1. ✅ Is the cookie eligible for this context? Cross-site Fetch needs `SameSite=None`; cross-origin/same-site Fetch does not inherently need it.
 2. ✅ Is `Secure` attribute set? (required with `SameSite=None`)
-3. ✅ Is the connection HTTPS? (required for `Secure`)
+3. ✅ Is the connection HTTPS, or a supported localhost exception?
 4. ✅ Is `Access-Control-Allow-Credentials: true` in response?
 5. ✅ Is `credentials: 'include'` in the request?
-6. ✅ Are third-party cookies enabled in browser?
+6. ✅ Does the browser allow this cookie in this embedding context, including any partitioning rules?
 
 **Debug in chrome devtools:**
 
@@ -302,7 +296,7 @@ Issues tab → Check for cookie warnings
 **Checklist:**
 
 1. ✅ Is `credentials: 'include'` set in fetch/axios?
-2. ✅ Does cookie have `SameSite=None`?
+2. ✅ If the request is cross-site, is the cookie eligible under SameSite and the browser's privacy policy?
 3. ✅ Is the cookie domain correct?
 4. ✅ Has the cookie expired?
 5. ✅ Does the path match the request URL?
@@ -368,16 +362,20 @@ Set-Cookie: session=xyz; Domain=.example.com
 
 Works across `app.example.com`, `api.example.com`, `shop.example.com`
 
-**2. Server-side sessions**
+**2. Server-side sessions with a suitable cookie context**
 
 ```js
-// Store session server-side, send only session ID
-app.post('/login', (req, res) => {
+// After credential verification; the session ID remains a bearer credential.
+app.post('/login', async (req, res) => {
+  const user = await validateCredentials(req.body)
+  if (!user) return res.sendStatus(401)
   const sessionId = generateSecureId()
-  sessions.set(sessionId, { userId: req.body.userId })
+  sessions.set(sessionId, { userId: user.id })
   res.cookie('sid', sessionId, { httpOnly: true, secure: true })
 })
 ```
+
+A server-side session does not bypass cookie restrictions. Host the session endpoint in an appropriate first-party context or use a redirect-based sign-in flow.
 
 **3. Token-based authentication (JWT)**
 
@@ -395,11 +393,14 @@ fetch('https://api.example.com/user', {
 
 **4. Cross-origin storage APIs**
 
-```js
-// Partitioned cookies (Chrome)
+```http
 Set-Cookie: session=xyz; Partitioned; Secure; SameSite=None
+```
 
-// Storage Access API (Safari, Firefox)
+Partitioned cookies are scoped to the top-level site. The Storage Access API is a separate mechanism with browser-specific permission and user-activation requirements:
+
+```js
+// Run from an eligible embedded document in response to user interaction.
 document.requestStorageAccess().then(
   () => console.log('access granted'),
   () => console.log('access denied')
@@ -440,6 +441,7 @@ app.use((req, res, next) => {
   const origin = req.headers.origin
   if (allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin)
+    res.vary('Origin')
     res.header('Access-Control-Allow-Credentials', 'true')
   }
   next()
@@ -451,7 +453,7 @@ app.use((req, res, next) => {
 ```js
 const cookieOptions = {
   secure: process.env.NODE_ENV === 'production',
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  sameSite: 'lax', // Choose 'none' only for a required cross-site context over HTTPS.
   httpOnly: true,
 }
 
@@ -460,26 +462,6 @@ res.cookie('session', sessionId, cookieOptions)
 
 # Conclusion
 
-Third-party cookies are powerful but increasingly restricted due to privacy concerns. Key takeaways:
+When a cookie is missing, identify whether the request is same-origin, cross-origin/same-site, or cross-site first. Then check its scope, SameSite eligibility, credentials mode, and browser storage policy. Configure CORS for script access to credentialed cross-origin responses. Changing one layer does not override the others.
 
-**Essential knowledge:**
-
-- Always use `SameSite=None; Secure` for cross-origin cookies
-- Set `Access-Control-Allow-Credentials: true` on server
-- Use `credentials: 'include'` on client
-- Never combine `Access-Control-Allow-Origin: *` with credentials
-
-**Future-proofing:**
-
-- Minimize reliance on third-party cookies
-- Implement alternative authentication methods (JWT, server-side sessions)
-- Test across browsers with default privacy settings
-
-**Security first:**
-
-- Always use `HttpOnly` for sensitive data
-- Always use `Secure` in production
-- Whitelist specific origins, never use wildcards with credentials
-- Implement proper CSRF protection
-
-The web is moving toward a more privacy-respecting future. Start planning your migration strategy now to avoid disruption when third-party cookies are fully deprecated.
+[MDN Set-Cookie reference](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie)

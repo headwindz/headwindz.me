@@ -64,7 +64,7 @@ summary: My personal git config settings with explanations for each option
   renames = true
 ```
 
-**`algorithm = histogram`** - Use the histogram algorithm for generating diffs. It's generally faster and produces more human-readable diffs than the default Myers algorithm, especially for large files with moved blocks of code.
+**`algorithm = histogram`** - Use the histogram algorithm for generating diffs. It can produce a different alignment from the default Myers algorithm. Compare the output on your changes before choosing a preference.
 
 **`colorMoved = plain`** - Highlight moved lines in diffs with different colors. When code is moved (not just deleted and added), Git will show this visually, making refactoring easier to review.
 
@@ -85,7 +85,7 @@ summary: My personal git config settings with explanations for each option
 
 **`autoSetupRemote = true`** - Automatically set up the remote tracking branch when you push a new local branch for the first time. No need to use `git push -u origin branch-name` anymore—just `git push` works.
 
-**`followTags = true`** - Automatically push tags that are reachable from the commits being pushed. Useful for ensuring version tags are synchronized with their commits.
+**`followTags = true`** - Push missing annotated tags that point to commits reachable from the refs being pushed. Lightweight tags are not included by this option. See the [Git push reference](https://git-scm.com/docs/git-push#Documentation/git-push.txt---follow-tags).
 
 ## Init settings
 

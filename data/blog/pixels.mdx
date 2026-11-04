@@ -67,7 +67,7 @@ An abstraction layer created specifically for web developers to be used in CSS a
 
 ### Device pixel ratio (`DPR`)
 
-Also referred to as CSS pixel ratio, this is the ratio of the number of device pixels to CSS pixels in the `ideal viewport`. This value can change with zoom or when moving a window between displays. For example:
+Also referred to as CSS pixel ratio, this is the ratio of the number of device pixels to CSS pixels in the `ideal viewport`. This value can change with `zoom` or when moving a window between displays. For example:
 
 | Device            | Physical Resolution | Device Pixel Ratio | Logical Resolution |
 | ----------------- | ------------------- | ------------------ | ------------------ |
@@ -128,9 +128,9 @@ The first meta tag tells the browser to make the layout viewport match the ideal
 
 # Zooming
 
-Zooming changes the device pixel ratio and the relationship between CSS pixels and physical pixels. Zoom in/out changes how many CSS pixels fit on the screen(e.g. 125% zoom means fewer CSS pixels in the same physical space). That behaves like a change in the effective ratio between CSS and physical pixels for layout/rendering. In many browsers, zoom also changes `window.devicePixelRatio` (or the effective value used for layout).
+Page zoom and pinch zoom affect different coordinate systems. Page zoom changes how many device pixels represent a CSS pixel and commonly changes `window.devicePixelRatio`. The layout viewport in CSS pixels changes too.
 
-**Note**: `window.innerWidth` typically changes with zoom while `screen.width` typically does not.
+Pinch zoom magnifies the visual viewport without changing the CSS-pixel size or DPR. Use `window.visualViewport` when you need the visible region or its scale. `screen.width` is not a substitute for the current layout or visual viewport. See [devicePixelRatio and zoom](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
 
 # CSS units and accessibility
 
@@ -142,7 +142,7 @@ The `px` unit is an abstraction for web developers. It's not a physical pixel bu
 
 ## Em (`em`)
 
-The `em` unit is relative to the font size of the current element. For example, `1.5em` means 1.5 times the element's computed font size.
+For properties such as margin, `em` is relative to the element's computed font size. For `font-size` itself, it is relative to the inherited font size, so nested relative font sizes can compound.
 
 ```css
 .paragraph {
@@ -159,11 +159,11 @@ The `rem` unit (`Root em`) is always relative to the root `<html>` element's fon
 
 ```css
 html {
-  font-size: 16px;
+  font-size: 100%; /* Preserve the browser/user default. */
 }
 
 h1 {
-  font-size: 2rem; /* 32px */
+  font-size: 2rem; /* 32px when the root computes to 16px. */
 }
 ```
 

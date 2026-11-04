@@ -7,7 +7,7 @@ summary: Master HTTP protocol fundamentals. Learn status codes (301 vs 302, 401 
 
 # Introduction
 
-The Hypertext Transfer Protocol (HTTP) is the foundation of data communication on the world wide web. Understanding HTTP is crucial for any web developer, as it governs how clients and servers communicate. This comprehensive guide explores the key concepts, mechanisms, and security considerations of HTTP and its secure variant HTTPS.
+HTTP describes request and response semantics: what a method means, how a status reports the result, and how headers control interpretation and caching. This is a reference for those decisions, followed by an overview of intermediaries and transport security. For a complete login flow, see the [authentication guide](/blog/guide-to-authentication).
 
 # Table of contents
 
@@ -17,6 +17,7 @@ The Hypertext Transfer Protocol (HTTP) is the foundation of data communication o
 - [Proxy and gateway](#proxy-and-gateway)
 - [Security](#security)
 - [HTTPS and encryption](#https-and-encryption)
+- [Conclusion](#conclusion)
 
 # HTTP status codes
 
@@ -175,7 +176,7 @@ HTTP/1.1 502 Bad Gateway
 **Common causes:**
 
 - Backend application server is down
-- Timeout connecting to upstream server
+- An invalid or incomplete upstream response. A timeout is commonly reported as 504 instead
 - Reverse proxy can't reach backend
 - DNS resolution failures
 
@@ -207,11 +208,15 @@ app.use((req, res, next) => {
 })
 ```
 
+## 504 - Gateway timeout
+
+A gateway or proxy returns 504 when it does not receive a timely response from the upstream server needed to complete the request. Compare its upstream timing and error logs with the backend logs. A 502 instead indicates an invalid upstream response. [HTTP gateway status codes](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.6).
+
 # HTTP headers
 
 HTTP headers are key-value pairs sent with requests and responses to convey metadata about the communication. They control caching, authentication, content type, security policies, and more.
 
-## Request Headers
+## Request headers
 
 Request headers are sent by the client to provide information about the request and the client itself.
 
@@ -245,7 +250,7 @@ server {
 }
 ```
 
-### Content-Type header (Request)
+### Content-type header (request)
 
 When sending data to the server (in POST, PUT, or PATCH requests), the `Content-Type` header tells the server how to interpret the request body. This is critical for proper data parsing.
 
@@ -341,7 +346,7 @@ const server = http.createServer((req, res) => {
 })
 ```
 
-#### 3. multipart/form-data
+#### 3. Multipart/form-data
 
 Used when uploading files through HTML forms. It allows sending binary data (like images, videos, PDFs) along with text data in a single request.
 
@@ -434,7 +439,7 @@ const server = http.createServer((req, res) => {
 })
 ```
 
-### User-Agent header
+### User-agent header
 
 Identifies the client application making the request. Useful for logging, analytics, and compatibility decisions.
 
@@ -468,11 +473,11 @@ Referer: https://example.com/search?q=javascript
 
 **Note:** The header name is misspelled as "Referer" for historical reasons, not "Referrer".
 
-## Response Headers
+## Response headers
 
 Response headers are sent by the server to provide information about the response and server behavior.
 
-### Content-Type header (Response)
+### Content-type header (response)
 
 In responses, `Content-Type` tells the client how to interpret the response body. It's set by the server based on the resource being returned.
 
@@ -492,7 +497,7 @@ Common response content types:
 - `image/png`, `image/jpeg` - Images
 - `application/pdf` - PDF documents
 
-### Cache-Control header
+### Cache-control header
 
 Controls caching behavior for browsers and proxies, reducing bandwidth and improving performance.
 
@@ -518,7 +523,7 @@ Common directives:
 - `no-cache` - Must revalidate with server before using
 - `no-store` - Never cache
 
-### Set-Cookie header
+### Set-cookie header
 
 Sends cookies to the client to be stored and sent with future requests.
 
@@ -533,7 +538,7 @@ Security attributes:
 - `Secure` - Only sent over HTTPS
 - `SameSite` - Protection against CSRF attacks (Strict, Lax, or None)
 
-### Access-Control-Allow-Origin header
+### Access-control-allow-origin header
 
 Part of CORS, tells browsers which origins can access this resource.
 
@@ -565,7 +570,7 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'
 
 HTTP defines several methods to indicate the desired action for a resource:
 
-## GET
+## Get
 
 **Retrieves** data from the server. Should be **idempotent** (multiple identical requests should have the same effect) and have no side effects.
 
@@ -573,7 +578,7 @@ HTTP defines several methods to indicate the desired action for a resource:
 fetch('/api/users/123').then((res) => res.json())
 ```
 
-## POST
+## Post
 
 **Submits** data to create a new resource. Not idempotent: multiple identical requests may create multiple resources.
 
@@ -585,7 +590,7 @@ fetch('/api/users', {
 })
 ```
 
-## PUT
+## Put
 
 **Replaces** an existing resource entirely. Idempotent: multiple identical requests should have the same effect.
 
@@ -597,7 +602,7 @@ fetch('/api/users/123', {
 })
 ```
 
-## PATCH
+## Patch
 
 **Partially updates** a resource. May or may not be idempotent depending on the implementation.
 
@@ -609,7 +614,7 @@ fetch('/api/users/123', {
 })
 ```
 
-## DELETE
+## Delete
 
 **Removes** a resource. Idempotent: deleting the same resource multiple times has the same effect as deleting it once.
 
@@ -623,36 +628,11 @@ fetch('/api/users/123', {
 
 ## Gateway
 
-A gateway is a server that acts as an intermediary between different protocols. It can translate requests from one protocol to another, **supporting non-HTTP protocols** like FTP, SMTP, gRPC, or WebSocket.
+In HTTP terminology, a **gateway**, also called a reverse proxy, accepts requests as though it were an origin server and forwards them toward backend services. It may translate protocols, but translation is not required. An application **API gateway** often adds authentication, rate limits, and request routing to this server-facing boundary.
 
-**Key characteristics:**
+A **forward proxy** is selected by the client to send requests on its behalf. The useful distinction is which side chooses the intermediary and how it presents itself, not whether both connections use the same protocol. See [HTTP intermediary definitions](https://www.rfc-editor.org/rfc/rfc9110.html#section-3.7).
 
-- **Protocol translation**: Converts between different communication protocols
-- **Intelligent routing**: Routes based on application logic, not just HTTP
-- **Protocol agnostic**: Not limited to HTTP-based communication
-
-**Example use cases:**
-
-- API gateway: Routes HTTP requests to different microservices, handles authentication, rate limiting
-- Protocol translation: HTTP to gRPC, HTTP to database protocols (SQL, NoSQL)
-- Message gateway: HTTP to message queues (RabbitMQ, Kafka)
-- IoT gateway: HTTP to MQTT, CoAP for IoT devices
-
-```
-Client (HTTP) → Gateway → Microservice 1 (gRPC)
-                        → Microservice 2 (REST API)
-                        → Message Queue (AMQP)
-```
-
-## Proxy
-
-A proxy server acts as an intermediary for requests from clients. Unlike gateways, proxies primarily work at the HTTP level and maintain protocol consistency.
-
-**Key characteristics:**
-
-- **Same protocol**: Both sides communicate using the same protocol (usually HTTP)
-- **Request forwarding**: Forwards requests and responses with minimal transformation
-- **Transparent or explicit**: Can work with or without client awareness
+## Proxy roles
 
 ### Forward proxy
 
@@ -725,38 +705,15 @@ server {
 
 **Popular reverse proxies:** Nginx, Apache, HAProxy, Cloudflare, AWS ALB
 
-## Gateway vs Proxy
+## Combine responsibilities when needed
 
-| Aspect             | Gateway                                     | Proxy                                |
-| ------------------ | ------------------------------------------- | ------------------------------------ |
-| **Protocol**       | Translates between different protocols      | Maintains same protocol (HTTP/HTTPS) |
-| **Scope**          | Works across protocol boundaries            | Works within protocol boundaries     |
-| **Transformation** | Significant message transformation required | Minimal to no message transformation |
-| **Use case**       | Connecting different services/protocols     | Routing and forwarding within HTTP   |
-| **Complexity**     | Higher (needs protocol knowledge)           | Lower (understands one protocol)     |
-| **Example**        | HTTP ↔ gRPC, HTTP ↔ MQTT                  | HTTP → Multiple HTTP backends        |
+| Role                         | Boundary                                   | Typical responsibility                                         |
+| ---------------------------- | ------------------------------------------ | -------------------------------------------------------------- |
+| Forward proxy                | Chosen by the client                       | Outbound access policy, forwarding, caching                    |
+| Reverse proxy / HTTP gateway | Presents an origin interface to the client | Backend routing, TLS termination, load balancing               |
+| Application API gateway      | Entry point for application APIs           | Authentication, quotas, routing, optional protocol translation |
 
-Gateways and proxies are often used **together** in modern architectures:
-
-1. **Reverse Proxy + Gateway**: A reverse proxy (Nginx) sits at the entry point for load balancing, then routes to an API gateway (Kong, AWS API Gateway) which handles service routing and protocol translation.
-
-2. **Forward Proxy + Gateway**: A forward proxy might route requests through a gateway for authentication and protocol translation before reaching backend services.
-
-**Typical microservices architecture:**
-
-```
-Client Request
-    ↓
-Reverse Proxy (Nginx) - Load balancing, SSL termination
-    ↓
-API Gateway (Kong/AWS API Gateway) - Authentication, rate limiting
-    ↓
-Gateway (gRPC Gateway) - Protocol translation HTTP to gRPC
-    ↓
-Microservices (gRPC, REST, etc.)
-```
-
-In practice, some tools blur the lines: an API gateway acts as both a reverse proxy and a gateway, handling HTTP routing plus protocol translation and service mesh integration.
+One service can perform several of these jobs. An application may put Nginx in front of an API gateway, but the extra hop needs a reason such as separate ownership or policy requirements; it is not required by the terminology.
 
 # Security
 
@@ -803,7 +760,7 @@ app.use((req, res, next) => {
 
 To test if a request will trigger CORS restrictions, use [Will It CORS?](https://toolhub.run/tools/will-it-cors)
 
-## XSS (Cross-Site Scripting)
+## XSS (cross-site scripting)
 
 XSS occurs when an attacker injects malicious scripts into web pages viewed by other users. This happens when user input is not properly sanitized before being rendered.
 
@@ -836,7 +793,7 @@ app.get('/search', (req, res) => {
 res.setHeader('Content-Security-Policy', "default-src 'self'")
 ```
 
-### CSRF (Cross-Site Request Forgery)
+### CSRF (cross-site request forgery)
 
 CSRF tricks authenticated users into executing unwanted actions on a web application where they're authenticated.
 
@@ -904,84 +861,50 @@ const user = await User.findById(userId)
 
 # HTTPS and encryption
 
-HTTPS (HTTP Secure) is HTTP over TLS/SSL, providing encryption, data integrity, and authentication.
+HTTPS protects HTTP messages with TLS, providing confidentiality, integrity, and server authentication. The transport depends on the HTTP version.
 
-## TCP handshake (3-way handshake)
+## TCP handshake for http/1.1 and http/2
 
-Before HTTPS can establish a secure connection, TCP must first establish a connection:
+For a new TCP-based HTTPS connection, the TCP handshake establishes transport before TLS negotiates security:
 
-1. **SYN**: Client sends synchronization packet to server
-2. **SYN-ACK**: Server acknowledges and sends its own synchronization packet
-3. **ACK**: Client acknowledges server's packet
+1. The client sends SYN.
+2. The server replies with SYN-ACK.
+3. The client sends ACK.
 
-```
-Client                                  Server
-  |                                       |
-  |------------SYN (seq=100)------------->|
-  |                                       |
-  |<------SYN-ACK (seq=300, ack=101)------|
-  |                                       |
-  |------------ACK (ack=301)------------->|
-  |                                       |
-```
+HTTP/3 uses QUIC over UDP and integrates TLS 1.3 into QUIC's connection establishment; it does not begin with this TCP exchange. [HTTP/3 specification](https://www.rfc-editor.org/rfc/rfc9114.html).
 
-## TLS/SSL handshake
+## A TLS 1.3 certificate-authenticated handshake
 
-After TCP connection is established, the TLS handshake occurs:
+The following is a simplified full handshake using ephemeral key agreement, rather than a resumed PSK session:
 
-1. **Client Hello**: Client sends supported cipher suites and TLS version
-2. **Server Hello**: Server chooses cipher suite and sends its certificate (containing public key)
-3. **Certificate Verification**: Client verifies server's certificate with CA (Certificate Authority)
-4. **Key Exchange**: Client generates pre-master secret, encrypts it with server's public key, sends to server
-5. **Session Keys**: Both parties generate session keys from the pre-master secret
-6. **Finished**: Both parties send encrypted "finished" messages to verify the handshake
+1. **ClientHello:** the client offers supported versions, algorithms, and key shares.
+2. **ServerHello:** the server selects parameters and supplies its key share. Both peers derive handshake traffic keys.
+3. **Server authentication:** the server sends encrypted handshake messages including its certificate chain, a CertificateVerify signature, and Finished. The client checks the chain, hostname, validity, signature, and Finished value.
+4. **Client Finished:** the client completes the handshake. Application traffic uses derived symmetric traffic keys.
 
-```
-Client                              Server
-  |---Client Hello------------------>|
-  |                                  |
-  |<--Server Hello, Certificate------|
-  |                                  |
-  |---Key Exchange------------------>|
-  |                                  |
-  |---Change Cipher Spec------------>|
-  |---Finished (encrypted)---------->|
-  |                                  |
-  |<--Change Cipher Spec-------------|
-  |<--Finished (encrypted)-----------|
-  |                                  |
-  |===Encrypted Application Data====>|
-```
+<Mermaid
+  chart={`
+sequenceDiagram
+  participant C as Client
+  participant S as Server
+  C->>S: ClientHello and key share
+  S->>C: ServerHello and key share
+  Note over C,S: Derive handshake traffic keys
+  S->>C: EncryptedExtensions, Certificate, CertificateVerify, Finished
+  Note over C: Validate server identity and handshake
+  C->>S: Finished
+  C->>S: Protected HTTP application data
+`}
+/>
 
-## Symmetric vs asymmetric encryption
+The server's certificate key authenticates the handshake. It is not used to encrypt a client-generated premaster secret in TLS 1.3. That older RSA key-transport pattern was removed from the protocol. [TLS 1.3 specification](https://www.rfc-editor.org/rfc/rfc8446.html).
 
-**Asymmetric encryption (Public-key cryptography):**
+## Key agreement, signatures, and symmetric protection
 
-- Uses a pair of keys: public key (encrypt) and private key (decrypt)
-- Slower but more secure for key exchange
-- Used during TLS handshake to securely exchange the symmetric key
-- Examples: RSA, ECC
+Public-key mechanisms serve different jobs: key agreement establishes shared secrets, while signatures authenticate the peer and handshake. Symmetric authenticated encryption, such as AES-GCM or ChaCha20-Poly1305, then protects traffic efficiently. Treat these as separate operations rather than describing all public-key cryptography as encrypting with a public key and decrypting with a private key.
 
-**Symmetric encryption:**
+# Conclusion
 
-- Uses the same key for encryption and decryption
-- Much faster than asymmetric encryption
-- Used for actual data transmission after handshake
-- Examples: AES, ChaCha20
+Read an HTTP exchange as a whole: the method expresses the requested action, the status reports the result, and the headers describe how to interpret, cache, or handle the message. Proxies can add routing and policy along the way, while HTTPS protects the connection carrying those messages.
 
-**HTTPS uses both:**
-
-1. Asymmetric encryption to securely exchange keys during handshake
-2. Symmetric encryption for the actual data transfer (for performance)
-
-## Conclusion
-
-Understanding HTTP is fundamental to web development. From status codes that communicate request outcomes, to security mechanisms that protect users. As the web continues to evolve, staying informed about HTTP and its security implications remains essential for building robust, performant, and secure web applications.
-
-**Key takeaways:**
-
-- **Status codes matter**: Use appropriate codes (301 vs 302, 401 vs 403, 429, 500-503) to communicate clearly with clients
-- **Headers are powerful**: Leverage caching, security, and CORS headers to build robust applications
-- **Security is non-negotiable**: Always validate inputs, use HTTPS, implement CSRF protection, and set proper security headers
-- **Understand proxies**: Gateway and reverse proxy patterns are essential for scaling and securing modern applications
-- **Developer responsibility**: Never trust user input, use parameterized queries, and follow security best practices
+When debugging, start with the request and response you can observe. Check the method, URL, status, and relevant headers, then trace the request through any intermediaries. A TLS failure may prevent an HTTP response from arriving at all, so check the negotiated HTTP and TLS versions before applying a version-specific explanation.

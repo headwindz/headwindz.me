@@ -1,7 +1,7 @@
 ---
-title: My typescript cheatsheet
+title: My TypeScript cheatsheet
 date: 2024-01-20
-summary: Most helpful typescript techniques
+summary: TypeScript utility types and generic helpers with examples
 tags: [cheatsheet]
 ---
 
@@ -26,21 +26,21 @@ Use the `keyof` operator to create more type-safe functions
 function getValue<T, K extends keyof T>(obj: T, key: K) {
   return obj[key]
 }
-let user: User = { name: 'Mike', age: 18 }
-getValue(user, 'name') // John
-getValue(user, 'gender') // Error thrown
+const user: IUser = { name: 'Mike', age: 18 }
+getValue(user, 'name') // 'Mike'
+getValue(user, 'gender') // Compile-time error: "gender" is not a key of IUser
 ```
 
 # Exclude
 
-`Exclude` utility type can be used to remove properties from an object type
+`Exclude<T, U>` removes members of a union that are assignable to `U`. To remove properties from an object type, use `Omit<T, Keys>`.
 
 ```ts
 interface IUser {
   name: string
   age: number
 }
-type UserWithoutAge = Exclude<User, 'age'>
+type UserWithoutAge = Omit<IUser, 'age'> // { name: string }
 
 type T0 = Exclude<'a' | 'b' | 'c', 'a'> // "b" | "c"
 ```
@@ -61,14 +61,14 @@ const sum = (a: number, b: number) => a + b
 type SumResult = ReturnType<typeof sum> // number
 ```
 
-# Await
+# Awaited
 
-`Awaited` type can be used unwrap the promise and get the type of what the promise resolves to
+`Awaited<T>` unwraps a promise type, including nested promises.
 
 ```ts
-const sum = (a: number, b: number) => a + b
+const sumAsync = async (a: number, b: number) => a + b
 
-type SumResult = Awaited<ReturnType<typeof sum>> // number
+type SumResult = Awaited<ReturnType<typeof sumAsync>> // number
 ```
 
 # Generic
@@ -96,3 +96,5 @@ const lib = { id: 1, name: 'hi', isPublic: true }
 // type: { label: string, value: number }
 const labelValue = toLabelValue('name', 'id', lib)
 ```
+
+[TypeScript utility-type reference](https://www.typescriptlang.org/docs/handbook/utility-types)

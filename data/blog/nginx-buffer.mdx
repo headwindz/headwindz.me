@@ -27,9 +27,9 @@ GET http://nginx.example.com/dist/js/vendor.js net::ERR_CONTENT_LENGTH_MISMATCH
 -rw-r--r--  1  michaelzheng  staff   4.6M Jul  2 17:00 vendor.js
 ```
 
-- Loading `vendor.js` directly via browser or `curl` works perfectly
+- The next diagnostic step is to compare the failing proxied URL with the upstream URL shown in the Nginx error log. Record which route each browser or `curl` request uses. A successful request alone does not establish whether it bypassed Nginx.
 
-## Understanding Nginx Proxy Buffering
+## Understanding Nginx proxy buffering
 
 Before debugging, it's important to understand how Nginx proxy buffering works:
 
@@ -43,11 +43,9 @@ When Nginx acts as a reverse proxy, it can buffer responses from the upstream se
 
 ### When buffering is used
 
-Nginx uses buffering when:
+With `proxy_buffering on` (the default), Nginx reads upstream responses into memory buffers while sending data to the client. If the response cannot be handled within those buffers, it can write part of the response to a temporary file, subject to the proxy temp-file settings. Buffering and disk spill are different stages.
 
-- `proxy_buffering` is `on` (default)
-- Response size exceeds `proxy_buffer_size` + `proxy_buffers` combined capacity
-- Large responses (like `vendor.js` bundles) that don't fit in memory buffers
+See the [Nginx proxy buffering documentation](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering).
 
 ### Buffer hierarchy
 
@@ -58,7 +56,7 @@ Nginx uses a two-tier buffering system:
 
 When memory buffers are full, Nginx writes overflow data to temporary files in `proxy_temp_path`.
 
-## Debugging Steps
+## Debugging steps
 
 ### 1. Locate Nginx configuration
 
@@ -98,9 +96,9 @@ host: "nginx.example.com", referrer: "http://nginx.example.com/testabc"
 ### 4. Verify Nginx process owner
 
 ```bash
-ps aux | grep nginx
-# nobody   14586  0.0  0.1  ...  nginx: worker process
-# root     14585  0.0  0.0  ...  nginx: master process
+ps -eo user,group,args | grep nginx
+# Inspect both USER and GROUP for the nginx worker process.
+# The master can run as root while workers use a different identity.
 ```
 
 The worker process runs as `nobody`, which needs write access to `proxy_temp`.
@@ -116,14 +114,13 @@ The directory is owned by `root` with `700` permissions, preventing `nobody` fro
 
 ## Solutions
 
-### Solution 1: Fix directory permissions (Recommended)
+### Solution 1: fix directory permissions (recommended)
 
-Grant the Nginx worker process owner write access to the buffer directory:
+Use the worker user and group observed on your machine. The original ownership command below uses `nobody:admin`. Verify the worker's actual user and group on your installation before adapting it. The worker needs write and traversal access to the temp directory. Changing a root-owned directory to `755` alone does not grant a non-owner write access:
 
 ```bash
 # Change owner to nginx worker user
 sudo chown -R nobody:admin /usr/local/var/run/nginx/proxy_temp
-
 # Or set broader permissions (less secure)
 sudo chmod 755 /usr/local/var/run/nginx/proxy_temp
 ```
@@ -139,7 +136,7 @@ sudo chmod 755 /usr/local/var/run/nginx/proxy_temp
 - May be reset after Nginx upgrades
 - Requires root access
 
-### Solution 2: Disable proxy buffering
+### Solution 2: disable proxy buffering
 
 Add to your `nginx.conf` or server block:
 
@@ -162,7 +159,7 @@ location / {
 - Upstream connections held open longer
 - Not recommended for production with slow clients
 
-### Solution 3: Change buffer directory location
+### Solution 3: change buffer directory location
 
 Specify a custom path where Nginx has permissions:
 
@@ -193,10 +190,10 @@ sudo chmod 755 /var/tmp/nginx/proxy_temp
 
 ## Conclusion
 
-The `ERR_CONTENT_LENGTH_MISMATCH` error typically indicates Nginx couldn't complete writing the response due to permission issues with the `proxy_temp` directory. Understanding Nginx's buffering mechanism helps you choose the right solution:
+In this incident, the Nginx error log identified a temp-directory permission failure. The browser error alone only indicated that the response did not match its declared length. Other causes require different fixes. Understanding Nginx's buffering mechanism helps you choose the right solution:
 
 - **For most cases**: Fix permissions (Solution 1)
 - **For streaming/real-time**: Disable buffering (Solution 2)
 - **For complex setups**: Custom temp path (Solution 3)
 
-Always test your chosen solution under load to ensure it meets your performance requirements.
+After changing ownership or configuration, validate the configuration, reload Nginx if needed, and repeat the same proxied request. Confirm that the complete response arrives and the permission error no longer appears in the log. Compare the upstream response if the mismatch remains; then test with a slow client before changing buffering behavior in production.

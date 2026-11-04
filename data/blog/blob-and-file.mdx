@@ -5,62 +5,7 @@ date: 2024-08-02
 summary: Comprehensive guide to Blob and File APIs in JavaScript, including creating object URLs, reading files, and practical use cases with image uploads and PDF.js workers.
 ---
 
-# Introduction
-
-The Blob (Binary Large Object) and File APIs are fundamental for working with binary data in web applications. Whether you're handling file uploads, generating downloads, or working with media, understanding these APIs is essential for modern web development.
-
-This guide covers:
-
-- URL construction and parsing with URLSearchParams
-- Creating and using Blob objects
-- Working with File objects from user uploads
-- Converting files to object URLs and base64
-- Real-world use cases and practical examples
-
-# URL basics
-
-## Working with URLSearchParams
-
-The **`URL`** interface provides powerful tools for parsing, constructing, and manipulating URLs. The `searchParams` property gives access to query parameters:
-
-```js
-const url = new URL('https://www.google.com:443/index.html?a=1&b=2#hash')
-
-/**
- *  URL {
- *    href: "https://www.google.com:443/index.html?a=1&b=2#hash",
- *    protocol: "https:",
- *    username: "",
- *    password: "",
- *    hash: "#hash",
- *    origin: "https://www.google.com:443", // with port, with protocol
- *    host: "www.google.com:443",           // with port, without protocol
- *    hostname: "www.google.com",           // without port, without protocol
- *    port: "443",
- *    pathname: "/index.html",
- *    search: "?a=1&b=2",
- *    searchParams: URLSearchParams {}
- *  }
- */
-
-// Read query parameters
-url.searchParams.get('a') // '1'
-url.searchParams.has('b') // true
-url.searchParams.getAll('a') // ['1']
-
-// Modify query parameters
-url.searchParams.set('c', '3')
-url.searchParams.delete('a')
-url.searchParams.append('d', '4')
-
-console.log(url.href) // Updated URL with new parameters
-```
-
-**Use cases:**
-
-- Reading query parameters from current page URL
-- Building URLs dynamically for API requests
-- Handling pagination, filters, and search parameters
+A `Blob` holds immutable binary data. A `File` adds a name and modification metadata, and commonly comes from a file input or drag-and-drop. This guide follows the main decisions: read the bytes, preview them through an object URL, or send them without converting to text.
 
 # Blob API
 
@@ -70,9 +15,9 @@ A **`Blob`** object represents immutable, raw binary data. Think of it as a cont
 
 - Read as text or binary
 - Converted to streams for processing
-- Used anywhere File objects are accepted
+- Used by APIs that accept Blob. APIs requiring a File name or other metadata may specifically need a File
 
-## Creating Blobs
+## Creating blobs
 
 ```js
 // From JSON data
@@ -93,7 +38,7 @@ const buffer = new ArrayBuffer(8)
 const binaryBlob = new Blob([buffer], { type: 'application/octet-stream' })
 ```
 
-## How to read Blobs
+## How to read blobs
 
 ### FileReader API
 
@@ -107,7 +52,7 @@ reader.onload = (e) => {
 reader.readAsText(jsonBlob) // Read as text
 ```
 
-### Creating object URLs from Blobs
+### Creating object URLs from blobs
 
 `URL.createObjectURL()` generates a temporary URL that references the Blob data:
 
@@ -131,7 +76,7 @@ URL.revokeObjectURL(blobUrl)
 
 **Important:** Always revoke object URLs when done to prevent memory leaks. The URL remains valid until the document is unloaded or you explicitly revoke it.
 
-# File api
+# File API
 
 ## Understanding File objects
 
@@ -141,7 +86,7 @@ A **`File`** object is a specialized Blob with additional metadata like filename
 - Drag-and-drop operations
 - Programmatic creation for testing or data generation
 
-## Creating Files programmatically
+## Creating files programmatically
 
 ```js
 const file = new File(
@@ -169,24 +114,24 @@ const file = new File(
 **`FileReader`** reads file contents asynchronously and converts them to different formats:
 
 ```js
+// Choose one method for each read operation.
 const reader = new FileReader()
-
-// Read as Data URL (base64)
+reader.onload = () => console.log(reader.result)
+reader.onerror = () => console.error(reader.error)
 reader.readAsDataURL(file)
 
-// Read as text
-reader.readAsText(file)
-
-// Read as array buffer
-reader.readAsArrayBuffer(file)
-
-// Read as binary string (deprecated, use ArrayBuffer)
-reader.readAsBinaryString(file)
+// Alternatives, using separate readers:
+const textReader = new FileReader()
+textReader.readAsText(file)
+const bufferReader = new FileReader()
+bufferReader.readAsArrayBuffer(file)
 ```
 
-## Preview uploaded images with Object URLs
+Do not start another read on the same reader while its `readyState` is `LOADING`; the [File API](https://www.w3.org/TR/FileAPI/) requires an `InvalidStateError` in that case. For text or bytes, `await file.text()` and `await file.arrayBuffer()` are alternatives.
 
-The most performant way to preview images - creates a temporary URL directly to the file:
+## Preview uploaded images with object URLs
+
+An object URL references the file without first encoding its contents into a base64 string:
 
 [preview-image](demo://blob-and-file/preview-image.tsx)
 
@@ -195,7 +140,7 @@ The most performant way to preview images - creates a temporary URL directly to 
 - Instant preview (no encoding needed)
 - Memory efficient
 - No base64 bloat
-- Perfect for large files
+- Avoids a large encoded string. Decoding and displaying the image still consumes resources
 
 ## Preview uploaded images with base64
 
@@ -206,7 +151,7 @@ When you need the actual data (e.g., for upload, storage, or manipulation):
 **When to use readAsDataURL:**
 
 - Need base64 for APIs that require it
-- Storing images in localStorage/IndexedDB
+- Sending to a text-only storage interface. IndexedDB itself can store Blob objects
 - Sending images in JSON payloads
 - Image manipulation before upload
 
@@ -216,14 +161,14 @@ When you need the actual data (e.g., for upload, storage, or manipulation):
 - Large base64 strings (33% larger than binary)
 - Higher memory usage
 
-## Real world use case: pdf.js worker setup
+## Historical example: a PDF.js worker with webpack
 
-When using libraries like [pdf.js](https://mozilla.github.io/pdf.js/), you might encounter issues with worker file paths after bundling. The traditional approach of pointing to a static file path breaks when using webpack or other bundlers:
+The following pattern applies to classic-script workers in historical PDF.js 2.x builds with webpack and raw-loader 4. It is not a recipe for current module-worker builds. For a current installation, follow the [PDF.js package examples](https://github.com/mozilla/pdf.js/tree/master/examples) for your installed version and bundler. The underlying issue is a worker file path that is not emitted as a served asset. The traditional approach of pointing to a static file path breaks when using webpack or other bundlers:
 
 ### The problem
 
 ```js
-import pdfjsLib from 'pdfjs-dist'
+import * as pdfjsLib from 'pdfjs-dist'
 
 // ❌ This breaks after bundling - path becomes incorrect
 pdfjsLib.GlobalWorkerOptions.workerSrc = './node_modules/pdfjs-dist/build/pdf.worker.js'
@@ -240,7 +185,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = './node_modules/pdfjs-dist/build/pdf.wo
 Convert the worker code to a Blob and create an object URL:
 
 ```js
-import pdfjsLib from 'pdfjs-dist'
+import * as pdfjsLib from 'pdfjs-dist'
 // Use raw-loader to import worker code as a string
 import pdfjsWorker from 'raw-loader!pdfjs-dist/build/pdf.worker.min.js'
 
@@ -256,19 +201,26 @@ const pdfjsWorkerBlobURL = URL.createObjectURL(pdfjsWorkerBlob)
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerBlobURL
 ```
 
+Keep the Blob URL alive while the worker may need it. Revoke it after the worker is destroyed; revoking immediately can prevent the worker from loading. Your Content Security Policy must also allow the worker source you choose.
+
 ## Best practices
 
-### 1. Always clean up Object URLs
+### 1. Always clean up object URLs
+
+An object URL should remain valid for the lifetime of its preview. Return a cleanup function so the caller can release it when the preview is replaced or removed:
 
 ```js
-// ❌ Memory leak
-const url = URL.createObjectURL(blob)
-img.src = url
+function showBlobPreview(img, blob) {
+  const url = URL.createObjectURL(blob)
+  img.src = url
+  return () => {
+    if (img.src === url) img.removeAttribute('src')
+    URL.revokeObjectURL(url)
+  }
+}
 
-// ✅ Proper cleanup
-const url = URL.createObjectURL(blob)
-img.src = url
-img.onload = () => URL.revokeObjectURL(url)
+const disposePreview = showBlobPreview(img, blob)
+// Call disposePreview() when replacing the preview or unmounting its component.
 ```
 
 ### 2. Validate file types
@@ -327,9 +279,7 @@ reader.readAsDataURL(file)
 ```js
 // Quick preview - use Object URL
 function previewImage(file) {
-  const url = URL.createObjectURL(file)
-  img.src = url
-  img.onload = () => URL.revokeObjectURL(url)
+  return showBlobPreview(img, file) // Caller owns the returned cleanup function.
 }
 
 // Upload to API - use FormData (keeps as binary)
@@ -339,7 +289,7 @@ function uploadImage(file) {
   fetch('/upload', { method: 'POST', body: formData })
 }
 
-// Store in database - use base64
+// For a text-only storage interface, encode as base64
 function storeImage(file) {
   const reader = new FileReader()
   reader.onload = (e) => {
@@ -357,14 +307,53 @@ function storeImage(file) {
 **API uploads:** Use FormData with File objects (no conversion needed)
 **Storing in database:** Use FileReader with base64 when binary storage isn't available
 
-## Conclusion
+# URL basics
 
-Understanding Blob and File APIs is crucial for modern web development. Key takeaways:
+## Working with URLSearchParams
 
-- **Object URLs** are fastest for previews but need manual cleanup
-- **FileReader** provides flexibility for different data formats
-- **Blobs** can solve bundling issues with workers and assets
-- Always validate file types and sizes
-- Clean up resources to prevent memory leaks
+The **`URL`** interface provides powerful tools for parsing, constructing, and manipulating URLs. The `searchParams` property gives access to query parameters:
 
-These APIs form the foundation for file handling in web applications, from simple image uploads to complex document processing systems.
+```js
+const url = new URL('https://www.google.com:443/index.html?a=1&b=2#hash')
+
+/**
+ *  URL {
+ *    href: "https://www.google.com/index.html?a=1&b=2#hash",
+ *    protocol: "https:",
+ *    username: "",
+ *    password: "",
+ *    hash: "#hash",
+ *    origin: "https://www.google.com", // default HTTPS port is omitted
+ *    host: "www.google.com", // a non-default port would be retained
+ *    hostname: "www.google.com",           // without port, without protocol
+ *    port: "", // 443 is the default for HTTPS
+ *    pathname: "/index.html",
+ *    search: "?a=1&b=2",
+ *    searchParams: URLSearchParams {}
+ *  }
+ */
+
+// Read query parameters
+url.searchParams.get('a') // '1'
+url.searchParams.has('b') // true
+url.searchParams.getAll('a') // ['1']
+
+// Modify query parameters
+url.searchParams.set('c', '3')
+url.searchParams.delete('a')
+url.searchParams.append('d', '4')
+
+console.log(url.href) // Updated URL with new parameters
+```
+
+**Use cases:**
+
+- Reading query parameters from current page URL
+- Building URLs dynamically for API requests
+- Handling pagination, filters, and search parameters
+
+# Conclusion
+
+Use `Blob` to hold binary data and `File` when you also need a filename and modification metadata. Choose the next step based on what the receiving API accepts: an object URL for a preview, `FormData` for a file upload, or text and bytes when you need to inspect the contents. Convert to base64 only when the destination requires a text representation.
+
+Keep each object URL alive while its consumer needs it, then revoke it when the preview is removed or the worker is destroyed. This keeps the file workflow focused on the operation at hand and gives temporary URLs a clear lifetime.

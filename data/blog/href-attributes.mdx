@@ -5,20 +5,18 @@ date: 2019-03-06
 summary: An anchor element with an empty `href` attribute will cause the page to reload when clicked
 ---
 
-Frontend developers are all familiar with [the anchor element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a). I recently struggled with a bug which took me a while to figure out. The root cause is an unexpected use of `href` attribute.
-
-> href: Contains a URL or a URL fragment that the hyperlink points to. URLs are not restricted to Web (HTTP)-based documents, but can use any protocol supported by the browser.
+I used anchors for every item in a nested menu. Items with no destination reloaded the page instead of only expanding the submenu. The problem was treating a navigation element as an action control.
 
 # Context
 
-I was building a multi-level menus with the following requirements:
+I was building a multi-level menu with the following requirements:
 
 - Only the leaf menu item is an active link
 - Clicking other non-leaf menu items should expand the next level items
 
 # What I did
 
-It comes in handy for making each menu item with `<a>`. The only difference between leaf menu items and non-leaf menu items is that leaf menu items should have valid `href` which indicates the redirection destination. Therefore, I build a `MenuItem` component like this:
+I initially rendered every menu item with `<a>`. The only difference between leaf menu items and non-leaf menu items is that leaf menu items should have valid `href` which indicates the redirection destination. Therefore, I built a `MenuItem` component like this:
 
 ```tsx
 function MenuItem({ link, title, onClick = () => {} }) {
@@ -30,7 +28,7 @@ function MenuItem({ link, title, onClick = () => {} }) {
 }
 ```
 
-# The Problem
+# The problem
 
 ## Leaf menu items ✅
 
@@ -38,54 +36,38 @@ Leaf menu items work fine as the source `{ link: '/aaa', title: 'abc'}` would be
 
 ## Non-leaf menu items ❌
 
-For non-leaf menu items, the source `{ link: '', title: 'abc', onClick: console.log }` would be rendered as `<a href> abc </a>`. Clicking such an anchor link will reload the page. This is a result of the fact that the current page is assumed to be the value of `href` attribute if the `href` attribute exists but no value is set for it. i.e.
+For a non-leaf item, `link` was an empty string. The resulting HTML link, `<a href="">`, resolves against the document's base URL and normally navigates back to the current page. That navigation is separate from the click handler, which is why expanding the menu also triggered a reload. An anchor with no `href` is different: it is not a hyperlink.
+
+`href="#"` is another distinct case. It navigates to an empty fragment and can change the URL or scroll position. Neither removing the destination nor substituting `#` gives an action the semantics and keyboard behavior of a button.
+
+# Use a button for expansion
+
+Keep anchors for items with destinations. For a submenu toggle, use a button and communicate its expanded state:
 
 ```tsx
-<a href>aa</a>
-```
-
-is equivalent to
-
-```tsx
-<a href={{location.href}}>aa</a>
-```
-
-# Solutions
-
-There are two possible solutions to work around this issue
-
-- Don't set href if link is exceptional
-
-In this case, anchor element is used for semantic purpose only. The `onClick` handler will take care of the interaction.
-
-```tsx
-function MenuItem({ link, title, onClick = () => {} }) {
-  if (link) {
-    return (
-      <a href={link} onClick={onClick}>
-        {title}
-      </a>
-    )
-  }
-  return <a onClick={onClick}>{title}</a>
+type MenuItemProps = {
+  link?: string
+  title: string
+  expanded: boolean
+  submenuId: string
+  onToggle: () => void
 }
-```
 
-- Reset link to # if link is exceptional
+function MenuItem({ link, title, expanded, submenuId, onToggle }: MenuItemProps) {
+  if (link) return <a href={link}>{title}</a>
 
-```tsx
-function MenuItem({ link, title, onClick = () => {} }) {
-  if (!link) {
-    link = '#'
-  }
   return (
-    <a href={link} onClick={onClick}>
+    <button type="button" aria-expanded={expanded} aria-controls={submenuId} onClick={onToggle}>
       {title}
-    </a>
+    </button>
   )
 }
 ```
 
+The parent controls `expanded` and renders the submenu with the matching `id`. Test Tab, Enter, and Space on the toggle, and verify that the URL stays unchanged while the submenu opens. Leaf links should still navigate to their destinations.
+
 # Conclusion
 
-To concludes, an anchor element with an empty `href` attribute will cause the page to reload when clicked. Having this knowledge in mind may save you time when you get into a similar track.
+An empty `href` still gives an anchor a navigation destination. In my menu, expanding a submenu was an action, so a button was the appropriate element. Keeping links for navigation and buttons for expansion removed the unwanted reload and gave each control the keyboard behavior users expect.
+
+[MDN anchor semantics](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/a)

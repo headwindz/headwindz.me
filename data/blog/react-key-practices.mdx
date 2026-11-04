@@ -33,7 +33,7 @@ React will throw a warning with the code above:
 
 Keys should be `unique` and `stable`
 
-### Index ? Maybe, but only `under some circumstances`
+### Index ? maybe, but only `under some circumstances`
 
 Array index is unique across an array.
 
@@ -66,7 +66,7 @@ Usually we will have a unique and stable `id` like property for each record from
 
 **Try it yourself**: Now tick `mike` and click add. The checkbox correctly stays with `mike` because each person has a stable `id` as the key.
 
-## Common Key Anti-patterns
+## Common key anti-patterns
 
 ### ❌ Random values or timestamps
 
@@ -82,7 +82,7 @@ Usually we will have a unique and stable `id` like property for each record from
 }
 ```
 
-These generate new keys on every render, forcing React to unmount and remount all elements unnecessarily. This destroys state and kills performance.
+Random values change identity on each render. Timestamps can change between renders and can also duplicate across siblings created within the same millisecond. Both are unsuitable substitutes for stable item IDs. Changed keys cause remounting and lost local state.
 
 ### ❌ Duplicate keys
 
@@ -95,7 +95,7 @@ These generate new keys on every render, forcing React to unmount and remount al
 
 Duplicate keys confuse React's reconciliation algorithm and can cause incorrect updates or lost state.
 
-## Advanced Key Concepts
+## Advanced key concepts
 
 ### Keys in fragments
 
@@ -152,16 +152,12 @@ Keys are critical for React's reconciliation performance. With proper keys, Reac
 
 - Efficiently reorder existing DOM nodes instead of recreating them
 - Preserve component state when items move in a list
-- Skip unnecessary re-renders of unchanged items
+- Match each item to the existing component instance when its identity is unchanged
 
-Without proper keys, React may needlessly destroy and recreate DOM nodes, losing state and degrading performance.
+Keys identify items during reconciliation. They do not by themselves skip component renders. Render skipping depends on other mechanisms, such as [memoization](https://react.dev/reference/react/memo).
 
-## Conclusion
+# Conclusion
 
-- `key` is a unique identifier for react elements
-- `key` should be `unique` and `stable`. A react element with a different `key` in different render phases will be considered a different element. The old one will be unmounted and a new one is created.
-- Only use array indices as keys when the number/order of array items are unchanged across the whole app lifecycle.
-- Always prefer to use backend/database unique identifier id-like properties as `key`
-- Never use random values, timestamps, or non-stable data as keys
-- Keys only need to be unique among siblings, not globally
-- Proper keys are essential for optimal reconciliation performance
+Choose a key from the item's stable identity, usually its database ID, so component state follows the item when the list changes. Keys need to be unique among siblings. Use an index only when items will not be inserted, deleted, or reordered in a way that changes the identity associated with a position.
+
+Change a key deliberately when you want to reset a component's state. For ordinary updates, keep it stable. A key controls identity during reconciliation, but it does not by itself prevent a component from rendering again.

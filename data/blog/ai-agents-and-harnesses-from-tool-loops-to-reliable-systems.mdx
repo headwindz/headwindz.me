@@ -109,7 +109,7 @@ The limits here are illustrative. Every model call and tool operation shares the
 
 The model's summary stays separate from the recorded check results. A request to finish triggers verification. Passing checks produce a completed result with evidence. Failed checks, exhausted limits, and interrupted work produce distinct incomplete results.
 
-An interruption preserves what is known so far. Before restarting, inspect the current state. Repeating the whole run can repeat edits or external writes.
+An interruption preserves what Is known so far. Before restarting, inspect the current state. Repeating the whole run can repeat edits or external writes.
 
 ### Verify the parser against the contract
 
@@ -132,7 +132,7 @@ flowchart TD
 
 The saved evidence shows which cases passed or failed and which version of the code was checked. The snapshot stays unchanged during verification, and the acceptance cases live outside the agent's editable files.
 
-The corrected parser passes all six cases. The original implementation fails the HTTP and JavaScript scheme cases. A function that always returns `null` also fails, because the verifier checks that supported HTTPS URLs still work. These checks establish the behavior listed in the table, not every possible property of the parser.
+In this illustrative implementation, the corrected parser passes all six cases. The original implementation fails the HTTP and JavaScript scheme cases. A function that always returns `null` also fails, because the verifier checks that supported HTTPS URLs still work. These checks establish the behavior listed in the table, not every possible property of the parser.
 
 In a real package, verification should also run the existing regression suite and inspect the final patch scope. Record those results alongside the acceptance cases.
 

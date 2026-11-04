@@ -5,11 +5,7 @@ date: 2025-12-24
 summary: Quick and practical chrome DevTools tips for everyday debugging tasks.
 ---
 
-Chrome DevTools is one of the most powerful tools in a web developer's arsenal. While most developers are familiar with the basics like inspecting elements and checking console logs, DevTools offers a wealth of advanced capabilities that can dramatically speed up debugging and development workflows.
-
-This post is a curated collection of practical DevTools tips I use regularly in my day-to-day development. Rather than being an exhaustive reference, these are the techniques that consistently save me time: from debugging transient UI states and tracking down network issues, to profiling performance and manipulating the DOM.
-
-Let's dive into some of the most useful chrome DevTools features you should know.
+These are the Chrome DevTools techniques I use to inspect transient UI, trace requests, and investigate slow interactions. Each tip starts with an action you can try in the relevant panel.
 
 ## Breakpoints & pausing
 
@@ -17,18 +13,12 @@ Let's dive into some of the most useful chrome DevTools features you should know
 
 ```js
 // Pause the page after 3 seconds
-setTimeout(() => debugger, 3000)
+setTimeout(() => {
+  debugger
+}, 3000)
 ```
 
 This gives you time to hover over an element, trigger a tooltip, or set up any UI state before the debugger pauses.
-
-## Network debugging
-
-**Simulate offline and throttle bandwidth**: Reproduce slow connections or offline scenarios to test your app's behavior.
-
-- `Network` panel → `throttle` dropdown → select `Slow 4G`, `Fast 4G`, `Offline` or create a custom profile
-
-![Network throttle](/static/blogs/dev-tool/network-throttle.gif)
 
 ## Screenshots & capture
 
@@ -74,6 +64,12 @@ This gives you time to hover over an element, trigger a tooltip, or set up any U
 ![Dom break on](/static/blogs/dev-tool/dom-break-on.png)
 
 ## Network panel
+
+**Simulate offline and throttle bandwidth**: Reproduce slow connections or offline scenarios to test your app's behavior.
+
+- `Network` panel → `throttle` dropdown → select `Slow 4G`, `Fast 4G`, `Offline` or create a custom profile
+
+![Network throttle](/static/blogs/dev-tool/network-throttle.gif)
 
 **Locate request origin**: See where a network request was triggered.
 
