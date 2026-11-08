@@ -32,15 +32,10 @@ function highlightCode(source: string) {
   })
 }
 
-export default function LiveDemoEditor({
-  initialCode,
-  runtimeUrl,
-}: {
-  initialCode: string
-  runtimeUrl: string
-}) {
+export default function LiveDemoEditor({ initialCode }: { initialCode: string }) {
   const [code, setCode] = useState(initialCode)
   const [script, setScript] = useState('')
+  const [runtime, setRuntime] = useState('')
   const [error, setError] = useState('')
   const [running, setRunning] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -71,6 +66,7 @@ export default function LiveDemoEditor({
         if (cancelled) return
         if (!response.ok) throw new Error(result.error || 'Could not run the demo.')
         setScript(result.script)
+        setRuntime(result.runtime)
         setError('')
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Could not run the demo.')
@@ -84,7 +80,7 @@ export default function LiveDemoEditor({
     }
   }, [code])
 
-  const preview = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font:14px system-ui,sans-serif;margin:0;padding:24px;color:#172033}button,input,select{font:inherit}button{cursor:pointer}.space-y-2>*+*{margin-top:8px}.space-y-4>*+*{margin-top:16px}.flex{display:flex}.items-center{align-items:center}.gap-2{gap:8px}.mb-4{margin-bottom:16px}.rounded{border-radius:6px}.bg-blue-500{background:#3b82f6}.text-white{color:white}.px-4{padding-left:16px;padding-right:16px}.py-2{padding-top:8px;padding-bottom:8px}.font-bold{font-weight:700}ul{padding-left:24px}</style></head><body><div id="root"></div><script>window.addEventListener('error',e=>{const p=document.createElement('pre');p.style.color='#b91c1c';p.textContent=e.message;document.body.append(p)})</script><script src="${runtimeUrl}"></script><script>${script.replaceAll('</script', '<\\/script')}</script></body></html>`
+  const preview = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font:14px system-ui,sans-serif;margin:0;padding:24px;color:#172033}button,input,select{font:inherit}button{cursor:pointer}.space-y-2>*+*{margin-top:8px}.space-y-4>*+*{margin-top:16px}.flex{display:flex}.items-center{align-items:center}.gap-2{gap:8px}.mb-4{margin-bottom:16px}.rounded{border-radius:6px}.bg-blue-500{background:#3b82f6}.text-white{color:white}.px-4{padding-left:16px;padding-right:16px}.py-2{padding-top:8px;padding-bottom:8px}.font-bold{font-weight:700}ul{padding-left:24px}</style></head><body><div id="root"></div><script>window.addEventListener('error',e=>{const p=document.createElement('pre');p.style.color='#b91c1c';p.textContent=e.message;document.body.append(p)})</script><script>${runtime.replaceAll('</script', '<\\/script')}</script><script>${script.replaceAll('</script', '<\\/script')}</script></body></html>`
 
   return (
     <div className="not-prose my-8 rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">

@@ -14,7 +14,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['public/static/demo-runtime.js'],
+    ignores: [],
   },
   js.configs.recommended,
   ...compat.extends(

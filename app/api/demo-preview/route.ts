@@ -1,4 +1,5 @@
 import { build } from 'esbuild'
+import demoRuntime from '../../../lib/demo-runtime.generated.json'
 
 export const runtime = 'nodejs'
 
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
         },
       ],
     })
-    return Response.json({ script: result.outputFiles[0].text })
+    return Response.json({ script: result.outputFiles[0].text, runtime: demoRuntime })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not compile this demo.'
     return Response.json({ error: message }, { status: 400 })

@@ -1,6 +1,7 @@
 import { build } from 'esbuild'
+import { writeFileSync } from 'node:fs'
 
-await build({
+const result = await build({
   stdin: {
     contents: `
       import * as React from 'react'
@@ -26,5 +27,7 @@ await build({
   format: 'iife',
   platform: 'browser',
   minify: true,
-  outfile: 'public/static/demo-runtime.js',
+  write: false,
 })
+
+writeFileSync('lib/demo-runtime.generated.json', JSON.stringify(result.outputFiles[0].text))
