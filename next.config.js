@@ -68,6 +68,7 @@ module.exports = () => {
     output,
     basePath,
     reactStrictMode: true,
+    serverExternalPackages: ['esbuild'],
     trailingSlash: false,
     pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
     images: {

@@ -30,7 +30,7 @@
   @apply rounded-xs bg-gray-700 px-5 py-3 font-mono text-sm font-bold text-gray-200 dark:bg-gray-800;
 }
 
-.remark-code-title + div > pre {
+.remark-code-title + .code-snippet {
   @apply mt-0 rounded-t-none;
 }
 

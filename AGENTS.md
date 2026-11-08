@@ -1,175 +1,70 @@
 # AGENTS.md
 
-This document provides guidance for AI agents working with this codebase.
+Guidance for agents working on headwindz.me, Michael Zheng's personal blog and portfolio.
 
-## Project overview
+## Source of truth
 
-This is a personal blog and portfolio website built with Next.js 15+ (App Router), TypeScript, and Contentlayer. The site features blog posts, project showcases, and interactive demos.
+Inspect `package.json` and the relevant implementation before changing behavior or documenting commands. The current stack is Next.js 16 App Router, React 19, TypeScript, Contentlayer2, and Tailwind CSS 4. Use pnpm and preserve `pnpm-lock.yaml`.
 
-## Tech stack
+Read [README.md](./README.md) for setup, commands, authoring examples, and deployment limitations. Use Node.js 20.9 or newer. `pnpm start` starts development; `pnpm serve` runs the production server after a build.
 
-- **Framework**: Next.js 15+ (App Router)
-- **Language**: TypeScript
-- **Content**: MDX with Contentlayer
-- **Styling**: Tailwind CSS
-- **Package Manager**: pnpm
-- **Code Quality**: ESLint, Prettier
+## Where to make changes
 
-## Project structure
+| Concern                             | Files                                                                                                 |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Pages, API handlers, metadata       | `app/`, including `app/seo.tsx`, `app/sitemap.ts`, `app/robots.ts`                                    |
+| Shared UI and MDX registration      | `components/`, `components/MDXComponents.tsx`                                                         |
+| Post, list, and author presentation | `layouts/`                                                                                            |
+| Posts and author profiles           | `data/blog/**/*.mdx`, `data/authors/**/*.mdx`                                                         |
+| Site configuration                  | `data/siteMetadata.js`, `data/projectsData.ts`, `data/headerNavLinks.ts`                              |
+| Styling and theme tokens            | `css/tailwind.css`; there is no `tailwind.config.js`                                                  |
+| MDX schema and processing           | `contentlayer.config.ts`, `lib/remark-demo.mjs`                                                       |
+| Interactive demos                   | `demos/`, `components/LiveDemo.tsx`, `components/LiveDemoEditor.tsx`, `app/api/demo-preview/route.ts` |
+| Runtime and RSS generation          | `scripts/build-demo-runtime.mjs`, `scripts/postbuild.mjs`, `scripts/rss.mjs`                          |
+| Framework and tooling               | `next.config.js`, `tsconfig.json`, `eslint.config.mjs`, `prettier.config.js`                          |
 
-### Core directories
+## Implementation conventions
 
-- **`app/`**: Next.js App Router pages and layouts
-  - Uses file-based routing
-  - Contains page components, layouts, and metadata
-  - Dynamic routes: `[...slug]`, `[tag]`, `[page]`
+- Keep changes focused and preserve unrelated work already in the working tree.
+- Use functional React components, hooks, and typed props. Add client boundaries only where needed; `LiveDemo` reads source files on the server.
+- Use PascalCase for component filenames, kebab-case for MDX and demo paths, and existing neighboring conventions for utilities.
+- Use Tailwind classes and the CSS-based theme. Theme providers live in `app/theme-providers.tsx`.
+- Follow Prettier: no semicolons, single quotes, two-space indentation, and a 100-character print width.
+- Prefer static generation where appropriate, while preserving the Node.js endpoint required for editable demos.
+- Use the existing image wrapper and Next.js image optimization. Check `next.config.js` when adding remote image hosts or external scripts.
+- Keep secrets in local environment files or deployment settings. Never commit credentials.
 
-- **`components/`**: Reusable React components
-  - UI components (Header, Footer, Card, etc.)
-  - MDX components for rich content
-  - Theme and navigation components
+## Content conventions
 
-- **`data/`**: Content and configuration
-  - **`blog/`**: MDX blog posts
-  - **`authors/`**: Author information
-  - `siteMetadata.js`: Site configuration
-  - `projectsData.ts`: Project showcase data
-  - `headerNavLinks.ts`: Navigation structure
+- Add posts under `data/blog/` as `.mdx`, optionally in subdirectories.
+- Include `title`, `date`, `tags`, and `summary`. The schema requires only `title` and `date`; tags default to an empty list.
+- Consult `contentlayer.config.ts` before introducing or changing frontmatter fields.
+- Use sentence case headings, preserving acronyms and proper names: `## Getting started`, `### Using the API`.
+- Write concise, clear sentences and avoid unnecessary words.
+- Register reusable MDX components in `components/MDXComponents.tsx`.
+- Preserve existing URLs; add redirects in `next.config.js` when intentionally changing published slugs.
 
-- **`demos/`**: Interactive demo components
-  - Used within blog posts to demonstrate concepts
-  - Each demo in its own subdirectory
+## Demo workflow and constraints
 
-- **`layouts/`**: Page layout components
-  - `PostLayout.tsx`: Blog post layout
-  - `ListLayout.tsx`: List views
-  - `AuthorLayout.tsx`: Author pages
+1. Create a self-contained file at `demos/<topic>/<example>.tsx`. Each path segment must contain only lowercase letters, digits, or hyphens.
+2. Define a component named `App`; the preview compiler appends the React mount call.
+3. Add `[Try the example](demo://<topic>/<example>.tsx)` in its own MDX paragraph. The remark plugin inserts `LiveDemo`, which reads the file from `demos/`.
+4. Use only supported imports: `react`, `react-dom/client`, and `react/jsx-runtime`. The API rejects other packages and local imports.
+5. Check the editor and rendered preview. Its iframe stylesheet is separate from the site's full Tailwind CSS.
 
-- **`lib/`**: Utility functions and configurations
-  - Remark/rehype plugins for MDX processing
+`pnpm dev`, `pnpm start`, `pnpm build`, and `pnpm analyze` generate `lib/demo-runtime.generated.json` before Next.js runs. Change the generator rather than hand-editing the generated runtime. Restart development after runtime changes. Keep the import restrictions and iframe isolation intact when modifying preview behavior.
 
-- **`public/`**: Static assets
-  - Images in `static/images/`
-  - Blog-specific assets in `static/blogs/`
+Static-only deployment does not support the preview API. The editor also uses an absolute `/api/demo-preview` URL; verify subpath behavior before changing `BASE_PATH`.
 
-- **`scripts/`**: Build and deployment scripts
-  - RSS feed generation
-  - Post-build optimizations
+## Generated files
 
-## Content management
+Do not manually edit `.next/`, `.contentlayer/`, `lib/demo-runtime.generated.json`, `app/tag-data.json`, `public/search.json`, or generated RSS feeds. Regenerate them through the normal scripts. Review the diff after checks and keep generated changes only when required by the task.
 
-### Blog posts
+## Validation
 
-- Located in `data/blog/`
-- Written in MDX format
-- Frontmatter includes: title, date, tags, summary
-- Organized with optional subdirectories (e.g., `cheatsheet/`)
-
-### Adding a new blog post
-
-1. Create a new `.mdx` file in `data/blog/`
-2. Add required frontmatter:
-   ```yaml
-   ---
-   title: 'Post Title'
-   date: 'YYYY-MM-DD'
-   tags: ['tag1', 'tag2']
-   summary: 'Brief description'
-   ---
-   ```
-3. Write content using MDX
-
-- **Headers**: Use sentence case (only first letter capitalized)
-- Correct: `## Getting started`, `### Using the API`
-- Incorrect: `## Getting Started`, `### Using The API`
-
-4. Contentlayer will process it automatically
-5. Try to use condensed sentences and avoid unnecessary words to keep the content concise and clear.
-
-### Custom MDX components
-
-- Defined in `components/MDXComponents.tsx`
-- Can include custom components like `LiveDemo`
-- Interactive demos from `demos/` directory
-
-## Development conventions
-
-### Code style
-
-- TypeScript for type safety
-- Functional React components with hooks
-- Tailwind CSS for styling
-- ESLint and Prettier for code formatting
-
-### File naming
-
-- React components: PascalCase (e.g., `Header.tsx`)
-- Utilities: camelCase (e.g., `remark-demo.mjs`)
-- Pages: lowercase with Next.js conventions
-- MDX content: kebab-case (e.g., `guide-to-authentication.mdx`)
-
-### Component structure
-
-- Keep components focused and single-purpose
-- Use TypeScript interfaces for props
-- Export components as default or named exports
-- Co-locate related components in subdirectories
-
-## Common tasks
-
-### Running the development server
-
-```bash
-pnpm dev
-```
-
-### Building for production
-
-```bash
-pnpm build
-```
-
-### Creating a new demo
-
-1. Create a new directory in `demos/`
-2. Add demo component(s)
-3. Import and use in relevant blog post MDX
-
-## Configuration files
-
-- `next.config.js`: Next.js configuration
-- `contentlayer.config.ts`: Content processing configuration
-- `tailwind.config.js`: Tailwind CSS customization
-- `tsconfig.json`: TypeScript configuration
-- `eslint.config.mjs`: Linting rules
-- `prettier.config.js`: Code formatting rules
-
-## Important notes
-
-- The site uses Contentlayer for MDX processing
-- Static generation preferred for performance
-- Images optimized through Next.js Image component
-- Dark/light theme support via `theme-providers.tsx`
-
-## SEO and metadata
-
-- SEO configuration in `app/seo.tsx`
-- Sitemap generated automatically
-- RSS feed generated via `scripts/rss.mjs`
-- robots.txt configured in `app/robots.ts`
-
-## When making changes
-
-1. **Content changes**: Edit MDX files in `data/blog/`
-2. **Component changes**: Modify files in `components/`
-3. **Layout changes**: Edit layouts in `layouts/` or `app/`
-4. **Styling**: Use Tailwind classes or update `css/tailwind.css`
-5. **Configuration**: Update relevant config files
-
-## Testing changes
-
-After making changes, verify:
-
-- Development server runs without errors
-- Build completes successfully
-- Linting passes (`pnpm lint`)
+- For documentation-only edits, run `pnpm exec prettier --check README.md AGENTS.md` and `git diff --check`, and verify claims against source.
+- For code or content changes, run `pnpm lint` and `pnpm build`. Start `pnpm dev` and check affected pages and interactive behavior.
+- The lint script covers `app`, `components`, `lib`, `layouts`, `scripts`, and `next.config.js`; it does not check every directory. Check changed files outside those paths explicitly where applicable.
+- There is no dedicated automated test script. Add or run focused checks when the change warrants them.
+- Builds need network access for the Space Grotesk Google font. Report runtime or network blockers accurately rather than claiming checks passed.
+- Summarize changes, checks actually run, and remaining limitations. Do not commit, push, or deploy unless requested.

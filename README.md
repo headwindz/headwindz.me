@@ -1,82 +1,107 @@
-# My personal blog
+# headwindz.me
 
-This blog serves as a platform for me to share my thoughts, experiences, and projects related to frontend development and web3 technologies.
+Michael Zheng's personal blog and portfolio about frontend development, Web3, and software engineering.
 
-[Visit the blog](https://headwindz.me)
+Visit [headwindz.me](https://headwindz.me).
 
-## Tech stack
+## Stack
 
-- Next.js 16 with the App Router and React 19
-- TypeScript and Tailwind CSS 4
-- MDX content processed with Contentlayer2
-- ESLint and Prettier
-- pnpm for package management
+- Next.js 16 App Router and React 19
+- TypeScript and MDX, processed with Contentlayer2
+- Tailwind CSS 4, configured in `css/tailwind.css`
+- ESLint 9, Prettier 3, and pnpm
+- Editable React demos compiled with esbuild, Mermaid diagrams, and local search
 
 ## Getting started
 
-Use Node.js 20.9 or later and pnpm. From the repository root, install dependencies and start the development server:
+Use Node.js 20.9 or newer and install pnpm:
 
-```bash
-pnpm install
+```sh
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open [localhost:3000](http://localhost:3000) to view the site. Changes to pages and MDX content reload during development.
+Open [localhost:3000](http://localhost:3000). Development and build scripts use webpack and generate the demo runtime before starting Next.js.
 
-## Available commands
+Environment variables are optional for basic local development. For integrations, copy `.env.example` to `.env.local` and fill only the values you need. The example includes starter integrations that are not all enabled. Configure active services in `data/siteMetadata.js`; Umami uses `NEXT_UMAMI_ID`, which is absent from the example. Keep credentials out of version control.
 
-| Command        | Description                                            |
-| -------------- | ------------------------------------------------------ |
-| `pnpm dev`     | Start the development server with Webpack.             |
-| `pnpm build`   | Build the production site and generate RSS feeds.      |
-| `pnpm serve`   | Serve the production build after running `pnpm build`. |
-| `pnpm lint`    | Run ESLint on application code and scripts.            |
-| `pnpm analyze` | Build with the bundle analyzer enabled.                |
+## Commands
+
+| Command                                          | Purpose                                                     |
+| ------------------------------------------------ | ----------------------------------------------------------- |
+| `pnpm dev`                                       | Generate the demo runtime and start development             |
+| `pnpm start`                                     | Also start development                                      |
+| `pnpm build`                                     | Generate the runtime, build Next.js, and generate RSS feeds |
+| `pnpm serve`                                     | Serve a completed production build                          |
+| `pnpm lint`                                      | Lint the paths configured in `package.json`                 |
+| `pnpm analyze`                                   | Build with the bundle analyzer enabled                      |
+| `pnpm exec prettier --check README.md AGENTS.md` | Check documentation formatting                              |
 
 ## Project structure
 
-| Path                     | Purpose                                                                   |
-| ------------------------ | ------------------------------------------------------------------------- |
-| `app/`                   | Pages, routing, layouts, SEO metadata, sitemap, and robots configuration. |
-| `components/`            | Shared UI and custom MDX components.                                      |
-| `data/blog/`             | Blog posts written in MDX.                                                |
-| `data/authors/`          | Author profiles.                                                          |
-| `data/siteMetadata.js`   | Site identity, social links, analytics, and search settings.              |
-| `data/projectsData.ts`   | Project showcase entries.                                                 |
-| `data/headerNavLinks.ts` | Navigation links.                                                         |
-| `demos/`                 | Interactive examples used in blog posts.                                  |
-| `layouts/`               | Blog, author, and list layouts.                                           |
-| `public/`                | Static images and other assets.                                           |
-| `scripts/`               | Post-build tasks and RSS generation.                                      |
+| Path                                             | Contents                                    |
+| ------------------------------------------------ | ------------------------------------------- |
+| `app/`                                           | Routes, layouts, metadata, and API handlers |
+| `components/`                                    | Shared UI, MDX components, and demo editor  |
+| `data/blog/`, `data/authors/`                    | MDX posts and author profiles               |
+| `data/siteMetadata.js`                           | Site identity, analytics, and search        |
+| `data/projectsData.ts`, `data/headerNavLinks.ts` | Projects and navigation                     |
+| `layouts/`                                       | Post, list, and author layouts              |
+| `demos/`                                         | Interactive examples referenced by posts    |
+| `lib/`                                           | MDX plugins and generated demo runtime      |
+| `css/`                                           | Tailwind theme and syntax highlighting      |
+| `public/static/`                                 | Images and blog assets                      |
+| `scripts/`                                       | Demo runtime and RSS generation             |
 
 ## Writing a post
 
-Create an `.mdx` file in `data/blog/`, using a kebab-case filename such as `my-new-post.mdx`:
+Create `data/blog/my-post.mdx`:
 
 ```mdx
 ---
-title: 'My new post'
+title: 'My post'
 date: '2026-11-08'
 tags: ['frontend']
-summary: 'A brief description of the post.'
-draft: true
+summary: 'A concise description of the post.'
 ---
 
-## Introduction
+## Getting started
 
-Write your post here.
+Write the post here.
 ```
 
-Preview the post with `pnpm dev`. Remove `draft: true` or set it to `false` when the post is ready to publish. Use sentence case for headings.
+Only `title` and `date` are required by the schema; include tags and a summary for useful listings and metadata. Optional fields include `lastmod`, `draft`, `images`, `authors`, `layout`, `bibliography`, and `canonicalUrl`. See `contentlayer.config.ts` for the schema and processing pipeline.
 
-Contentlayer processes posts and generates tag counts and the local search index. See `contentlayer.config.ts` for supported frontmatter fields and MDX plugins. Custom MDX components live in `components/MDXComponents.tsx`, with interactive examples in `demos/`.
+Preview posts with `pnpm dev`. Set `draft: true` in frontmatter while writing, then remove it or set it to `false` when the post is ready to publish.
+
+Use kebab-case filenames, concise sentences, and sentence case headings, preserving proper names and acronyms. Register shared MDX components in `components/MDXComponents.tsx`. Contentlayer generates post data, tag counts, and the local search index.
 
 ## Configuration
 
-Update `data/siteMetadata.js` to change the site title, URL, social links, theme, analytics, or search settings. Set `NEXT_UMAMI_ID` in `.env.local` if you want to enable the configured Umami analytics integration.
+Update `data/siteMetadata.js` to change the site title, URL, social links, theme, analytics, or search settings. Update `data/projectsData.ts` for project entries and `data/headerNavLinks.ts` for navigation.
 
 Update `next.config.js` when changing image domains, redirects, or the Content Security Policy. Styling is configured in `css/tailwind.css`.
 
+## Adding an interactive demo
+
+Create a self-contained TSX file such as `demos/my-topic/example.tsx` with a component named `App`. Reference it from its own paragraph in MDX:
+
+```md
+[Try the example](demo://my-topic/example.tsx)
+```
+
+`lib/remark-demo.mjs` converts the link into `LiveDemo`. Demo paths must match `topic/example.tsx`, using lowercase letters, numbers, and hyphens. The preview compiler allows imports only from `react`, `react-dom/client`, and `react/jsx-runtime`; local modules and other packages are unavailable. The iframe has a small built-in stylesheet, not the site's full Tailwind styles.
+
+The editor sends code to `POST /api/demo-preview`, which runs esbuild on the server. Keep the named `App` component because the compiler appends the mount call. Restart development after changing the runtime generator or its dependencies.
+
+## Validation and deployment
+
+For application changes, run `pnpm lint` and `pnpm build`, then check affected routes with `pnpm dev`. Builds use `next/font/google` for Space Grotesk and need access to Google's font service. There is no dedicated test script.
+
+Deploy with a Next.js-compatible Node.js runtime. Although `next.config.js` supports `EXPORT`, live demo previews require the Node.js API handler and cannot run on static-only hosting. `BASE_PATH` and `UNOPTIMIZED` are also supported flags; the editor currently uses an absolute `/api/demo-preview` URL, so verify it before deploying under a subpath.
+
+Metadata lives in `app/seo.tsx` and `app/layout.tsx`; sitemap and robots routes live in `app/`. `scripts/postbuild.mjs` generates RSS feeds after the production build.
+
 ## Attribution
 
-Generated from the starter template: [tailwind-nextjs-starter-blog](https://github.com/timlrx/tailwind-nextjs-starter-blog)
+Based on [tailwind-nextjs-starter-blog](https://github.com/timlrx/tailwind-nextjs-starter-blog). See [LICENSE](./LICENSE).

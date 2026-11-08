@@ -19,7 +19,7 @@ export default function Projects() {
 
         <div className="divide-y divide-gray-200 dark:divide-gray-800">
           {projectsData.map((project) => (
-            <div key={project.title} className="py-12">
+            <div key={project.title} className="py-7">
               <Card
                 title={project.title}
                 description={project.description}

@@ -3,11 +3,11 @@
   "version": "2.4.0",
   "private": true,
   "scripts": {
-    "start": "next dev --webpack",
-    "dev": "cross-env INIT_CWD=$PWD next dev --webpack",
-    "build": "cross-env INIT_CWD=$PWD next build --webpack && cross-env NODE_OPTIONS='--experimental-json-modules' node ./scripts/postbuild.mjs",
+    "start": "node ./scripts/build-demo-runtime.mjs && next dev --webpack",
+    "dev": "node ./scripts/build-demo-runtime.mjs && cross-env INIT_CWD=$PWD next dev --webpack",
+    "build": "node ./scripts/build-demo-runtime.mjs && cross-env INIT_CWD=$PWD next build --webpack && cross-env NODE_OPTIONS='--experimental-json-modules' node ./scripts/postbuild.mjs",
     "serve": "next start",
-    "analyze": "cross-env ANALYZE=true next build --webpack",
+    "analyze": "node ./scripts/build-demo-runtime.mjs && cross-env ANALYZE=true next build --webpack",
     "lint": "eslint app components lib layouts scripts next.config.js",
     "prepare": "husky"
   },
