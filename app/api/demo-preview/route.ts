@@ -12,7 +12,6 @@ export async function POST(request: Request) {
     const result = await build({
       stdin: {
         contents: `${code}\nimport { createRoot } from 'react-dom/client';\ncreateRoot(document.getElementById('root')!).render(<App />);`,
-        resolveDir: process.cwd(),
         sourcefile: 'demo.tsx',
         loader: 'tsx',
       },
@@ -26,14 +25,11 @@ export async function POST(request: Request) {
         {
           name: 'limit-demo-imports',
           setup(plugin) {
-            plugin.onResolve({ filter: /.*/ }, ({ path, importer }) => {
-              if (
-                importer.endsWith('demo.tsx') &&
-                !['react', 'react-dom/client', 'react/jsx-runtime'].includes(path)
-              ) {
-                return { errors: [{ text: `Import '${path}' is unavailable in demos.` }] }
+            plugin.onResolve({ filter: /.*/ }, ({ path }) => {
+              if (['react', 'react-dom/client', 'react/jsx-runtime'].includes(path)) {
+                return { path, external: true }
               }
-              return undefined
+              return { errors: [{ text: `Import '${path}' is unavailable in demos.` }] }
             })
           },
         },

@@ -20,6 +20,7 @@ export default function LiveDemo({ code, demoPath }: LiveDemoProps) {
     <LiveDemoEditor
       key={demoPath}
       initialCode={source.replace(/^['"]use client['"]\s*\n\s*/m, '')}
+      runtimeUrl={`${process.env.BASE_PATH || ''}/static/demo-runtime.js`}
     />
   )
 }
