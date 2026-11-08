@@ -66,7 +66,7 @@ const Card = ({ title, description, imgSrc, href }) => {
           </>
         )}
       </div>
-      <div className="flex flex-1 flex-col justify-between space-y-4 py-6 lg:pt-0 lg:pl-8">
+      <div className="flex flex-1 flex-col justify-between space-y-4 pt-6 lg:pt-0 lg:pl-8">
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {href ? (
@@ -82,11 +82,11 @@ const Card = ({ title, description, imgSrc, href }) => {
         {href && (
           <Link
             href={href}
-            className="group inline-flex items-center text-sm text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+            className="group hover:border-primary-500 hover:text-primary-600 focus-visible:border-primary-500 focus-visible:text-primary-600 dark:hover:text-primary-400 dark:focus-visible:text-primary-400 inline-flex w-fit items-center gap-1 border-b border-transparent pb-0.5 text-sm text-gray-600 transition-colors duration-200 focus-visible:outline-none dark:text-gray-400"
             aria-label={`Link to ${title}`}
           >
             View project
-            <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-focus-visible:translate-x-1" />
           </Link>
         )}
       </div>

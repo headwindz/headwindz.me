@@ -4,11 +4,11 @@ import { useState } from 'react'
 
 function Icon() {
   return (
-    <svg viewBox="0 0 100 100">
+    <svg viewBox="0 0 100 100" width="48" height="48" aria-label="Gradient circle">
       <defs>
         <linearGradient id="gradient">
-          <stop offset="0%" stop-color="pink" />
-          <stop offset="100%" stop-color="teal" />
+          <stop offset="0%" stopColor="pink" />
+          <stop offset="100%" stopColor="teal" />
         </linearGradient>
       </defs>
       <circle cx="50" cy="50" r="50" fill="url(#gradient)" />
@@ -31,13 +31,29 @@ export default function App() {
         <span>Show first icon</span>
       </label>
 
-      <div className="flex gap-4">
-        <div className="h-20 w-20 rounded border border-gray-300 p-4">
+      <div style={{ display: 'flex', gap: 16 }}>
+        <div
+          style={{
+            width: 80,
+            height: 80,
+            padding: 16,
+            border: '1px solid #d1d5db',
+            borderRadius: 6,
+          }}
+        >
           <div style={{ display: isFirstIconVisible ? 'block' : 'none' }}>
             <Icon />
           </div>
         </div>
-        <div className="h-20 w-20 rounded border border-gray-300 p-4">
+        <div
+          style={{
+            width: 80,
+            height: 80,
+            padding: 16,
+            border: '1px solid #d1d5db',
+            borderRadius: 6,
+          }}
+        >
           <Icon />
         </div>
       </div>
