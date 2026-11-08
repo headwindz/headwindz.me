@@ -27,7 +27,6 @@ public/sitemap.xml
 
 # search
 /public/search.json
-/public/static/demo-runtime.js
 
 # misc
 .DS_Store
