@@ -45,7 +45,7 @@ Apply `none` to a control whose label should stay unselected during interaction.
 
 Try dragging across the button's label, then selecting a word in each paragraph. The command uses `all`, so selecting part of it selects the whole command. This does not copy it to the clipboard. An explicit Copy button needs a separate implementation.
 
-[Try the original selection example](https://codesandbox.io/s/use-select-lp7u9).
+[Try the selection example](demo://text-selection-and-clicks/selection.tsx)
 
 ## Keep selection rules local
 
@@ -85,9 +85,9 @@ This example places a decorative tint over a button. The wrapper establishes the
 }
 ```
 
-Clicking the button through the overlay triggers its alert. Remove `pointer-events: none` to see the overlay intercept the click. The overlay is empty and decorative, so `aria-hidden="true"` keeps it out of the accessibility tree.
+The code above triggers an alert when you click through the overlay. The inline demo below counts clicks instead. Uncheck its option to switch the overlay from `pointer-events: none` to `auto` and see it intercept pointer input. The overlay is empty and decorative, so `aria-hidden="true"` keeps it out of the accessibility tree.
 
-[Try the original pointer-events example](https://codesandbox.io/s/point-events-6gp7x?file=/index.html).
+[Try the overlay example](demo://text-selection-and-clicks/overlay.tsx)
 
 ## Restore targeting on a child
 
