@@ -1,16 +1,41 @@
 function App() {
   return (
-    <main style={{ padding: 24, fontFamily: 'sans-serif', lineHeight: 1.6 }}>
-      <p>Drag across each example to compare text selection.</p>
-      <button type="button" style={{ userSelect: 'none', WebkitUserSelect: 'none', padding: 12 }}>
-        Drag handle: this label stays unselected
-      </button>
-      <p style={{ userSelect: 'text', WebkitUserSelect: 'text' }}>
-        You can select part of this sentence.
-      </p>
-      <p style={{ userSelect: 'all', WebkitUserSelect: 'all', fontFamily: 'monospace' }}>
-        npm install example-package
-      </p>
-    </main>
+    <>
+      <style>{`.selection-demo {
+  padding: 24px;
+  font-family: sans-serif;
+  line-height: 1.6;
+}
+
+.select-text {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.select-none {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.select-all {
+  -webkit-user-select: all;
+  user-select: all;
+}`}</style>
+      <main className="selection-demo">
+        <p>Try selecting a word in each example.</p>
+        <section>
+          <strong>user-select: text</strong>
+          <p className="select-text">Try selecting part of this sentence.</p>
+        </section>
+        <section>
+          <strong>user-select: none</strong>
+          <p className="select-none">Try selecting part of this sentence.</p>
+        </section>
+        <section>
+          <strong>user-select: all</strong>
+          <p className="select-all">Try selecting part of this sentence.</p>
+        </section>
+      </main>
+    </>
   )
 }

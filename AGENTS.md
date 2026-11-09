@@ -67,4 +67,5 @@ Do not manually edit `.next/`, `.contentlayer/`, `lib/demo-runtime.generated.jso
 - The lint script covers `app`, `components`, `lib`, `layouts`, `scripts`, and `next.config.js`; it does not check every directory. Check changed files outside those paths explicitly where applicable.
 - There is no dedicated automated test script. Add or run focused checks when the change warrants them.
 - Builds need network access for the Space Grotesk Google font. Report runtime or network blockers accurately rather than claiming checks passed.
-- Summarize changes, checks actually run, and remaining limitations. Do not commit, push, or deploy unless requested.
+- Summarize changes, checks actually run, and remaining limitations. Do not commit or deploy unless explicitly requested.
+- Push only when the user explicitly asks to push the changes being delivered. Editing files or requesting a commit does not authorize a push. A previous push request does not authorize pushing later changes or follow-up tasks; wait for a new explicit push request.

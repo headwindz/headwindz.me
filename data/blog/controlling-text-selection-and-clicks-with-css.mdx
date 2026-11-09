@@ -12,7 +12,7 @@ Dragging across a control can accidentally select its label. A decorative overla
 | `user-select`    | Whether and how users select text                 | Avoid accidental selection on a drag handle  |
 | `pointer-events` | Which element becomes the target of pointer input | Let clicks pass through a decorative overlay |
 
-# User-select: control text selection
+## User-select: control text selection
 
 The `user-select` property controls text selection. Its common values are:
 
@@ -23,73 +23,45 @@ The `user-select` property controls text selection. Its common values are:
 
 The specification also defines `contain`, but [MDN reports that browsers do not support it](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/user-select#values). Check the page's compatibility table for your target browsers.
 
-## Prevent accidental selection
+### Prevent accidental selection
 
 Apply `none` to a control whose label should stay unselected during interaction. Keep article text and other content readers may want to copy selectable.
 
-```html
-<button type="button" class="select-none">Drag handle</button>
-<p>You can select part of this sentence.</p>
-<p class="select-all">npm install example-package</p>
-```
+The demo compares the same sentence with three selection rules:
 
-```css
-.select-none {
-  user-select: none;
-}
+- `text`: select individual words or part of the sentence.
+- `none`: prevent starting a text selection in the sentence.
+- `all`: select the whole sentence when selecting any part of it.
 
-.select-all {
-  user-select: all;
-}
-```
+Try selecting a word in each example. Selecting text does not copy it to the clipboard; a Copy button would need a separate implementation.
 
-Try dragging across the button's label, then selecting a word in each paragraph. The command uses `all`, so selecting part of it selects the whole command. This does not copy it to the clipboard. An explicit Copy button needs a separate implementation.
+The demo includes `-webkit-user-select` as a fallback for browsers that require the prefix. Edit the CSS in the playground to experiment with each value.
 
 [Try the selection example](demo://text-selection-and-clicks/selection.tsx)
 
-## Keep selection rules local
+### Keep selection rules local
 
 Although `user-select` is not inherited according to the specification, the initial `auto` value takes a parent's `none` or `all` into account. Browser implementations also have inheritance differences, described in the [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/user-select#syntax). Apply the rule to the smallest relevant element and test nested content in your target browsers.
 
 Disabling selection does not protect the underlying content from copying. The [CSS specification](https://drafts.csswg.org/css-ui-4/#content-selection) describes it as a convenience for interaction, not a copy protection mechanism.
 
-# Pointer-events: control pointer targeting
+## Pointer-events: control pointer targeting
 
 For HTML elements, use `auto` for normal pointer targeting and `none` to exclude an element from it. Other values, such as `stroke` and `fill`, are primarily for SVG.
 
 With `none`, the browser targets an eligible element behind the excluded element. The excluded element remains visible and keeps its layout space. See the [MDN pointer-events reference](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/pointer-events).
 
-## Let clicks pass through an overlay
+### Let clicks pass through an overlay
 
-This example places a decorative tint over a button. The wrapper establishes the positioning context, and `z-index` puts the overlay above the button.
+The demo places a decorative tint over a button. The wrapper establishes the positioning context, and `z-index` puts the overlay above the button. The empty overlay uses `aria-hidden="true"` to keep it out of the accessibility tree.
 
-```html
-<div class="preview">
-  <button type="button" onclick="alert('Button clicked')">Click me</button>
-  <div class="overlay" aria-hidden="true"></div>
-</div>
-```
+Click the button and watch the counter increase. With the checkbox checked, the overlay uses `pointer-events: none`, so pointer input passes through to the button. Uncheck it to switch the overlay to `auto`: the overlay intercepts pointer input, and clicking no longer increases the counter.
 
-```css
-.preview {
-  position: relative;
-  padding: 2rem;
-}
-
-.overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: rgb(0 0 0 / 15%);
-  pointer-events: none;
-}
-```
-
-The code above triggers an alert when you click through the overlay. The inline demo below counts clicks instead. Uncheck its option to switch the overlay from `pointer-events: none` to `auto` and see it intercept pointer input. The overlay is empty and decorative, so `aria-hidden="true"` keeps it out of the accessibility tree.
+With the option unchecked, use Tab to focus the button and Enter to activate it. The counter still increases because `pointer-events` does not disable keyboard activation.
 
 [Try the overlay example](demo://text-selection-and-clicks/overlay.tsx)
 
-## Restore targeting on a child
+### Restore targeting on a child
 
 `pointer-events` is inherited. A child can explicitly use `auto` to become a pointer target inside a parent that uses `none`:
 
@@ -105,7 +77,7 @@ The code above triggers an alert when you click through the overlay. The inline 
 
 This lets a floating layer pass clicks through its empty areas while its buttons remain clickable. Events targeting those buttons still travel through the parent during capture and bubbling. A listener on the parent can therefore still run, as the [CSS specification explains](https://drafts.csswg.org/css-ui-4/#pointer-events-control).
 
-## Disable controls with HTML semantics
+### Disable controls with HTML semantics
 
 `pointer-events: none` does not remove an element from keyboard navigation. A focusable link can still receive focus with Tab and be activated with Enter. It also does not prevent text selection.
 
@@ -117,6 +89,6 @@ For a button that must be unavailable, use its native `disabled` attribute:
 
 Links have no native `disabled` attribute. If a link must remain visible but unavailable, decide how to present that state and prevent activation through every supported input method. Adding `aria-disabled="true"` communicates the state but does not disable behavior by itself. The [MDN aria-disabled reference](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-disabled) explains this distinction.
 
-# Conclusion
+## Conclusion
 
 Use `user-select` for text selection and `pointer-events` for pointer targeting. Keep selection restrictions local, let decorative layers pass clicks through, and use native control states when an action is unavailable. Test pointer interaction and keyboard access separately because changing one does not necessarily change the other.
