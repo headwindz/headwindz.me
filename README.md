@@ -72,7 +72,15 @@ Write the post here.
 
 Only `title` and `date` are required by the schema; include tags and a summary for useful listings and metadata. Optional fields include `lastmod`, `draft`, `images`, `authors`, `layout`, `bibliography`, and `canonicalUrl`. See `contentlayer.config.ts` for the schema and processing pipeline.
 
+Preview posts with `pnpm dev`. Set `draft: true` in frontmatter while writing, then remove it or set it to `false` when the post is ready to publish.
+
 Use kebab-case filenames, concise sentences, and sentence case headings, preserving proper names and acronyms. Register shared MDX components in `components/MDXComponents.tsx`. Contentlayer generates post data, tag counts, and the local search index.
+
+## Configuration
+
+Update `data/siteMetadata.js` to change the site title, URL, social links, theme, analytics, or search settings. Update `data/projectsData.ts` for project entries and `data/headerNavLinks.ts` for navigation.
+
+Update `next.config.js` when changing image domains, redirects, or the Content Security Policy. Styling is configured in `css/tailwind.css`.
 
 ## Adding an interactive demo
 
