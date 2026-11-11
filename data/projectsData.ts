@@ -1,6 +1,7 @@
 interface Project {
   title: string
   description: string
+  summary?: string
   href?: string
   imgSrc?: string
 }
@@ -8,6 +9,7 @@ interface Project {
 const projectsData: Project[] = [
   {
     title: 'Awesome web3',
+    summary: 'Explore Web3 through a history timeline, glossary, and curated learning resources.',
     description:
       'A comprehensive web3 educational platform featuring a full timeline of cryptocurrency and blockchain history, an extensive glossary of web3 terms, and curated learning resources.',
     href: 'https://awesome-web3.headwindz.me/',
@@ -15,6 +17,7 @@ const projectsData: Project[] = [
   },
   {
     title: 'Figx',
+    summary: 'TypeScript-first utilities for Figma plugins, colors, and more.',
     description:
       'A TypeScript-first Figma utilities library with native type support. Offers intuitive APIs for color conversion, plugin development, and more, backed by thorough documentation.',
     href: 'https://github.com/headwindz/figx',
@@ -22,6 +25,7 @@ const projectsData: Project[] = [
   },
   {
     title: 'Toolhub',
+    summary: 'Everyday tools for formatting JSON, compressing images, picking colors, and more.',
     description:
       'A curated collection of essential tools and utilities designed to boost productivity. Features a wide range of tools including JSON formatter and viewer for data visualization, intelligent image compressor for web optimization, OCR for text extraction from images, customizable QR code generator, cryptographic hash generators (MD5, SHA1, SHA256), advanced color picker with palette generation, WCAG-compliant color contrast checker, Base64 encoder/decoder, multi-base number converter (binary, octal, decimal, hex), JWT token decoder and analyzer, and many more utilities to streamline your workflow.',
     href: 'https://toolhub.run',

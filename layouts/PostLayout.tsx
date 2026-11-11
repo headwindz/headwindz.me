@@ -39,7 +39,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
       <article>
         <div className="xl:divide-y xl:divide-gray-200 xl:dark:divide-gray-700">
           <header className="pt-6 xl:pb-6">
-            <div className="space-y-1 text-center">
+            <div className="space-y-4 text-center">
               <dl className="space-y-10">
                 <div>
                   <dt className="sr-only">Published on</dt>
@@ -67,7 +67,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
                           src={author.avatar}
                           width={38}
                           height={38}
-                          alt="avatar"
+                          alt={author.name}
                           className="h-10 w-10 rounded-full"
                         />
                       )}
@@ -126,7 +126,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
                   </div>
                 )}
                 {(next || prev) && (
-                  <div className="flex justify-between py-4 xl:block xl:space-y-8 xl:py-8">
+                  <div className="flex flex-col gap-6 py-4 sm:flex-row sm:justify-between xl:block xl:space-y-8 xl:py-8">
                     {prev && prev.path && (
                       <div>
                         <h2 className="text-xs tracking-wide text-gray-500 uppercase dark:text-gray-400">

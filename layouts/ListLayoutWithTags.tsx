@@ -23,8 +23,6 @@ interface ListLayoutProps {
 
 function Pagination({ totalPages, currentPage }: PaginationProps) {
   const pathname = usePathname()
-  const segments = pathname.split('/')
-  const lastSegment = segments[segments.length - 1]
   const basePath = pathname
     .replace(/^\//, '') // Remove leading slash
     .replace(/\/page\/\d+\/?$/, '') // Remove any trailing /page
@@ -34,9 +32,12 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
 
   return (
     <div className="space-y-2 py-4 md:space-y-5">
-      <nav className="flex justify-between">
+      <nav
+        aria-label="Pagination"
+        className="flex items-center justify-between border-t border-gray-200 py-6 dark:border-gray-800"
+      >
         {!prevPage && (
-          <button className="cursor-auto disabled:opacity-50" disabled={!prevPage}>
+          <button className="min-h-11 cursor-auto disabled:opacity-50" disabled={!prevPage}>
             Previous
           </button>
         )}
@@ -52,7 +53,7 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
           {currentPage} of {totalPages}
         </span>
         {!nextPage && (
-          <button className="cursor-auto disabled:opacity-50" disabled={!nextPage}>
+          <button className="min-h-11 cursor-auto disabled:opacity-50" disabled={!nextPage}>
             Next
           </button>
         )}
@@ -77,19 +78,20 @@ export default function ListLayoutWithTags({
   const tagKeys = Object.keys(tagCounts)
   const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a])
 
+  const primaryTags = sortedTags.slice(0, 6)
+  const moreTags = sortedTags.slice(6)
+
   const displayPosts = initialDisplayPosts.length > 0 ? initialDisplayPosts : posts
 
   return (
     <>
       <div>
         <div className="pt-6 pb-6">
-          <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:hidden sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
-            {title}
-          </h1>
+          <h1 className="journal-page-title">{title === 'All Posts' ? 'Blogs' : title}</h1>
         </div>
-        <div className="flex sm:space-x-24">
-          <div className="hidden h-full max-h-screen max-w-[280px] min-w-[280px] flex-wrap overflow-auto rounded-sm bg-gray-50 pt-5 shadow-md sm:flex dark:bg-gray-900/70 dark:shadow-gray-800/40">
-            <div className="px-6 py-4">
+        <div className="journal-archive flex items-start gap-8 lg:gap-12">
+          <div className="hidden max-h-[calc(100dvh-2rem)] w-52 shrink-0 overflow-y-auto rounded-lg bg-gray-50 lg:sticky lg:top-4 lg:block dark:bg-gray-900/70">
+            <nav aria-label="Filter posts by tag" className="px-4 py-5">
               {pathname.startsWith('/blog') ? (
                 <h3 className="text-primary-500 font-bold uppercase">All Posts</h3>
               ) : (
@@ -101,10 +103,10 @@ export default function ListLayoutWithTags({
                 </Link>
               )}
               <ul>
-                {sortedTags.map((t) => {
+                {primaryTags.map((t) => {
                   return (
                     <li key={t} className="my-3">
-                      {decodeURI(pathname.split('/tags/')[1]) === slug(t) ? (
+                      {pathname.split('/tags/')[1]?.split('/')[0] === slug(t) ? (
                         <h3 className="text-primary-500 inline px-3 py-2 text-sm font-bold uppercase">
                           {`${t} (${tagCounts[t]})`}
                         </h3>
@@ -121,15 +123,29 @@ export default function ListLayoutWithTags({
                   )
                 })}
               </ul>
-            </div>
+              {moreTags.length > 0 && (
+                <details className="more-topics">
+                  <summary>More topics</summary>
+                  <ul>
+                    {moreTags.map((t) => (
+                      <li key={t}>
+                        <Link href={`/tags/${slug(t)}`}>
+                          {t} <span>({tagCounts[t]})</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </nav>
           </div>
-          <div>
-            <ul>
+          <div className="min-w-0 flex-1">
+            <ul className="divide-y divide-gray-200 dark:divide-gray-800">
               {displayPosts.map((post) => {
                 const { path, date, title, summary, tags } = post
                 return (
-                  <li key={path} className="py-5">
-                    <article className="flex flex-col space-y-2 xl:space-y-0">
+                  <li key={path} className="py-8 first:pt-0">
+                    <article className="flex flex-col space-y-2 xl:space-y-3">
                       <dl>
                         <dt className="sr-only">Published on</dt>
                         <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
@@ -140,12 +156,12 @@ export default function ListLayoutWithTags({
                       </dl>
                       <div className="space-y-3">
                         <div>
-                          <h2 className="text-2xl leading-8 font-bold tracking-tight">
+                          <h2 className="archive-post-title">
                             <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">
-                              {title}
+                              {title === 'All Posts' ? 'Blogs' : title}
                             </Link>
                           </h2>
-                          <div className="flex flex-wrap">
+                          <div className="mt-2 flex flex-wrap gap-y-1">
                             {tags?.map((tag) => (
                               <Tag key={tag} text={tag} />
                             ))}

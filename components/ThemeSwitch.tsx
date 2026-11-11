@@ -2,15 +2,7 @@
 
 import { Fragment, useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
-import {
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-  Radio,
-  RadioGroup,
-  Transition,
-} from '@headlessui/react'
+import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react'
 
 const Sun = () => (
   <svg
@@ -65,7 +57,10 @@ const ThemeSwitch = () => {
     <div className="flex cursor-pointer">
       <Menu as="div" className="relative inline-block text-left">
         <div className="hover:text-primary-500 dark:hover:text-primary-400 flex items-center justify-center">
-          <MenuButton aria-label="Theme switcher" className="cursor-pointer">
+          <MenuButton
+            aria-label="Theme switcher"
+            className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-900"
+          >
             {mounted ? resolvedTheme === 'dark' ? <Moon /> : <Sun /> : <Blank />}
           </MenuButton>
         </div>
@@ -79,56 +74,26 @@ const ThemeSwitch = () => {
           leaveTo="transform opacity-0 scale-95"
         >
           <MenuItems className="ring-opacity-5 absolute right-0 z-50 mt-2 w-32 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black focus:outline-hidden dark:bg-gray-800">
-            <RadioGroup value={theme} onChange={setTheme}>
-              <div className="p-1">
-                <Radio value="light">
-                  <MenuItem>
-                    {({ focus }) => (
-                      <button
-                        className={`${focus ? 'bg-primary-600 text-white' : ''} group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                      >
-                        <div className="mr-2">
-                          <Sun />
-                        </div>
-                        Light
-                      </button>
-                    )}
-                  </MenuItem>
-                </Radio>
-                <Radio value="dark">
-                  <MenuItem>
-                    {({ focus }) => (
-                      <button
-                        className={`${
-                          focus ? 'bg-primary-600 text-white' : ''
-                        } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                      >
-                        <div className="mr-2">
-                          <Moon />
-                        </div>
-                        Dark
-                      </button>
-                    )}
-                  </MenuItem>
-                </Radio>
-                <Radio value="system">
-                  <MenuItem>
-                    {({ focus }) => (
-                      <button
-                        className={`${
-                          focus ? 'bg-primary-600 text-white' : ''
-                        } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                      >
-                        <div className="mr-2">
-                          <Monitor />
-                        </div>
-                        System
-                      </button>
-                    )}
-                  </MenuItem>
-                </Radio>
-              </div>
-            </RadioGroup>
+            <div className="p-1">
+              {[
+                { value: 'light', label: 'Light', Icon: Sun },
+                { value: 'dark', label: 'Dark', Icon: Moon },
+                { value: 'system', label: 'System', Icon: Monitor },
+              ].map(({ value, label, Icon }) => (
+                <MenuItem key={value}>
+                  {({ focus }) => (
+                    <button
+                      onClick={() => setTheme(value)}
+                      className={`${focus ? 'bg-primary-600 text-white' : ''} flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm`}
+                    >
+                      <Icon />
+                      {label}
+                      {mounted && theme === value && <span className="sr-only"> (selected)</span>}
+                    </button>
+                  )}
+                </MenuItem>
+              ))}
+            </div>
           </MenuItems>
         </Transition>
       </Menu>

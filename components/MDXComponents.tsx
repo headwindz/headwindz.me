@@ -10,6 +10,7 @@ import Mermaid from './Mermaid'
 
 export const components: MDXComponents = {
   Image,
+  h1: ({ children, ...props }) => <h2 {...props}>{children}</h2>,
   TOCInline,
   a: CustomLink,
   pre: CodeSnippet,

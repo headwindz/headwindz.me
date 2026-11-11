@@ -4,10 +4,11 @@ import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from 'contentlayer/generated'
 import Comments from '@/components/Comments'
 import Link from '@/components/Link'
-import PageTitle from '@/components/PageTitle'
-import SectionContainer from '@/components/SectionContainer'
+import Tag from '@/components/Tag'
+import ArticleToc from '@/components/ArticleToc'
 import siteMetadata from '@/data/siteMetadata'
 import ScrollTopAndComment from '@/components/ScrollTopAndComment'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 
 interface LayoutProps {
   content: CoreContent<Blog>
@@ -17,68 +18,58 @@ interface LayoutProps {
 }
 
 export default function PostLayout({ content, next, prev, children }: LayoutProps) {
-  const { path, slug, date, title } = content
+  const { path, slug, date, title, tags, readingTime, toc } = content
   const basePath = path.split('/')[0]
-
   return (
-    <SectionContainer>
+    <>
       <ScrollTopAndComment />
-      <div className="pt-4 pb-4 xl:pt-8">
-        <Link
-          href={`/${basePath}`}
-          className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
-          aria-label="Back to the blog"
-        >
-          &larr; Back to the blog
-        </Link>
-      </div>
-      <article>
-        <div>
-          <header>
-            <div className="space-y-1 border-b border-gray-200 pb-10 text-center dark:border-gray-700">
-              <div>
-                <PageTitle>{title}</PageTitle>
-              </div>
-            </div>
-          </header>
-          <div className="grid-rows-[auto_1fr] divide-y divide-gray-200 pb-8 xl:divide-y-0 dark:divide-gray-700">
-            <div className="divide-y divide-gray-200 xl:col-span-3 xl:row-span-2 xl:pb-0 dark:divide-gray-700">
-              <div className="prose dark:prose-invert max-w-none pt-10 pb-8">{children}</div>
-            </div>
-            {siteMetadata.comments && (
-              <div className="pt-6 pb-6 text-center text-gray-700 dark:text-gray-300" id="comment">
-                <Comments slug={slug} />
-              </div>
-            )}
-            <footer>
-              <div className="flex flex-col text-sm font-medium sm:flex-row sm:justify-between sm:text-base">
-                {prev && prev.path && (
-                  <div className="pt-4 xl:pt-8">
-                    <Link
-                      href={`/${prev.path}`}
-                      className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
-                      aria-label={`Previous post: ${prev.title}`}
-                    >
-                      &larr; {prev.title}
-                    </Link>
-                  </div>
-                )}
-                {next && next.path && (
-                  <div className="pt-4 xl:pt-8">
-                    <Link
-                      href={`/${next.path}`}
-                      className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
-                      aria-label={`Next post: ${next.title}`}
-                    >
-                      {next.title} &rarr;
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </footer>
+      <article className="journal-article">
+        <header className="article-masthead">
+          <div className="article-topline">
+            <Link href={`/${basePath}`}>
+              <ArrowLeft size={16} aria-hidden="true" /> All blogs
+            </Link>
+            <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
           </div>
+          <h1>{title}</h1>
+          <div className="article-provenance">
+            <Link href="/about">{siteMetadata.author}</Link>
+            <span>{readingTime?.text}</span>
+            <div className="flex flex-wrap gap-y-1">
+              {tags?.map((tag) => (
+                <Tag key={tag} text={tag} />
+              ))}
+            </div>
+          </div>
+        </header>
+        <div className={`article-reading-layout ${toc?.length > 1 ? 'has-index' : ''}`}>
+          <ArticleToc headings={toc} />
+          <div className="article-body prose dark:prose-invert">{children}</div>
         </div>
+        {siteMetadata.comments && (
+          <div className="py-8 text-center" id="comment">
+            <Comments slug={slug} />
+          </div>
+        )}
+        <footer className="article-pagination">
+          {prev && (
+            <Link href={`/${prev.path}`}>
+              <span>
+                <ArrowLeft size={16} aria-hidden="true" /> Previous article
+              </span>
+              <strong>{prev.title}</strong>
+            </Link>
+          )}
+          {next && (
+            <Link href={`/${next.path}`}>
+              <span>
+                Next article <ArrowRight size={16} aria-hidden="true" />
+              </span>
+              <strong>{next.title}</strong>
+            </Link>
+          )}
+        </footer>
       </article>
-    </SectionContainer>
+    </>
   )
 }

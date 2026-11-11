@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T15:41:26.057986+00:00",
+  "title": "Design System: headwindz.me",
+  "extensions": {
+    "colorMeta": {
+      "mark": {
+        "role": "primary",
+        "displayName": "Yellow marker"
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Notebook paper"
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Card paper"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Plain introduction",
+        "purpose": "Modest sans-serif homepage heading."
+      }
+    },
+    "shadows": [
+      {
+        "name": "paper-light",
+        "value": "0 3px 7px rgb(35 40 29 / 7%)",
+        "purpose": "Paper cards in light mode."
+      },
+      {
+        "name": "paper-dark",
+        "value": "0 3px 7px rgb(0 0 0 / 14%)",
+        "purpose": "Paper cards in dark mode."
+      }
+    ],
+    "motion": [
+      {
+        "name": "button-state",
+        "value": "transform 180ms ease, box-shadow 180ms ease",
+        "purpose": "Explicit button hover; reduced-motion override applies."
+      },
+      {
+        "name": "paper-card-feedback",
+        "value": "transform 240ms cubic-bezier(0.16, 1, 0.3, 1), border-color 160ms ease, box-shadow 240ms ease",
+        "purpose": "On hover-capable fine pointers, hover or keyboard focus straightens and lifts paper cards 4px. Reduced motion keeps resting tilt and uses border/shadow feedback only. No touch hover movement."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile-menu",
+        "value": "640px"
+      },
+      {
+        "name": "stacked-opening",
+        "value": "768px"
+      },
+      {
+        "name": "inline-index",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Notebook button",
+      "kind": "button",
+      "description": "Notebook button in the personal notebook system.",
+      "html": "<button class=\"ds-button\">Browse blogs →</button>",
+      "css": ".ds-button{font-family:var(--font-sans, sans-serif);color:var(--journal-ink,#252822);background:var(--journal-ink,#252822);color:var(--journal-paper,#f8f8f5);border:1px solid var(--journal-ink,#252822);border-radius:6px 9px 7px 10px;min-height:46px;padding:.65rem 1rem;font-size:.9rem;font-weight:600;transform:rotate(-1deg);transition:transform 180ms ease,box-shadow 180ms ease;cursor:pointer}.ds-button:hover{transform:rotate(0) translateY(-2px);box-shadow:0 4px 9px rgb(35 40 29 / 13%)}.ds-button:focus-visible{outline:2px solid var(--color-primary-500,#9b7a28);outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-button{transition:none}}",
+      "refersTo": "notebook-button"
+    },
+    {
+      "name": "Author note",
+      "kind": "card",
+      "description": "Author note in the personal notebook system.",
+      "html": "<aside class=\"ds-note\"><h2>Headwindz</h2><p>A personal notebook.</p></aside>",
+      "css": ".ds-note{font-family:var(--font-sans, sans-serif);color:var(--journal-ink,#252822);background:var(--notebook-note,#fff8dc);border:1px solid var(--journal-rule,#d5d8cd);padding:1.6rem;border-radius:10px 7px 12px 8px;transform:rotate(2deg);box-shadow:var(--notebook-shadow,0 3px 7px rgb(35 40 29 / 7%))}.ds-note h2{font-size:1.25rem;font-weight:650}.ds-note p{font-size:.95rem;line-height:1.8}",
+      "refersTo": "author-note"
+    },
+    {
+      "name": "Writing card",
+      "kind": "card",
+      "description": "Writing card in the personal notebook system.",
+      "html": "<article class=\"ds-card\"><h3><a href=\"/blog\">AI agents and harnesses</a></h3><p>From tool loops to reliable systems.</p></article>",
+      "css": ".ds-card{font-family:var(--font-sans, sans-serif);color:var(--journal-ink,#252822);background:var(--journal-card,#fff);border:1px solid var(--journal-rule,#d5d8cd);border-radius:9px 13px 8px 12px;padding:1.5rem;transform:rotate(-.65deg);box-shadow:var(--notebook-shadow,0 3px 7px rgb(35 40 29 / 7%))}.ds-card h3{font-size:1.35rem;line-height:1.4;font-weight:600;letter-spacing:-.025em}.ds-card a{color:inherit;text-decoration:none}.ds-card a:hover{text-decoration:underline}.ds-card a:focus-visible{outline:2px solid var(--color-primary-500,#9b7a28);outline-offset:4px}.ds-card p{color:var(--journal-muted,#5d6358);font-size:.875rem;line-height:1.8}",
+      "refersTo": "writing-card"
+    },
+    {
+      "name": "Topic chip",
+      "kind": "chip",
+      "description": "Topic chip in the personal notebook system.",
+      "html": "<a class=\"ds-chip\" href=\"/tags/ai\">AI agents</a>",
+      "css": ".ds-chip{font-family:var(--font-sans, sans-serif);color:var(--journal-ink,#252822);display:inline-flex;align-items:center;min-height:36px;padding:.35rem .6rem;border:1px solid var(--journal-rule,#d5d8cd);background:var(--journal-card,#fff);border-radius:4px 7px 5px 6px;font-size:.75rem;text-decoration:none}.ds-chip:hover{text-decoration:underline}.ds-chip:focus-visible{outline:2px solid var(--color-primary-500,#9b7a28);outline-offset:4px}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "description": "Navigation in the personal notebook system.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Main navigation\"><a href=\"/blog\" aria-current=\"page\">Blogs</a><a href=\"/projects\">Projects</a><a href=\"/about\">About</a><a href=\"/tags\">Tags</a></nav>",
+      "css": ".ds-nav{font-family:var(--font-sans, sans-serif);color:var(--journal-ink,#252822);display:flex;gap:.35rem;align-items:center}.ds-nav a{display:flex;align-items:center;min-height:44px;padding:.5rem .8rem;border:1px solid transparent;border-radius:7px 10px 7px 9px;font-size:.9rem;color:inherit;text-decoration:none}.ds-nav a:hover{background:var(--journal-card,#fff)}.ds-nav a[aria-current]{background:var(--journal-card,#fff);border-color:var(--journal-rule,#d5d8cd);box-shadow:var(--notebook-shadow,0 3px 7px rgb(35 40 29 / 7%));transform:rotate(-2deg);font-weight:600}.ds-nav a:focus-visible{outline:2px solid var(--color-primary-500,#9b7a28);outline-offset:4px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Personal notebook",
+    "overview": "Plain sans-serif typography, paper-like cards, small tilts, and sparse yellow highlights make this a personal space for sharing technical work. Readability stays orderly; irregularity belongs to surrounding surfaces and controls.",
+    "keyCharacteristics": [
+      "Modest sans-serif hierarchy",
+      "Varied corners and soft paper shadows",
+      "Sparse yellow emphasis"
+    ],
+    "rules": [
+      {
+        "name": "Sparse marker",
+        "body": "Highlight short phrases or active states; keep reading surfaces neutral.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do keep article reading and menus unrotated.",
+      "Do use real content and technical interactions."
+    ],
+    "donts": [
+      "Don't restore the rejected serif journal identity.",
+      "Don't add ambient animation or decorative terminal commands."
+    ]
+  }
+}
