@@ -23,6 +23,8 @@ export default function HomeProjects() {
                   <Image
                     src={project.imgSrc}
                     alt={`${project.title} preview`}
+                    loading="eager"
+                    unoptimized
                     width={544}
                     height={306}
                     sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1183px) 30vw, 357px"

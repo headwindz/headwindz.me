@@ -73,14 +73,17 @@ export default function AgentLoop() {
         ))}
         <span className="agent-repeat">repeat</span>
       </div>
-      <div className="agent-console">
-        <p aria-live="polite">
-          <strong>{steps[active].name}.</strong> {steps[active].detail}
-        </p>
-        <button onClick={() => setActive((active + 1) % steps.length)} className="step-button">
-          Next step <ArrowRight size={16} aria-hidden="true" />
-        </button>
-      </div>
+      <details className="agent-controls">
+        <summary>Explore the loop</summary>
+        <div className="agent-console">
+          <p aria-live="polite">
+            <strong>{steps[active].name}.</strong> {steps[active].detail}
+          </p>
+          <button onClick={() => setActive((active + 1) % steps.length)} className="step-button">
+            Next step <ArrowRight size={16} aria-hidden="true" />
+          </button>
+        </div>
+      </details>
     </div>
   )
 }

@@ -1,3 +1,5 @@
+import { ChevronRight } from 'lucide-react'
+
 interface Heading {
   value: string
   url: string
@@ -11,7 +13,10 @@ export default function ArticleToc({ headings = [] }: { headings?: Heading[] }) 
   return (
     <aside className="article-index">
       <details open>
-        <summary>In this article</summary>
+        <summary>
+          <ChevronRight size={16} aria-hidden="true" />
+          In this article
+        </summary>
         <nav aria-label="Article sections">
           <ol>
             {sections.map((heading, i) => (

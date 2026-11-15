@@ -782,11 +782,6 @@ input:-webkit-autofill:focus {
 .journal-archive {
   padding-top: 0.75rem;
 }
-.journal-archive > div:first-child {
-  background: var(--journal-card);
-  border: 1px solid var(--journal-rule);
-  border-radius: 8px 12px 9px 11px;
-}
 .journal-archive > div:last-child > ul {
   border: none;
 }
@@ -1638,5 +1633,1010 @@ input:-webkit-autofill:focus {
   }
   .terminal-command input::placeholder {
     font-size: 0.75rem;
+  }
+}
+
+/* Profile first: preserve the terminal while keeping the opening concise. */
+.home-profile {
+  padding-top: 2rem;
+  margin-bottom: 3rem;
+}
+.home-profile .about-command-heading {
+  margin-bottom: 1.5rem;
+}
+.home-profile .about-command-heading h1 {
+  font-size: clamp(2rem, 4.5vw, 3.5rem);
+}
+.home-profile .terminal-titlebar {
+  padding-block: 0.6rem;
+}
+.home-profile .terminal-identity {
+  padding-block: 1rem;
+}
+.home-profile .terminal-shortcuts {
+  padding-block: 0 1rem;
+}
+.home-profile .terminal-output {
+  padding-block: 1.25rem;
+}
+.home-profile .about-command-footer {
+  margin-top: 1rem;
+}
+.journal-feature {
+  padding: 1.5rem;
+  gap: 1.5rem;
+}
+.journal-feature > .agent-lab {
+  width: min(100%, 340px);
+  justify-self: center;
+}
+.agent-controls > summary {
+  cursor: pointer;
+  padding: 0.5rem 0;
+  color: var(--journal-ink);
+  font-size: 0.85rem;
+}
+.article-index summary {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  list-style: none;
+}
+.article-index summary::-webkit-details-marker {
+  display: none;
+}
+.article-index summary svg {
+  flex-shrink: 0;
+}
+.article-index details[open] > summary svg {
+  transform: rotate(90deg);
+}
+.topic-filter {
+  border-block: 1px solid var(--journal-rule);
+  padding: 1.25rem 0;
+  margin-bottom: 2rem;
+}
+.topic-filter-heading {
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+.topic-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.topic-options a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 44px;
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
+  color: var(--journal-muted);
+}
+.topic-options a span,
+.topic-more summary span {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.topic-options a:hover {
+  background: var(--journal-card);
+  color: var(--journal-ink);
+}
+.topic-options a[aria-current='page'] {
+  background: var(--notebook-mark);
+  color: var(--journal-ink);
+  font-weight: 600;
+}
+.topic-more {
+  margin-top: 0.75rem;
+}
+.topic-more summary {
+  cursor: pointer;
+  width: fit-content;
+  padding: 0.6rem 0;
+  color: var(--journal-muted);
+}
+.topic-more[open] summary {
+  margin-bottom: 0.5rem;
+}
+
+/* A quiet optional filter leaves the writing in the foreground. */
+.topic-filter-disclosure {
+  margin-bottom: 1.25rem;
+}
+.topic-filter-disclosure > summary {
+  width: fit-content;
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 0.65rem;
+  font-size: 0.85rem;
+  color: var(--journal-muted);
+}
+.topic-filter-disclosure > summary:hover {
+  color: var(--journal-ink);
+}
+.topic-filter-disclosure[open] > summary {
+  margin-bottom: 0.5rem;
+}
+.topic-filter-disclosure .topic-options {
+  padding-bottom: 1rem;
+}
+.terminal-dots {
+  display: inline-block;
+  white-space: nowrap;
+}
+.terminal-dots > span:nth-child(2) {
+  animation: terminal-dot-two 1.8s steps(1, end) infinite;
+}
+.terminal-dots > span:nth-child(3) {
+  animation: terminal-dot-three 1.8s steps(1, end) infinite;
+}
+@keyframes terminal-dot-two {
+  0%,
+  100% {
+    visibility: hidden;
+  }
+  33.333%,
+  99.999% {
+    visibility: visible;
+  }
+}
+@keyframes terminal-dot-three {
+  0%,
+  100% {
+    visibility: hidden;
+  }
+  66.666%,
+  99.999% {
+    visibility: visible;
+  }
+}
+.reading-light {
+  display: flex;
+  align-items: center;
+  color: var(--journal-ink);
+}
+.reading-light-switch {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 48px;
+  cursor: pointer;
+}
+.reading-light svg {
+  overflow: visible;
+}
+.reading-light svg path,
+.reading-light svg rect {
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.lamp-shade {
+  fill: var(--journal-card);
+}
+.lamp-bulb,
+.lamp-rays {
+  opacity: 0.35;
+}
+.reading-light[data-lit='true'] .lamp-shade {
+  fill: var(--notebook-mark);
+}
+.reading-light[data-lit='true'] .lamp-rays,
+.reading-light[data-lit='true'] .lamp-bulb {
+  opacity: 1;
+}
+.lamp-cord {
+  transition: transform 220ms ease-out;
+}
+.reading-light-switch:hover .lamp-cord {
+  transform: translateY(2px);
+}
+.reading-light-switch:active .lamp-cord {
+  transform: translateY(6px);
+}
+.reading-light-options {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 44px;
+  cursor: pointer;
+  color: var(--journal-muted);
+}
+.reading-light-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 60;
+  width: 170px;
+  padding: 0.35rem;
+  border: 1px solid var(--journal-rule);
+  border-radius: 10px;
+  background: var(--journal-card);
+  box-shadow: var(--notebook-shadow);
+}
+.reading-light-menu button {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.reading-light-menu button[data-focus] {
+  background: var(--notebook-mark);
+}
+@media (prefers-reduced-motion: reduce) {
+  .terminal-dots > span {
+    animation: none;
+  }
+  .lamp-cord {
+    transition: none;
+  }
+  .reading-light-switch:hover .lamp-cord,
+  .reading-light-switch:active .lamp-cord {
+    transform: none;
+  }
+}
+
+.writing-collection {
+  margin-bottom: 3.5rem;
+}
+.writing-collection .journal-feature {
+  margin-bottom: 1.25rem;
+  transform: none;
+  padding: 1.25rem 1.5rem;
+}
+.writing-collection .journal-feature > .agent-lab {
+  width: min(100%, 280px);
+}
+.writing-list {
+  border-top: 1px solid var(--journal-rule);
+}
+.writing-list article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 0.35rem 1rem;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--journal-rule);
+}
+.writing-list .article-row-meta {
+  grid-column: 1;
+}
+.writing-list h3 {
+  grid-column: 1;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.writing-list h3 a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.writing-list .article-summary {
+  grid-column: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.writing-read-link {
+  grid-column: 2;
+  grid-row: 1 / 4;
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+}
+.writing-read-link:hover {
+  color: var(--journal-accent);
+}
+.terminal-enter-hint {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: #b1beb6;
+  padding-inline: 0.5rem;
+}
+.reading-light-switch {
+  width: 46px;
+  height: 52px;
+  position: relative;
+}
+.lamp-housing {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 50px;
+  border-radius: 12px 12px 18px 18px;
+  background: var(--journal-card);
+  border: 1px solid var(--journal-rule);
+}
+.lamp-housing::before {
+  content: '';
+  position: absolute;
+  inset: 24px 5px 0;
+  clip-path: polygon(32% 0, 68% 0, 100% 100%, 0 100%);
+  background: linear-gradient(#f3d56b88, #f3d56b00);
+  opacity: 0;
+  transition: opacity 350ms ease-out;
+}
+.reading-light[data-lit='true'] .lamp-housing::before {
+  opacity: 1;
+}
+.reading-light .lamp-shade {
+  fill: #776444;
+  stroke: #baaa87;
+}
+.reading-light .lamp-cap,
+.reading-light .lamp-cord rect {
+  fill: #b8a47a;
+  stroke: #b8a47a;
+}
+.reading-light .lamp-rim {
+  stroke: #c9b98f;
+}
+.reading-light[data-lit='true'] .lamp-shade {
+  fill: #efd384;
+  stroke: #9b7c33;
+}
+.reading-light[data-lit='true'] .lamp-bulb {
+  fill: #ffe9a6;
+}
+.lamp-cord.is-pulled {
+  animation: lamp-tug 650ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: 32px 32px;
+}
+@keyframes lamp-tug {
+  0% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(5px);
+  }
+  55% {
+    transform: rotate(-7deg);
+  }
+  78% {
+    transform: rotate(4deg);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+@media (max-width: 639px) {
+  .terminal-enter-hint {
+    font-size: 0.65rem;
+    padding-inline: 0;
+  }
+  .writing-collection .journal-feature {
+    gap: 0.5rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lamp-cord.is-pulled {
+    animation: none;
+  }
+  .lamp-housing::before {
+    transition: none;
+  }
+}
+
+/* Day and night move through a small observatory window. */
+.theme-orbit {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  width: 40px;
+  height: 32px;
+  overflow: hidden;
+  border: 1px solid var(--journal-rule);
+  border-radius: 50%;
+  background: #182536;
+  transition: background 400ms ease-out;
+}
+.orbit-sun,
+.orbit-moon {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.orbit-sun {
+  left: 7px;
+  top: 7px;
+  background: #f1ca60;
+  transform: translateY(28px);
+}
+.orbit-moon {
+  left: 21px;
+  top: 5px;
+  background: #eceddc;
+}
+.orbit-moon::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  left: -4px;
+  top: -3px;
+  border-radius: 50%;
+  background: #182536;
+}
+.orbit-star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #f1f2e9;
+  transition: opacity 300ms ease-out;
+}
+.star-one {
+  left: 9px;
+  top: 8px;
+}
+.star-two {
+  left: 16px;
+  top: 16px;
+}
+.orbit-horizon {
+  position: absolute;
+  left: -5px;
+  bottom: -15px;
+  width: 50px;
+  height: 25px;
+  border: 1px solid #8d9e94;
+  border-radius: 50%;
+  background: #344239;
+}
+.reading-light[data-lit='true'] .theme-orbit {
+  background: #f1e4bc;
+}
+.reading-light[data-lit='true'] .orbit-sun {
+  transform: translateY(0);
+}
+.reading-light[data-lit='true'] .orbit-moon {
+  transform: translateY(-26px);
+}
+.reading-light[data-lit='true'] .orbit-star {
+  opacity: 0;
+}
+.reading-light-switch:hover .theme-orbit {
+  border-color: var(--journal-accent);
+}
+.archive-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-block: 1.5rem;
+}
+.topic-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--journal-muted);
+}
+.topic-picker select {
+  width: 145px;
+  min-height: 44px;
+  border: 1px solid var(--journal-rule);
+  border-radius: 7px;
+  padding: 0.5rem 1.75rem 0.5rem 0.6rem;
+  color: var(--journal-ink);
+  background-color: var(--journal-card);
+  font: inherit;
+  cursor: pointer;
+}
+.home-project-picture {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
+  background: var(--journal-rule);
+}
+.home-project-picture img {
+  height: 100%;
+  object-fit: cover;
+}
+.writing-list article {
+  position: relative;
+  transition: background 200ms ease-out;
+}
+.writing-list article::before {
+  content: '';
+  position: absolute;
+  top: 1.1rem;
+  bottom: 1.1rem;
+  left: -0.6rem;
+  width: 2px;
+  background: var(--journal-accent);
+  opacity: 0;
+  transform: scaleY(0.25);
+  transition:
+    opacity 200ms ease-out,
+    transform 250ms ease-out;
+}
+.writing-list article:is(:hover, :focus-within) {
+  background: color-mix(in srgb, var(--notebook-mark) 12%, transparent);
+}
+.writing-list article:is(:hover, :focus-within)::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+.writing-read-link svg {
+  transition: transform 200ms ease-out;
+}
+.writing-list article:is(:hover, :focus-within) .writing-read-link svg {
+  transform: translate(2px, -2px);
+}
+.article-preview {
+  grid-column: 1;
+  font-size: 0.8rem;
+  margin-top: 0.35rem;
+}
+.article-preview > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  min-height: 36px;
+  cursor: pointer;
+  color: var(--journal-accent);
+  list-style: none;
+}
+.article-preview > summary::-webkit-details-marker {
+  display: none;
+}
+.article-preview[open] > summary svg {
+  transform: rotate(90deg);
+}
+.preview-workbench {
+  border: 1px dashed var(--journal-rule);
+  border-radius: 8px;
+  padding: 0.85rem;
+  margin-top: 0.35rem;
+  background: var(--journal-card);
+}
+.preview-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.preview-stages button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 40px;
+  padding: 0.4rem 0.6rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.preview-stages button[aria-pressed='true'] {
+  background: var(--notebook-mark);
+  color: var(--journal-ink);
+}
+.preview-workbench p {
+  margin-top: 0.65rem;
+  color: var(--journal-muted);
+  line-height: 1.6;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-orbit,
+  .orbit-sun,
+  .orbit-moon,
+  .orbit-star,
+  .writing-list article,
+  .writing-list article::before,
+  .writing-read-link svg {
+    transition: none;
+  }
+}
+
+/* Quiet generative ink stays in the margins and never captures input. */
+.journal-site {
+  isolation: isolate;
+}
+.theme-glyph {
+  position: relative;
+  display: block;
+  width: 26px;
+  height: 26px;
+}
+.reading-light .theme-glyph svg {
+  position: absolute;
+  inset: 1px;
+  transition:
+    transform 400ms ease-out,
+    opacity 250ms ease-out;
+}
+.reading-light .theme-glyph svg path {
+  stroke-width: 1.6;
+}
+.theme-sun {
+  opacity: 0;
+  transform: rotate(-80deg) scale(0.6);
+}
+.theme-moon {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+.reading-light[data-lit='true'] .theme-sun {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+.reading-light[data-lit='true'] .theme-moon {
+  opacity: 0;
+  transform: rotate(70deg) scale(0.6);
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  z-index: 2;
+}
+.writing-list article::before {
+  content: none;
+}
+.writing-list article:is(:hover, :focus-within) {
+  background: transparent;
+}
+@media (hover: hover) and (pointer: fine) {
+  .writing-list article:hover h3 a {
+    color: var(--journal-accent);
+  }
+  .writing-list article:hover .writing-read-link svg {
+    transform: translate(2px, -2px);
+  }
+}
+.writing-list article:focus-within .writing-read-link svg {
+  transform: none;
+}
+.post-cover {
+  grid-column: 1;
+  margin-top: 0.75rem;
+  min-width: 0;
+  border: 1px solid var(--journal-rule);
+  border-radius: 9px;
+  overflow: hidden;
+  font-size: 0.8rem;
+}
+.post-cover button {
+  cursor: pointer;
+  min-height: 40px;
+}
+.workspace-cover {
+  background: #18201d;
+  color: #dce7df;
+}
+.workspace-screen {
+  padding: 0.85rem 1rem;
+}
+.workspace-screen > span {
+  color: #b1beb6;
+  font-size: 0.7rem;
+}
+.workspace-screen pre {
+  margin-top: 0.5rem;
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+  min-height: 4.5em;
+  line-height: 1.5;
+}
+.workspace-dock {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  border-top: 1px solid #3d4a42;
+}
+.workspace-dock button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  flex: 1;
+  border-radius: 5px;
+  font-size: 0.75rem;
+}
+.workspace-dock button[aria-pressed='true'] {
+  background: #344239;
+  color: #c0df99;
+}
+.tokens-cover {
+  padding: 1rem;
+  background: var(--journal-card);
+}
+.token-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.token-controls > span {
+  color: var(--journal-muted);
+  margin-right: 0.4rem;
+}
+.token-controls button {
+  width: 40px;
+  color: white;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+.token-samples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-block: 1rem;
+}
+.sample-badge {
+  color: var(--sample-accent);
+  background: #f8f8f5;
+  border: 1px solid var(--sample-accent);
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+}
+.sample-button {
+  background: var(--sample-accent);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.sample-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--sample-accent);
+  background: #f8f8f5;
+  border-radius: 5px;
+  padding: 0.35rem;
+}
+.tokens-cover p {
+  color: var(--journal-muted);
+  font-size: 0.75rem;
+}
+.workflow-cover {
+  padding: 1rem;
+  background: var(--journal-card);
+}
+.workflow-track {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding-block: 0.5rem 1.25rem;
+}
+.workflow-track > span {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--journal-muted);
+}
+.workflow-dot {
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--journal-rule);
+  border-radius: 50%;
+}
+.workflow-track > span[data-active='true'] {
+  color: var(--journal-accent);
+}
+.workflow-track > span[data-active='true'] .workflow-dot {
+  background: var(--journal-accent);
+}
+.workflow-output {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px dashed var(--journal-rule);
+  padding-top: 0.5rem;
+  gap: 0.5rem;
+}
+.workflow-output button {
+  width: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: var(--notebook-mark);
+}
+.reserve-cover {
+  padding: 1rem;
+  background: var(--journal-card);
+}
+.reserve-ledger {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 1rem;
+}
+.reserve-ledger div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.reserve-ledger span {
+  color: var(--journal-muted);
+}
+.reserve-ledger strong {
+  font-size: 1.8rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.reserve-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  border-top: 1px dashed var(--journal-rule);
+  padding-top: 0.5rem;
+}
+.reserve-action > span {
+  color: var(--journal-muted);
+  font-size: 0.7rem;
+}
+.reserve-action button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline: 0.6rem;
+  border-radius: 5px;
+  background: var(--notebook-mark);
+}
+@media (max-width: 450px) {
+  .workflow-track {
+    gap: 0.2rem;
+    font-size: 0.7rem;
+  }
+  .workflow-dot {
+    display: none;
+  }
+  .workspace-dock button {
+    font-size: 0.65rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reading-light .theme-glyph svg {
+    transition: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .writing-list article {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 40%);
+    gap: 0.5rem 2rem;
+    align-items: start;
+    padding-block: 1.5rem;
+  }
+  .writing-list .post-cover {
+    grid-column: 2;
+    grid-row: 1 / 5;
+    margin-top: 0;
+    align-self: center;
+  }
+  .writing-list .writing-read-link {
+    grid-column: 1;
+    grid-row: 4;
+    width: 40px;
+    justify-self: start;
+  }
+}
+
+/* A single tactile light/dark rocker keeps the header compact. */
+.theme-rocker {
+  display: block;
+  position: relative;
+  width: 34px;
+  height: 22px;
+  border: 1px solid var(--journal-rule);
+  border-radius: 6px;
+  background: var(--journal-card);
+  box-shadow: inset 0 1px 3px #0002;
+}
+.rocker-knob {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--journal-ink);
+  box-shadow: 0 1px 2px #0003;
+  transform: translateX(12px);
+  transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reading-light[data-lit='true'] .rocker-knob {
+  transform: translateX(0);
+  background: var(--journal-accent);
+}
+.reading-light-switch:hover .theme-rocker {
+  border-color: var(--journal-accent);
+}
+.writing-list {
+  border-top: none;
+  display: grid;
+  gap: 1rem;
+}
+.writing-list > li {
+  min-width: 0;
+}
+.writing-list article {
+  padding: 1.25rem;
+  border: 1px solid var(--journal-rule);
+  border-radius: 12px;
+  background: var(--journal-card);
+  transition:
+    transform 220ms ease-out,
+    box-shadow 220ms ease-out,
+    border-color 220ms ease-out;
+}
+.writing-list article:is(:hover, :focus-within) {
+  background: var(--journal-card);
+}
+.writing-list article:focus-within {
+  border-color: var(--journal-accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .writing-list article:hover {
+    transform: translateY(-3px);
+    border-color: var(--journal-accent);
+    box-shadow: 0 8px 20px #0000000d;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rocker-knob,
+  .writing-list article {
+    transition: none;
+  }
+  .writing-list article:hover {
+    transform: none;
+  }
+}
+
+.eclipse-toggle {
+  overflow: visible;
+  color: var(--journal-ink);
+}
+.eclipse-disc {
+  transform-origin: center;
+  transition: transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.eclipse-cutout {
+  transform: translate(0, 0);
+  transition: transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.eclipse-rays {
+  transform-origin: 16px 16px;
+  transform: rotate(-70deg) scale(0.5);
+  opacity: 0;
+  transition:
+    transform 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 250ms ease-out;
+}
+.reading-light[data-lit='true'] .eclipse-cutout {
+  transform: translate(12px, -12px);
+}
+.reading-light[data-lit='true'] .eclipse-rays {
+  transform: rotate(0) scale(1);
+  opacity: 1;
+}
+.reading-light-switch:hover .eclipse-toggle {
+  color: var(--journal-accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .eclipse-disc,
+  .eclipse-cutout,
+  .eclipse-rays {
+    transition: none;
   }
 }

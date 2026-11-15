@@ -1,6 +1,6 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { slug } from 'github-slugger'
 import { formatDate } from 'pliny/utils/formatDate'
 import { CoreContent } from 'pliny/utils/contentlayer'
@@ -74,71 +74,37 @@ export default function ListLayoutWithTags({
   pagination,
 }: ListLayoutProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const tagCounts = tagData as Record<string, number>
   const tagKeys = Object.keys(tagCounts)
   const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a])
-
-  const primaryTags = sortedTags.slice(0, 6)
-  const moreTags = sortedTags.slice(6)
 
   const displayPosts = initialDisplayPosts.length > 0 ? initialDisplayPosts : posts
 
   return (
     <>
       <div>
-        <div className="pt-6 pb-6">
+        <div className="archive-heading">
           <h1 className="journal-page-title">{title === 'All Posts' ? 'Blogs' : title}</h1>
+          <label className="topic-picker">
+            <span>Topic</span>
+            <select
+              aria-label="Browse posts by topic"
+              value={pathname.split('/tags/')[1]?.split('/')[0] || ''}
+              onChange={(event) =>
+                router.push(event.target.value ? `/tags/${event.target.value}` : '/blog')
+              }
+            >
+              <option value="">All posts</option>
+              {sortedTags.map((tag) => (
+                <option key={tag} value={slug(tag)}>
+                  {tag} ({tagCounts[tag]})
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
-        <div className="journal-archive flex items-start gap-8 lg:gap-12">
-          <div className="hidden max-h-[calc(100dvh-2rem)] w-52 shrink-0 overflow-y-auto rounded-lg bg-gray-50 lg:sticky lg:top-4 lg:block dark:bg-gray-900/70">
-            <nav aria-label="Filter posts by tag" className="px-4 py-5">
-              {pathname.startsWith('/blog') ? (
-                <h3 className="text-primary-500 font-bold uppercase">All Posts</h3>
-              ) : (
-                <Link
-                  href={`/blog`}
-                  className="hover:text-primary-500 dark:hover:text-primary-500 font-bold text-gray-700 uppercase dark:text-gray-300"
-                >
-                  All Posts
-                </Link>
-              )}
-              <ul>
-                {primaryTags.map((t) => {
-                  return (
-                    <li key={t} className="my-3">
-                      {pathname.split('/tags/')[1]?.split('/')[0] === slug(t) ? (
-                        <h3 className="text-primary-500 inline px-3 py-2 text-sm font-bold uppercase">
-                          {`${t} (${tagCounts[t]})`}
-                        </h3>
-                      ) : (
-                        <Link
-                          href={`/tags/${slug(t)}`}
-                          className="hover:text-primary-500 dark:hover:text-primary-500 px-3 py-2 text-sm font-medium text-gray-500 uppercase dark:text-gray-300"
-                          aria-label={`View posts tagged ${t}`}
-                        >
-                          {`${t} (${tagCounts[t]})`}
-                        </Link>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
-              {moreTags.length > 0 && (
-                <details className="more-topics">
-                  <summary>More topics</summary>
-                  <ul>
-                    {moreTags.map((t) => (
-                      <li key={t}>
-                        <Link href={`/tags/${slug(t)}`}>
-                          {t} <span>({tagCounts[t]})</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              )}
-            </nav>
-          </div>
+        <div className="journal-archive">
           <div className="min-w-0 flex-1">
             <ul className="divide-y divide-gray-200 dark:divide-gray-800">
               {displayPosts.map((post) => {

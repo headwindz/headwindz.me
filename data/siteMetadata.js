@@ -2,7 +2,7 @@
 const siteMetadata = {
   title: 'web3.headwindz',
   author: 'Michael Zheng',
-  headerTitle: 'Headwindz',
+  headerTitle: 'Michael Zheng',
   description: 'My personal blog',
   language: 'en-us',
   theme: 'light', // system, dark or light

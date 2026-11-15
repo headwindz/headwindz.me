@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent, type ReactNode } from 'react'
-import { ArrowRight, Terminal } from 'lucide-react'
+import { Terminal } from 'lucide-react'
 
 const views = ['all', 'about', 'interests', 'opensource', 'help'] as const
 type View = (typeof views)[number] | 'clear'
@@ -13,9 +13,9 @@ export default function AboutTerminal({
   identity: ReactNode
   children: ReactNode
 }) {
-  const [view, setView] = useState<View>('all')
+  const [view, setView] = useState<View>('about')
   const [command, setCommand] = useState('')
-  const [message, setMessage] = useState('All profile sections are visible.')
+  const [message, setMessage] = useState('Showing about. Choose a section to explore more.')
   const [history, setHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
   const run = (raw: string) => {
@@ -57,7 +57,7 @@ export default function AboutTerminal({
           <i />
         </div>
         <span>
-          <Terminal size={15} aria-hidden="true" /> michael@headwindz: ~/about
+          <Terminal size={15} aria-hidden="true" /> michael@headwindz: ~
         </span>
         <span className="terminal-file">profile.md</span>
       </div>
@@ -110,7 +110,7 @@ export default function AboutTerminal({
           <input
             id="profile-command"
             value={command}
-            placeholder="Type help, or choose a section above"
+            placeholder="Type a command, then press Enter"
             autoComplete="off"
             autoCapitalize="none"
             spellCheck={false}
@@ -134,9 +134,9 @@ export default function AboutTerminal({
               }
             }}
           />
-          <button type="submit" aria-label="Run profile command">
-            <ArrowRight size={18} aria-hidden="true" />
-          </button>
+          <span className="terminal-enter-hint" aria-hidden="true">
+            Enter ↵
+          </span>
         </form>
       </div>
     </section>
