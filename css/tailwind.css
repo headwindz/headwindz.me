@@ -772,6 +772,9 @@ input:-webkit-autofill:focus {
   letter-spacing: -0.025em;
   line-height: 1.35;
 }
+.archive-post-title a {
+  text-decoration-skip-ink: none;
+}
 .archive-post-title a:hover {
   text-decoration: underline;
   text-underline-offset: 5px;
@@ -1178,6 +1181,21 @@ input:-webkit-autofill:focus {
   .notebook-button:hover {
     transform: rotate(-1deg);
   }
+}
+
+.reading-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 40;
+  height: 4px;
+  pointer-events: none;
+  background: var(--journal-rule);
+}
+.reading-progress-fill {
+  height: 100%;
+  background: var(--journal-accent);
+  transform: scaleX(0);
+  transform-origin: left;
 }
 
 .home-projects {

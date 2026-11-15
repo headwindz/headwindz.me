@@ -33,11 +33,11 @@ React will throw a warning with the code above:
 
 Keys should be `unique` and `stable`
 
-### Index ? maybe, but only `under some circumstances`
+### Use index as key ? It may work, but only `under some circumstances`
 
-Array index is unique across an array.
+Array index is `unique` across an array.
 
-```jsx
+```tsx
 import React, { useState } from 'react'
 
 function App() {
@@ -52,11 +52,11 @@ function App() {
 }
 ```
 
-However, if the order/number of items may change, array index is NOT `stable`.
+However, if the `order/number` of items may change, array index is NOT `stable`.
 
 [Index Key Demo](demo://react-key-practices/array-index-as-key.tsx)
 
-**Try it yourself**: Tick `mike` and then click the add button. You'll see the check status incorrectly stays with the first position instead of following `mike`.
+**Try it yourself**: Tick `mike` and then click the add button. You'll see the check status incorrectly stays with the first position instead of the expected `mike`.
 
 ### `Stable` key
 

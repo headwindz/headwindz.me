@@ -54,21 +54,11 @@ The agent uses file tools to read the parser's source code and tests. The harnes
 
 The model produces structured tool requests. A runtime dispatches those requests to actual implementations and returns observations. In a multimodal system, requests and observations may include more than text. The same execution boundary still applies.
 
-<Mermaid
-  chart={`
-flowchart TD
-  task[Task and acceptance criteria] --> context[Harness assembles context]
-  context --> model[Model proposes the next action]
-  model --> kind{Action type}
-  kind -->|Tool request| policy[Validate arguments and check policy]
-  policy -->|Allowed| tool[Execute tool within limits]
-  policy -->|Denied| observation[Record a structured observation]
-  tool --> observation
-  observation --> context
-  kind -->|Finish request| verify[Run independent acceptance checks]
-  verify -->|Pass| done[Return result with evidence]
-  verify -->|Fail| stopped[Return an incomplete result with failures]
-`}
+<SketchDiagram
+  src="/static/images/ai-agents-and-harnesses/harness-execution-loop.svg"
+  alt="Agent execution loop: the harness supplies context to the model, validates tool requests, returns observations for the next decision, and independently checks finish requests before reporting completion or failure."
+  width={1000}
+  height={1250}
 />
 
 The harness should also handle cancellation, timeouts, and resource limits at every blocking operation. The diagram shows the successful control path, rather than every operational exit.
@@ -117,17 +107,11 @@ The parser fix has three steps: parse the input as an absolute URL, reject it if
 
 The verifier then runs all six cases from the earlier table against a fixed workspace snapshot. It compares each actual result with the expected result and records mismatches or unexpected exceptions.
 
-<Mermaid
-  chart={`
-flowchart TD
-  snapshot[Fixed workspace snapshot] --> run[Run all six URL cases]
-  run --> compare[Compare actual and expected results]
-  cases[Expected results from the table] --> compare
-  compare --> record[Record passes, failures, and code version]
-  record --> outcome{All cases pass?}
-  outcome -->|Yes| complete[Report completion with evidence]
-  outcome -->|No| incomplete[Report incomplete with failures]
-`}
+<SketchDiagram
+  src="/static/images/ai-agents-and-harnesses/acceptance-checks.svg"
+  alt="Acceptance checks: run six URL cases against a fixed snapshot, compare actual and expected results, record outcomes and code version, then report completion only when all cases pass."
+  width={900}
+  height={1000}
 />
 
 The saved evidence shows which cases passed or failed and which version of the code was checked. The snapshot stays unchanged during verification, and the acceptance cases live outside the agent's editable files.

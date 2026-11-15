@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1000" viewBox="0 0 900 1000" role="img" aria-labelledby="title desc">
+<title id="title">Verify against the contract</title><desc id="desc">A fixed workspace snapshot runs all six URL cases. Actual outputs are compared with the independent expected results. Passes, failures and the code version are recorded. All passing cases produce completion with evidence; any failure produces an incomplete result.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="#707570" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g font-family="'Comic Sans MS', 'Chalkboard SE', cursive" fill="#4b5563" font-size="25">
+<text x="45" y="62" text-anchor="start" fill="#2476a2" font-size="32">Verify against the contract</text>
+<text x="45" y="105" text-anchor="start" fill="#4b5563" font-size="23">Completion follows recorded checks.</text>
+<path d="M 74 151 Q 230.0 147 387 152 Q 407 152 405 172 L 404 230 Q 406 252 384 250 L 75 251 Q 53 250 55 228 L 56 171 Q 54 150 74 151 Z" fill="#8054ad" fill-opacity=".055" stroke="#8054ad" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="230.0" y="192.0" text-anchor="middle" fill="#8054ad" font-size="25">Fixed workspace</text>
+<text x="230.0" y="226.0" text-anchor="middle" fill="#8054ad" font-size="25">snapshot</text>
+<path d="M 514 151 Q 670.0 147 827 152 Q 847 152 845 172 L 844 230 Q 846 252 824 250 L 515 251 Q 493 250 495 228 L 496 171 Q 494 150 514 151 Z" fill="#a9561d" fill-opacity=".055" stroke="#a9561d" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="670.0" y="192.0" text-anchor="middle" fill="#a9561d" font-size="25">Expected results</text>
+<text x="670.0" y="226.0" text-anchor="middle" fill="#a9561d" font-size="25">from the six-case table</text>
+<path d="M 230 252 L 230 307" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 74 313 Q 230.0 309 387 314 Q 407 314 405 334 L 404 382 Q 406 404 384 402 L 75 403 Q 53 402 55 380 L 56 333 Q 54 312 74 313 Z" fill="#2476a2" fill-opacity=".055" stroke="#2476a2" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="230.0" y="366.0" text-anchor="middle" fill="#2476a2" font-size="25">Run all six URL cases</text>
+<path d="M 230 404 L 230 450 L 450 450 L 450 495" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 670 252 L 670 450 L 450 450" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 259 501 Q 450.0 497 642 502 Q 662 502 660 522 L 659 570 Q 661 592 639 590 L 260 591 Q 238 590 240 568 L 241 521 Q 239 500 259 501 Z" fill="#2476a2" fill-opacity=".055" stroke="#2476a2" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="450.0" y="554.0" text-anchor="middle" fill="#2476a2" font-size="25">Compare actual + expected</text>
+<path d="M 450 592 L 450 646" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 259 651 Q 450.0 647 642 652 Q 662 652 660 672 L 659 730 Q 661 752 639 750 L 260 751 Q 238 750 240 728 L 241 671 Q 239 650 259 651 Z" fill="#8054ad" fill-opacity=".055" stroke="#8054ad" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="450.0" y="692.0" text-anchor="middle" fill="#8054ad" font-size="25">Record passes, failures</text>
+<text x="450.0" y="726.0" text-anchor="middle" fill="#8054ad" font-size="25">+ code version</text>
+<path d="M 450 752 L 450 800 L 235 800 L 235 854" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 450 800 L 675 800 L 675 854" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="235" y="833" text-anchor="middle" fill="#287d3b" font-size="22">All cases pass</text>
+<text x="675" y="833" text-anchor="middle" fill="#b64b4b" font-size="22">Any case fails</text>
+<path d="M 74 860 Q 235.0 856 397 861 Q 417 861 415 881 L 414 934 Q 416 956 394 954 L 75 955 Q 53 954 55 932 L 56 880 Q 54 859 74 860 Z" fill="#287d3b" fill-opacity=".055" stroke="#287d3b" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="235.0" y="898.5" text-anchor="middle" fill="#287d3b" font-size="25">Report completion</text>
+<text x="235.0" y="932.5" text-anchor="middle" fill="#287d3b" font-size="25">with evidence</text>
+<path d="M 514 860 Q 670.0 856 827 861 Q 847 861 845 881 L 844 934 Q 846 956 824 954 L 515 955 Q 493 954 495 932 L 496 880 Q 494 859 514 860 Z" fill="#b64b4b" fill-opacity=".055" stroke="#b64b4b" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="670.0" y="898.5" text-anchor="middle" fill="#b64b4b" font-size="25">Report incomplete</text>
+<text x="670.0" y="932.5" text-anchor="middle" fill="#b64b4b" font-size="25">with failures</text>
+</g></svg>

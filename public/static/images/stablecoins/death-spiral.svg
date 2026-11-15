@@ -1,0 +1,205 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="960"
+  height="830"
+  viewBox="0 0 960 830"
+  role="img"
+  aria-labelledby="title desc"
+>
+  <title id="title">UST–LUNA: when the mechanism turns on itself</title>
+  <desc id="desc">
+    Clockwise loop: UST selling, depeg, burning UST to mint LUNA, expanding LUNA supply, falling
+    LUNA price, loss of confidence, then renewed UST selling.
+  </desc>
+  <defs>
+    <marker
+      id="arrow"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="8"
+      markerHeight="8"
+      orient="auto-start-reverse"
+    >
+      <path
+        d="M1 1 L9 5 L1 9"
+        fill="none"
+        stroke="#687583"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </marker>
+  </defs>
+  <g font-family="'Comic Sans MS', 'Chalkboard SE', cursive">
+    <text x="40" y="48" font-size="28" fill="#26313b" font-weight="600" text-anchor="start">
+      UST–LUNA: when the mechanism turns on itself
+    </text>
+    <text x="40" y="79" font-size="16" fill="#64748b" font-weight="400" text-anchor="start">
+      A feedback loop, not a one-way chain of events.
+    </text>
+    <path
+      d="M372 111 Q480.0 108 588 111 Q611 110 610 133 L609 198 Q610 221 588 220 L373 219 Q349 220 351 198 L350 133 Q349 111 372 111 Z"
+      fill="#2476a2"
+      fill-opacity=".055"
+      stroke="#2476a2"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="370" y="144" font-size="20" fill="#2476a2" font-weight="600" text-anchor="start">
+      01 · Sell pressure
+    </text>
+    <text x="370" y="177" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Large UST selling
+    </text>
+    <path
+      d="M682 246 Q790.0 243 898 246 Q921 245 920 268 L919 333 Q920 356 898 355 L683 354 Q659 355 661 333 L660 268 Q659 246 682 246 Z"
+      fill="#b64b4b"
+      fill-opacity=".055"
+      stroke="#b64b4b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="680" y="279" font-size="20" fill="#b64b4b" font-weight="600" text-anchor="start">
+      02 · Depeg
+    </text>
+    <text x="680" y="312" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      UST falls below $1
+    </text>
+    <path
+      d="M682 466 Q790.0 463 898 466 Q921 465 920 488 L919 553 Q920 576 898 575 L683 574 Q659 575 661 553 L660 488 Q659 466 682 466 Z"
+      fill="#287d3b"
+      fill-opacity=".055"
+      stroke="#287d3b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="680" y="499" font-size="20" fill="#287d3b" font-weight="600" text-anchor="start">
+      03 · Burn → mint
+    </text>
+    <text x="680" y="532" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Burn UST, mint LUNA
+    </text>
+    <path
+      d="M372 601 Q480.0 598 588 601 Q611 600 610 623 L609 688 Q610 711 588 710 L373 709 Q349 710 351 688 L350 623 Q349 601 372 601 Z"
+      fill="#a9561d"
+      fill-opacity=".055"
+      stroke="#a9561d"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="370" y="634" font-size="20" fill="#a9561d" font-weight="600" text-anchor="start">
+      04 · LUNA supply
+    </text>
+    <text x="370" y="667" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      More LUNA issued
+    </text>
+    <path
+      d="M62 466 Q170.0 463 278 466 Q301 465 300 488 L299 553 Q300 576 278 575 L63 574 Q39 575 41 553 L40 488 Q39 466 62 466 Z"
+      fill="#b64b4b"
+      fill-opacity=".055"
+      stroke="#b64b4b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="60" y="499" font-size="20" fill="#b64b4b" font-weight="600" text-anchor="start">
+      05 · Price decline
+    </text>
+    <text x="60" y="532" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      LUNA price falls
+    </text>
+    <path
+      d="M62 246 Q170.0 243 278 246 Q301 245 300 268 L299 333 Q300 356 278 355 L63 354 Q39 355 41 333 L40 268 Q39 246 62 246 Z"
+      fill="#b64b4b"
+      fill-opacity=".055"
+      stroke="#b64b4b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="60" y="279" font-size="20" fill="#b64b4b" font-weight="600" text-anchor="start">
+      06 · Confidence
+    </text>
+    <text x="60" y="312" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Trust in backing falls
+    </text>
+    <path
+      d="M616 164 C710 164 790 183 790 238"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M790 361 L790 458"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M790 581 C790 643 710 655 617 655"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M343 655 C250 655 170 640 170 582"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M170 459 L170 362"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M170 238 C170 179 252 164 343 164"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <text x="480" y="345" font-size="22" fill="#b64b4b" font-weight="600" text-anchor="middle">
+      THE DEATH SPIRAL
+    </text>
+    <text x="480" y="385" font-size="19" fill="#34404c" font-weight="400" text-anchor="middle">
+      The rescue mechanism
+    </text>
+    <text x="480" y="413" font-size="19" fill="#34404c" font-weight="400" text-anchor="middle">
+      amplifies the panic.
+    </text>
+    <text x="480" y="448" font-size="14" fill="#64748b" font-weight="400" text-anchor="middle">
+      Self-reinforcing feedback
+    </text>
+    <rect
+      x="40"
+      y="752"
+      width="880"
+      height="48"
+      rx="12"
+      fill="none"
+      stroke="#9aa19b"
+      stroke-dasharray="8 8"
+    />
+    <text x="480" y="782" font-size="16" fill="#34404c" font-weight="400" text-anchor="middle">
+      Lost confidence feeds more selling — and the cycle repeats.
+    </text>
+  </g>
+</svg>

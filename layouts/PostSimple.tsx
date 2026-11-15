@@ -44,7 +44,9 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
         </header>
         <div className={`article-reading-layout ${toc?.length > 1 ? 'has-index' : ''}`}>
           <ArticleToc headings={toc} />
-          <div className="article-body prose dark:prose-invert">{children}</div>
+          <div id="post-body" className="article-body prose dark:prose-invert">
+            {children}
+          </div>
         </div>
         {siteMetadata.comments && (
           <div className="py-8 text-center" id="comment">

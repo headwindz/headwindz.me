@@ -45,3 +45,12 @@ yarn-error.log*
 
 # Contentlayer
 .contentlayer
+
+# Impeccable working files and local state
+/.impeccable/build/
+/.impeccable/questions/
+/.impeccable/critique/
+/.impeccable/mocks/
+/.impeccable/review/
+/.impeccable/config.local.json
+/.impeccable/hook.cache.json

@@ -1,0 +1,206 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="960"
+  height="740"
+  viewBox="0 0 960 740"
+  role="img"
+  aria-labelledby="title desc"
+>
+  <title id="title">Crypto-backed: a buffer, then a threshold</title>
+  <desc id="desc">
+    A historical Maker example uses $3,000 collateral and 2,000 DAI debt. Oracle prices determine
+    the collateral ratio. Below a simplified 150 percent threshold the position is liquidated;
+    otherwise it remains open.
+  </desc>
+  <defs>
+    <marker
+      id="arrow"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="8"
+      markerHeight="8"
+      orient="auto-start-reverse"
+    >
+      <path
+        d="M1 1 L9 5 L1 9"
+        fill="none"
+        stroke="#687583"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </marker>
+  </defs>
+  <g font-family="'Comic Sans MS', 'Chalkboard SE', cursive">
+    <text x="40" y="48" font-size="28" fill="#26313b" font-weight="600" text-anchor="start">
+      Crypto-backed: a buffer, then a threshold
+    </text>
+    <text x="40" y="79" font-size="16" fill="#64748b" font-weight="400" text-anchor="start">
+      A price fall shrinks the collateral buffer while debt remains.
+    </text>
+    <path
+      d="M62 128 Q165.0 125 268 128 Q291 127 290 150 L289 245 Q290 268 268 267 L63 266 Q39 267 41 245 L40 150 Q39 128 62 128 Z"
+      fill="#2476a2"
+      fill-opacity=".055"
+      stroke="#2476a2"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="60" y="161" font-size="20" fill="#2476a2" font-weight="600" text-anchor="start">
+      Collateral
+    </text>
+    <text x="60" y="194" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      1.5 ETH × $2,000
+    </text>
+    <text x="60" y="220" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      $3,000 value
+    </text>
+    <path
+      d="M377 128 Q480.0 125 583 128 Q606 127 605 150 L604 245 Q605 268 583 267 L378 266 Q354 267 356 245 L355 150 Q354 128 377 128 Z"
+      fill="#287d3b"
+      fill-opacity=".055"
+      stroke="#287d3b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="375" y="161" font-size="20" fill="#287d3b" font-weight="600" text-anchor="start">
+      Vault debt
+    </text>
+    <text x="375" y="194" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Borrow 2,000 DAI
+    </text>
+    <text x="375" y="220" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      150% ratio
+    </text>
+    <path
+      d="M692 128 Q795.0 125 898 128 Q921 127 920 150 L919 245 Q920 268 898 267 L693 266 Q669 267 671 245 L670 150 Q669 128 692 128 Z"
+      fill="#a9561d"
+      fill-opacity=".055"
+      stroke="#a9561d"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="690" y="161" font-size="20" fill="#a9561d" font-weight="600" text-anchor="start">
+      Price oracle
+    </text>
+    <text x="690" y="194" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Updates collateral
+    </text>
+    <text x="690" y="220" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      valuation
+    </text>
+    <path
+      d="M295 197 L348 197"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M795 273 L795 331 L488 331"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M480 273 L480 367"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <text x="40" y="312" font-size="14" fill="#64748b" font-weight="400" text-anchor="start">
+      COLLATERAL VALUE ÷ DEBT
+    </text>
+    <path
+      d="M377 375 Q480.0 372 583 375 Q606 374 605 397 L604 456 Q605 479 583 478 L378 477 Q354 478 356 456 L355 397 Q354 375 377 375 Z"
+      fill="#8054ad"
+      fill-opacity=".055"
+      stroke="#8054ad"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="375" y="408" font-size="20" fill="#8054ad" font-weight="600" text-anchor="start">
+      Below threshold?
+    </text>
+    <text x="375" y="441" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Simplified: 150%
+    </text>
+    <path
+      d="M350 426 L265 426 L265 502"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <text x="285" y="409" font-size="15" fill="#34404c" font-weight="400" text-anchor="middle">
+      No
+    </text>
+    <path
+      d="M610 426 L695 426 L695 502"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <text x="675" y="409" font-size="15" fill="#34404c" font-weight="400" text-anchor="middle">
+      Yes
+    </text>
+    <path
+      d="M132 511 Q265.0 508 398 511 Q421 510 420 533 L419 602 Q420 625 398 624 L133 623 Q109 624 111 602 L110 533 Q109 511 132 511 Z"
+      fill="#287d3b"
+      fill-opacity=".055"
+      stroke="#287d3b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="130" y="544" font-size="20" fill="#287d3b" font-weight="600" text-anchor="start">
+      Position stays open
+    </text>
+    <text x="130" y="577" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Continue monitoring
+    </text>
+    <path
+      d="M562 511 Q695.0 508 828 511 Q851 510 850 533 L849 602 Q850 625 828 624 L563 623 Q539 624 541 602 L540 533 Q539 511 562 511 Z"
+      fill="#b64b4b"
+      fill-opacity=".055"
+      stroke="#b64b4b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="560" y="544" font-size="20" fill="#b64b4b" font-weight="600" text-anchor="start">
+      Liquidation
+    </text>
+    <text x="560" y="577" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Sell collateral
+    </text>
+    <text x="560" y="603" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      to cover the debt
+    </text>
+    <rect
+      x="40"
+      y="660"
+      width="880"
+      height="48"
+      rx="12"
+      fill="none"
+      stroke="#9aa19b"
+      stroke-dasharray="8 8"
+    />
+    <text x="480" y="690" font-size="16" fill="#34404c" font-weight="400" text-anchor="middle">
+      Historical Maker example; thresholds, fees, and collateral rules vary.
+    </text>
+  </g>
+</svg>

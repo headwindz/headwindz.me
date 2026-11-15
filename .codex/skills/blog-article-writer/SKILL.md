@@ -26,11 +26,11 @@ Keep the user's requested scope and audience. Apply the repository's frontmatter
    - Follow `tech-writing` for outlining, drafting, and reviewing the body.
    - Add required frontmatter: `title`, `date`, `tags`, and `summary`.
    - Use sentence case headings; preserve capitalization for proper nouns and acronyms.
-   - Use the site's `<Mermaid chart={`...`} />` component for suitable diagrams and existing MDX components or demos when relevant.
+   - Follow `AGENTS.md` for architecture diagram style and image assets. Use existing MDX components or demos when relevant.
    - Consult [references/article_guide.md](references/article_guide.md) for frontmatter details, heading conventions, and component syntax.
 
 3. **Review and validate**
    - Complete the editorial and source review required by `tech-writing`.
    - Verify frontmatter against Contentlayer types and headings against sentence case conventions.
-   - Check code examples and Mermaid syntax, and inspect rendered visuals when present.
+   - Check code examples, diagram labels and connections, and inspect rendered visuals for readability on desktop and mobile.
    - Verify compilation with `pnpm build` or Contentlayer/dev server logs.

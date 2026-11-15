@@ -28,7 +28,7 @@ export default function Home({ posts }: { posts: CoreContent<Blog>[] }) {
             Hi, I’m <Link href="/about">Michael Zheng</Link>, a full-stack engineer.
           </p>
           <p className="journal-description">
-            Notes on frontend, AI agents, and Web3.
+            Notes on full stack, AI agents, and Web3.
             <br />
             Things I build, learn, and figure out along the way.
           </p>
@@ -51,7 +51,7 @@ export default function Home({ posts }: { posts: CoreContent<Blog>[] }) {
               className="notebook-avatar"
             />
             <div>
-              <h2>Headwindz</h2>
+              <h2>Michael Zheng</h2>
               <p>A personal notebook.</p>
             </div>
           </div>

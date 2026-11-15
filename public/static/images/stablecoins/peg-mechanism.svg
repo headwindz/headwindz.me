@@ -1,0 +1,234 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="960"
+  height="592"
+  viewBox="0 0 960 592"
+  role="img"
+  aria-labelledby="title desc"
+>
+  <title id="title">The intended peg mechanism</title>
+  <desc id="desc">
+    Above the peg, burning LUNA and minting UST expands supply and creates downward price pressure.
+    Below the peg, burning UST and minting LUNA contracts UST supply, with upward pressure
+    contingent on demand and functioning markets.
+  </desc>
+  <defs>
+    <marker
+      id="arrow"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="8"
+      markerHeight="8"
+      orient="auto-start-reverse"
+    >
+      <path
+        d="M1 1 L9 5 L1 9"
+        fill="none"
+        stroke="#687583"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </marker>
+  </defs>
+  <g font-family="'Comic Sans MS', 'Chalkboard SE', cursive">
+    <text x="40" y="48" font-size="28" fill="#26313b" font-weight="600" text-anchor="start">
+      The intended peg mechanism
+    </text>
+    <text x="40" y="79" font-size="16" fill="#64748b" font-weight="400" text-anchor="start">
+      Two directions of arbitrage; the goal is the same $1 target.
+    </text>
+    <path
+      d="M62 125 Q135.0 122 208 125 Q231 124 230 147 L229 232 Q230 255 208 254 L63 253 Q39 254 41 232 L40 147 Q39 125 62 125 Z"
+      fill="#2476a2"
+      fill-opacity=".055"
+      stroke="#2476a2"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="60" y="158" font-size="20" fill="#2476a2" font-weight="600" text-anchor="start">
+      UST above $1
+    </text>
+    <path
+      d="M292 125 Q365.0 122 438 125 Q461 124 460 147 L459 232 Q460 255 438 254 L293 253 Q269 254 271 232 L270 147 Q269 125 292 125 Z"
+      fill="#287d3b"
+      fill-opacity=".055"
+      stroke="#287d3b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="290" y="158" font-size="20" fill="#287d3b" font-weight="600" text-anchor="start">
+      Arbitrage
+    </text>
+    <text x="290" y="191" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Burn LUNA
+    </text>
+    <text x="290" y="217" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Mint UST
+    </text>
+    <path
+      d="M522 125 Q595.0 122 668 125 Q691 124 690 147 L689 232 Q690 255 668 254 L523 253 Q499 254 501 232 L500 147 Q499 125 522 125 Z"
+      fill="#2476a2"
+      fill-opacity=".055"
+      stroke="#2476a2"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="520" y="158" font-size="20" fill="#2476a2" font-weight="600" text-anchor="start">
+      Supply
+    </text>
+    <text x="520" y="191" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      UST supply
+    </text>
+    <text x="520" y="217" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      increases
+    </text>
+    <path
+      d="M752 125 Q825.0 122 898 125 Q921 124 920 147 L919 232 Q920 255 898 254 L753 253 Q729 254 731 232 L730 147 Q729 125 752 125 Z"
+      fill="#2476a2"
+      fill-opacity=".055"
+      stroke="#2476a2"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="750" y="158" font-size="20" fill="#2476a2" font-weight="600" text-anchor="start">
+      Toward $1
+    </text>
+    <text x="750" y="191" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Sell UST
+    </text>
+    <text x="750" y="217" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Price ↓
+    </text>
+    <path
+      d="M235 189 L263 189"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M465 189 L493 189"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M695 189 L723 189"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M62 339 Q135.0 336 208 339 Q231 338 230 361 L229 446 Q230 469 208 468 L63 467 Q39 468 41 446 L40 361 Q39 339 62 339 Z"
+      fill="#a9561d"
+      fill-opacity=".055"
+      stroke="#a9561d"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="60" y="372" font-size="20" fill="#a9561d" font-weight="600" text-anchor="start">
+      UST below $1
+    </text>
+    <path
+      d="M292 339 Q365.0 336 438 339 Q461 338 460 361 L459 446 Q460 469 438 468 L293 467 Q269 468 271 446 L270 361 Q269 339 292 339 Z"
+      fill="#287d3b"
+      fill-opacity=".055"
+      stroke="#287d3b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="290" y="372" font-size="20" fill="#287d3b" font-weight="600" text-anchor="start">
+      Arbitrage
+    </text>
+    <text x="290" y="405" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Burn UST
+    </text>
+    <text x="290" y="431" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Mint LUNA
+    </text>
+    <path
+      d="M522 339 Q595.0 336 668 339 Q691 338 690 361 L689 446 Q690 469 668 468 L523 467 Q499 468 501 446 L500 361 Q499 339 522 339 Z"
+      fill="#a9561d"
+      fill-opacity=".055"
+      stroke="#a9561d"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="520" y="372" font-size="20" fill="#a9561d" font-weight="600" text-anchor="start">
+      Supply
+    </text>
+    <text x="520" y="405" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      UST supply
+    </text>
+    <text x="520" y="431" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      decreases
+    </text>
+    <path
+      d="M752 339 Q825.0 336 898 339 Q921 338 920 361 L919 446 Q920 469 898 468 L753 467 Q729 468 731 446 L730 361 Q729 339 752 339 Z"
+      fill="#2476a2"
+      fill-opacity=".055"
+      stroke="#2476a2"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="750" y="372" font-size="20" fill="#2476a2" font-weight="600" text-anchor="start">
+      Toward $1
+    </text>
+    <text x="750" y="405" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Price ↑
+    </text>
+    <text x="750" y="431" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      If demand holds
+    </text>
+    <path
+      d="M235 403 L263 403"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M465 403 L493 403"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M695 403 L723 403"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <rect
+      x="40"
+      y="514"
+      width="880"
+      height="48"
+      rx="12"
+      fill="none"
+      stroke="#9aa19b"
+      stroke-dasharray="8 8"
+    />
+    <text x="480" y="544" font-size="16" fill="#34404c" font-weight="400" text-anchor="middle">
+      Intended feedback, not a guarantee: demand, liquidity, and confidence matter.
+    </text>
+  </g>
+</svg>

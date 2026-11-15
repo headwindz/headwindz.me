@@ -7,6 +7,7 @@ import CustomLink from './Link'
 import TableWrapper from './TableWrapper'
 import LiveDemo from './LiveDemo'
 import Mermaid from './Mermaid'
+import SketchDiagram from './SketchDiagram'
 
 export const components: MDXComponents = {
   Image,
@@ -18,4 +19,5 @@ export const components: MDXComponents = {
   BlogNewsletterForm,
   LiveDemo,
   Mermaid,
+  SketchDiagram,
 }

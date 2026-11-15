@@ -1,0 +1,202 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="960"
+  height="655"
+  viewBox="0 0 960 655"
+  role="img"
+  aria-labelledby="title desc"
+>
+  <title id="title">Three ways to target $1</title>
+  <desc id="desc">
+    Three columns compare fiat reserves, collateralized debt, and algorithmic incentives, with
+    examples and risks.
+  </desc>
+  <defs>
+    <marker
+      id="arrow"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="8"
+      markerHeight="8"
+      orient="auto-start-reverse"
+    >
+      <path
+        d="M1 1 L9 5 L1 9"
+        fill="none"
+        stroke="#687583"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </marker>
+  </defs>
+  <g font-family="'Comic Sans MS', 'Chalkboard SE', cursive">
+    <text x="40" y="48" font-size="28" fill="#26313b" font-weight="600" text-anchor="start">
+      Three ways to target $1
+    </text>
+    <text x="40" y="79" font-size="16" fill="#64748b" font-weight="400" text-anchor="start">
+      Read each design through its backing and its failure mode.
+    </text>
+    <path
+      d="M62 116 Q180.0 113 298 116 Q321 115 320 138 L319 248 Q320 271 298 270 L63 269 Q39 270 41 248 L40 138 Q39 116 62 116 Z"
+      fill="#2476a2"
+      fill-opacity=".055"
+      stroke="#2476a2"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="60" y="149" font-size="20" fill="#2476a2" font-weight="600" text-anchor="start">
+      Fiat-backed
+    </text>
+    <text x="60" y="182" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Issuer reserves
+    </text>
+    <text x="60" y="208" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      + eligible redemption
+    </text>
+    <text x="60" y="306" font-size="14" fill="#64748b" font-weight="400" text-anchor="start">
+      EXAMPLES
+    </text>
+    <text x="60" y="338" font-size="16" fill="#34404c" font-weight="400" text-anchor="start">
+      USDC · USDT · PYUSD
+    </text>
+    <path
+      d="M180 360 L180 395"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M62 416 Q180.0 413 298 416 Q321 415 320 438 L319 523 Q320 546 298 545 L63 544 Q39 545 41 523 L40 438 Q39 416 62 416 Z"
+      fill="#2476a2"
+      fill-opacity=".055"
+      stroke="#2476a2"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="60" y="449" font-size="20" fill="#2476a2" font-weight="600" text-anchor="start">
+      What can break
+    </text>
+    <text x="60" y="482" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Custodian / bank risk
+    </text>
+    <text x="60" y="508" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Issuer freeze controls
+    </text>
+    <path
+      d="M362 116 Q480.0 113 598 116 Q621 115 620 138 L619 248 Q620 271 598 270 L363 269 Q339 270 341 248 L340 138 Q339 116 362 116 Z"
+      fill="#287d3b"
+      fill-opacity=".055"
+      stroke="#287d3b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="360" y="149" font-size="20" fill="#287d3b" font-weight="600" text-anchor="start">
+      Crypto-backed
+    </text>
+    <text x="360" y="182" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Collateralized debt
+    </text>
+    <text x="360" y="208" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      + liquidation
+    </text>
+    <text x="360" y="306" font-size="14" fill="#64748b" font-weight="400" text-anchor="start">
+      EXAMPLES
+    </text>
+    <text x="360" y="338" font-size="16" fill="#34404c" font-weight="400" text-anchor="start">
+      DAI · LUSD · crvUSD
+    </text>
+    <path
+      d="M480 360 L480 395"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M362 416 Q480.0 413 598 416 Q621 415 620 438 L619 523 Q620 546 598 545 L363 544 Q339 545 341 523 L340 438 Q339 416 362 416 Z"
+      fill="#287d3b"
+      fill-opacity=".055"
+      stroke="#287d3b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="360" y="449" font-size="20" fill="#287d3b" font-weight="600" text-anchor="start">
+      What can break
+    </text>
+    <text x="360" y="482" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Collateral / oracle risk
+    </text>
+    <text x="360" y="508" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Liquidation liquidity
+    </text>
+    <path
+      d="M662 116 Q780.0 113 898 116 Q921 115 920 138 L919 248 Q920 271 898 270 L663 269 Q639 270 641 248 L640 138 Q639 116 662 116 Z"
+      fill="#b64b4b"
+      fill-opacity=".055"
+      stroke="#b64b4b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="660" y="149" font-size="20" fill="#b64b4b" font-weight="600" text-anchor="start">
+      Algorithmic
+    </text>
+    <text x="660" y="182" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Supply incentives
+    </text>
+    <text x="660" y="208" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      + market confidence
+    </text>
+    <text x="660" y="306" font-size="14" fill="#64748b" font-weight="400" text-anchor="start">
+      EXAMPLES
+    </text>
+    <text x="660" y="338" font-size="16" fill="#34404c" font-weight="400" text-anchor="start">
+      UST (collapsed 2022)
+    </text>
+    <path
+      d="M780 360 L780 395"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M662 416 Q780.0 413 898 416 Q921 415 920 438 L919 523 Q920 546 898 545 L663 544 Q639 545 641 523 L640 438 Q639 416 662 416 Z"
+      fill="#b64b4b"
+      fill-opacity=".055"
+      stroke="#b64b4b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="660" y="449" font-size="20" fill="#b64b4b" font-weight="600" text-anchor="start">
+      What can break
+    </text>
+    <text x="660" y="482" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Reflexive selling
+    </text>
+    <text x="660" y="508" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Death spiral risk
+    </text>
+    <rect
+      x="40"
+      y="577"
+      width="880"
+      height="48"
+      rx="12"
+      fill="none"
+      stroke="#9aa19b"
+      stroke-dasharray="8 8"
+    />
+    <text x="480" y="607" font-size="16" fill="#34404c" font-weight="400" text-anchor="middle">
+      Same price target. Different backing, redemption, and failure modes.
+    </text>
+  </g>
+</svg>

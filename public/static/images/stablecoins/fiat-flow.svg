@@ -1,0 +1,229 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="960"
+  height="730"
+  viewBox="0 0 960 730"
+  role="img"
+  aria-labelledby="title desc"
+>
+  <title id="title">Fiat-backed: cash in, tokens out</title>
+  <desc id="desc">
+    Top lane: an eligible participant pays dollars to an issuer, which mints USDC to a wallet.
+    Bottom lane: USDC is returned and burned, and dollars are paid to a bank account. Issuer reserve
+    assets support redemption.
+  </desc>
+  <defs>
+    <marker
+      id="arrow"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="8"
+      markerHeight="8"
+      orient="auto-start-reverse"
+    >
+      <path
+        d="M1 1 L9 5 L1 9"
+        fill="none"
+        stroke="#687583"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </marker>
+  </defs>
+  <g font-family="'Comic Sans MS', 'Chalkboard SE', cursive">
+    <text x="40" y="48" font-size="28" fill="#26313b" font-weight="600" text-anchor="start">
+      Fiat-backed: cash in, tokens out
+    </text>
+    <text x="40" y="79" font-size="16" fill="#64748b" font-weight="400" text-anchor="start">
+      Issuance and redemption are separate operations.
+    </text>
+    <text x="40" y="130" font-size="17" fill="#2476a2" font-weight="600" text-anchor="start">
+      01 · ISSUE TOKENS
+    </text>
+    <path
+      d="M62 154 Q150.0 151 238 154 Q261 153 260 176 L259 235 Q260 258 238 257 L63 256 Q39 257 41 235 L40 176 Q39 154 62 154 Z"
+      fill="#2476a2"
+      fill-opacity=".055"
+      stroke="#2476a2"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="60" y="187" font-size="20" fill="#2476a2" font-weight="600" text-anchor="start">
+      Participant
+    </text>
+    <text x="60" y="220" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Mint eligible
+    </text>
+    <path
+      d="M392 154 Q480.0 151 568 154 Q591 153 590 176 L589 235 Q590 258 568 257 L393 256 Q369 257 371 235 L370 176 Q369 154 392 154 Z"
+      fill="#287d3b"
+      fill-opacity=".055"
+      stroke="#287d3b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="390" y="187" font-size="20" fill="#287d3b" font-weight="600" text-anchor="start">
+      Issuer
+    </text>
+    <text x="390" y="220" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      e.g. Circle
+    </text>
+    <path
+      d="M722 154 Q810.0 151 898 154 Q921 153 920 176 L919 235 Q920 258 898 257 L723 256 Q699 257 701 235 L700 176 Q699 154 722 154 Z"
+      fill="#2476a2"
+      fill-opacity=".055"
+      stroke="#2476a2"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="720" y="187" font-size="20" fill="#2476a2" font-weight="600" text-anchor="start">
+      Wallet
+    </text>
+    <text x="720" y="220" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Receives USDC
+    </text>
+    <path
+      d="M265 205 L363 205"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <text x="315" y="188" font-size="15" fill="#34404c" font-weight="400" text-anchor="middle">
+      $1M USD
+    </text>
+    <path
+      d="M595 205 L693 205"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <text x="645" y="170" font-size="15" fill="#34404c" font-weight="400" text-anchor="middle">
+      Mint 1M
+    </text>
+    <text x="645" y="194" font-size="15" fill="#34404c" font-weight="400" text-anchor="middle">
+      USDC
+    </text>
+    <text x="40" y="321" font-size="17" fill="#2476a2" font-weight="600" text-anchor="start">
+      02 · REDEEM TOKENS
+    </text>
+    <path
+      d="M62 345 Q150.0 342 238 345 Q261 344 260 367 L259 426 Q260 449 238 448 L63 447 Q39 448 41 426 L40 367 Q39 345 62 345 Z"
+      fill="#2476a2"
+      fill-opacity=".055"
+      stroke="#2476a2"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="60" y="378" font-size="20" fill="#2476a2" font-weight="600" text-anchor="start">
+      Participant
+    </text>
+    <text x="60" y="411" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Redeem eligible
+    </text>
+    <path
+      d="M392 345 Q480.0 342 568 345 Q591 344 590 367 L589 426 Q590 449 568 448 L393 447 Q369 448 371 426 L370 367 Q369 345 392 345 Z"
+      fill="#287d3b"
+      fill-opacity=".055"
+      stroke="#287d3b"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="390" y="378" font-size="20" fill="#287d3b" font-weight="600" text-anchor="start">
+      Issuer
+    </text>
+    <text x="390" y="411" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Burns returned
+    </text>
+    <text x="390" y="437" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      USDC
+    </text>
+    <path
+      d="M722 345 Q810.0 342 898 345 Q921 344 920 367 L919 426 Q920 449 898 448 L723 447 Q699 448 701 426 L700 367 Q699 345 722 345 Z"
+      fill="#2476a2"
+      fill-opacity=".055"
+      stroke="#2476a2"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="720" y="378" font-size="20" fill="#2476a2" font-weight="600" text-anchor="start">
+      Bank account
+    </text>
+    <text x="720" y="411" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Receives USD
+    </text>
+    <path
+      d="M265 395 L363 395"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <text x="315" y="360" font-size="15" fill="#34404c" font-weight="400" text-anchor="middle">
+      Return 1M
+    </text>
+    <text x="315" y="384" font-size="15" fill="#34404c" font-weight="400" text-anchor="middle">
+      USDC
+    </text>
+    <path
+      d="M595 395 L693 395"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <text x="645" y="378" font-size="15" fill="#34404c" font-weight="400" text-anchor="middle">
+      $1M USD
+    </text>
+    <path
+      d="M357 516 Q480.0 513 603 516 Q626 515 625 538 L624 599 Q625 622 603 621 L358 620 Q334 621 336 599 L335 538 Q334 516 357 516 Z"
+      fill="#a9561d"
+      fill-opacity=".055"
+      stroke="#a9561d"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <text x="355" y="549" font-size="20" fill="#a9561d" font-weight="600" text-anchor="start">
+      Reserve assets
+    </text>
+    <text x="355" y="582" font-size="17" fill="#34404c" font-weight="400" text-anchor="start">
+      Bank deposits / T-bills
+    </text>
+    <path
+      d="M480 509 L480 454"
+      fill="none"
+      stroke="#687583"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      marker-end="url(#arrow)"
+    />
+    <text x="500" y="490" font-size="15" fill="#34404c" font-weight="400" text-anchor="start">
+      Reserves support redemption
+    </text>
+    <rect
+      x="40"
+      y="650"
+      width="880"
+      height="48"
+      rx="12"
+      fill="none"
+      stroke="#9aa19b"
+      stroke-dasharray="8 8"
+    />
+    <text x="480" y="680" font-size="16" fill="#34404c" font-weight="400" text-anchor="middle">
+      Mint / redeem access depends on issuer terms; a wallet alone is not enough.
+    </text>
+  </g>
+</svg>

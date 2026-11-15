@@ -41,6 +41,7 @@ Read [README.md](./README.md) for setup, commands, authoring examples, and deplo
 - Consult `contentlayer.config.ts` before introducing or changing frontmatter fields.
 - Use sentence case headings, preserving acronyms and proper names: `## Getting started`, `### Using the API`.
 - Write concise, clear sentences and avoid unnecessary words.
+- For architecture diagrams, prefer hand-drawn images over Mermaid, with transparent backgrounds, sketch-style rounded boxes and arrows, dashed grouping lines, restrained blue/orange/green/purple accents, and clear handwritten-style labels. Prefer SVG for crisp lines and text when zooming. Choose label and line colors with sufficient contrast against the diagram viewer's background in light and dark themes. Keep text readable on mobile, include descriptive alt text, and store assets under `public/static/images/<topic>/`. Use the existing `SketchDiagram` viewer for expand, zoom, and download controls. Apply this preference to new or revised diagrams; replace existing diagrams only when requested.
 - Register reusable MDX components in `components/MDXComponents.tsx`.
 - Preserve existing URLs; add redirects in `next.config.js` when intentionally changing published slugs.
 

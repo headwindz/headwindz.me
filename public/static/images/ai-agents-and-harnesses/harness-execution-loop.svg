@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1250" viewBox="0 0 1000 1250" role="img" aria-labelledby="title desc">
+<title id="title">One request through the harness</title><desc id="desc">The harness assembles context for the model. Tool requests are validated; allowed tools execute and denied requests become observations. Observations feed the next model call. Finish requests trigger independent checks, producing either evidence of completion or an incomplete result.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="#707570" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g font-family="'Comic Sans MS', 'Chalkboard SE', cursive" fill="#4b5563" font-size="25">
+<text x="48" y="62" text-anchor="start" fill="#2476a2" font-size="32">One request through the harness</text>
+<text x="48" y="104" text-anchor="start" fill="#4b5563" font-size="22">The model proposes. The harness controls execution.</text>
+<path d="M 309 146 Q 500.0 142 692 147 Q 712 147 710 167 L 709 209 Q 711 231 689 229 L 310 230 Q 288 229 290 207 L 291 166 Q 289 145 309 146 Z" fill="#2476a2" fill-opacity=".055" stroke="#2476a2" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="500.0" y="196.0" text-anchor="middle" fill="#2476a2" font-size="25">Task + acceptance criteria</text>
+<path d="M 500 230 L 500 276" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 309 281 Q 500.0 277 692 282 Q 712 282 710 302 L 709 344 Q 711 366 689 364 L 310 365 Q 288 364 290 342 L 291 301 Q 289 280 309 281 Z" fill="#2476a2" fill-opacity=".055" stroke="#2476a2" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="500.0" y="331.0" text-anchor="middle" fill="#2476a2" font-size="25">Harness assembles context</text>
+<path d="M 500 365 L 500 410" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 309 416 Q 500.0 412 692 417 Q 712 417 710 437 L 709 479 Q 711 501 689 499 L 310 500 Q 288 499 290 477 L 291 436 Q 289 415 309 416 Z" fill="#8054ad" fill-opacity=".055" stroke="#8054ad" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="500.0" y="466.0" text-anchor="middle" fill="#8054ad" font-size="25">Model proposes next action</text>
+<path d="M 500 500 L 500 550 L 260 550 L 260 598" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 500 550 L 755 550 L 755 598" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="250" y="581" text-anchor="middle" fill="#a9561d" font-size="22">Tool request</text>
+<text x="755" y="581" text-anchor="middle" fill="#287d3b" font-size="22">Finish request</text>
+<rect x="98" y="600" width="330" height="440" rx="25" fill="none" stroke="#a9561d" stroke-width="1.7" stroke-dasharray="9 10"/>
+<path d="M 139 626 Q 262.5 622 387 627 Q 407 627 405 647 L 404 705 Q 406 727 384 725 L 140 726 Q 118 725 120 703 L 121 646 Q 119 625 139 626 Z" fill="#a9561d" fill-opacity=".055" stroke="#a9561d" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="262.5" y="667.0" text-anchor="middle" fill="#a9561d" font-size="25">Validate arguments</text>
+<text x="262.5" y="701.0" text-anchor="middle" fill="#a9561d" font-size="25">+ check policy</text>
+<path d="M 260 727 L 260 800" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="275" y="771" text-anchor="start" fill="#287d3b" font-size="21">Allowed</text>
+<path d="M 139 806 Q 262.5 802 387 807 Q 407 807 405 827 L 404 875 Q 406 897 384 895 L 140 896 Q 118 895 120 873 L 121 826 Q 119 805 139 806 Z" fill="#a9561d" fill-opacity=".055" stroke="#a9561d" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="262.5" y="842.0" text-anchor="middle" fill="#a9561d" font-size="25">Execute tool</text>
+<text x="262.5" y="876.0" text-anchor="middle" fill="#a9561d" font-size="25">within limits</text>
+<path d="M 260 897 L 260 948" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 139 953 Q 262.5 949 387 954 Q 407 954 405 974 L 404 998 Q 406 1020 384 1018 L 140 1019 Q 118 1018 120 996 L 121 973 Q 119 952 139 953 Z" fill="#2476a2" fill-opacity=".055" stroke="#2476a2" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="262.5" y="994.0" text-anchor="middle" fill="#2476a2" font-size="25">Record observation</text>
+<path d="M 405 673 L 461 673 L 461 983 L 407 983" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="474" y="791" text-anchor="start" fill="#b64b4b" font-size="21">Denied</text>
+<path d="M 119 983 L 53 983 L 53 322 L 287 322" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="79" y="1130" text-anchor="start" fill="#2476a2" font-size="23">Observations become evidence</text>
+<text x="79" y="1162" text-anchor="start" fill="#2476a2" font-size="23">for the next model decision.</text>
+<path d="M 609 626 Q 755.0 622 902 627 Q 922 627 920 647 L 919 705 Q 921 727 899 725 L 610 726 Q 588 725 590 703 L 591 646 Q 589 625 609 626 Z" fill="#287d3b" fill-opacity=".055" stroke="#287d3b" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="755.0" y="667.0" text-anchor="middle" fill="#287d3b" font-size="25">Run independent</text>
+<text x="755.0" y="701.0" text-anchor="middle" fill="#287d3b" font-size="25">acceptance checks</text>
+<path d="M 755 726 L 755 803" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="772" y="770" text-anchor="start" fill="#287d3b" font-size="22">Pass</text>
+<path d="M 609 808 Q 755.0 804 902 809 Q 922 809 920 829 L 919 875 Q 921 897 899 895 L 610 896 Q 588 895 590 873 L 591 828 Q 589 807 609 808 Z" fill="#287d3b" fill-opacity=".055" stroke="#287d3b" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="755.0" y="843.0" text-anchor="middle" fill="#287d3b" font-size="25">Return result</text>
+<text x="755.0" y="877.0" text-anchor="middle" fill="#287d3b" font-size="25">with evidence</text>
+<path d="M 921 676 L 959 676 L 959 978 L 921 978" fill="none" stroke="#707570" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="945" y="778" text-anchor="middle" fill="#b64b4b" font-size="20">Fail</text>
+<path d="M 609 936 Q 755.0 932 902 937 Q 922 937 920 957 L 919 1003 Q 921 1025 899 1023 L 610 1024 Q 588 1023 590 1001 L 591 956 Q 589 935 609 936 Z" fill="#b64b4b" fill-opacity=".055" stroke="#b64b4b" stroke-width="2.8" stroke-linejoin="round"/>
+<text x="755.0" y="971.0" text-anchor="middle" fill="#b64b4b" font-size="25">Return incomplete</text>
+<text x="755.0" y="1005.0" text-anchor="middle" fill="#b64b4b" font-size="25">with failures</text>
+<path d="M 48 1170 L 952 1172" stroke="#737573" stroke-dasharray="8 10" fill="none"/>
+<text x="50" y="1212" text-anchor="start" fill="#4b5563" font-size="23">At every blocking call: cancellation, timeouts, resource limits.</text>
+</g></svg>

@@ -48,7 +48,7 @@ The blog uses custom MDX components imported in `components/MDXComponents.tsx`:
 
 ### Mermaid Diagrams
 
-Use Mermaid for workflows, architectural flows, sequence interactions, or state transitions:
+For architecture diagrams, follow the image style and asset conventions in `AGENTS.md`. Mermaid remains available for other diagrams or when explicitly requested:
 
 ```tsx
 <Mermaid
@@ -94,5 +94,5 @@ Before finalizing the MDX:
 2. Are all Markdown headings formatted in strict sentence case?
 3. Has the article body completed the global `tech-writing` skill's editorial and source review?
 4. Are code snippets syntactically valid with language tags specified?
-5. If Mermaid diagrams are included, is the Mermaid chart syntax valid?
+5. Are diagram labels and connections correct and readable on mobile, with descriptive alt text for images? If Mermaid is used, is its syntax valid?
 6. Does `pnpm build` or Contentlayer compile without errors?

@@ -83,20 +83,11 @@ There are three fundamentally different approaches, each making a different set 
 
 A quick note on terminology before we continue: when a stablecoin **loses its peg,** it means the token's market price has drifted away from the \$1.00 target — either above (trading at \$1.05, for example) or, more dangerously, below (\$0.90 or lower). Some depegs are brief and recover within hours while others are permanent. Understanding what causes each type of depeg is central to evaluating any stablecoin.
 
-<Mermaid
-  chart={`
-flowchart TD
-  sc[Stablecoin designs]
-  sc --> fb[Fiat-backed]
-  sc --> cb[Crypto-backed]
-  sc --> ab[Algorithmic]
-  fb --> fb1[USDC, USDT, PYUSD]
-  cb --> cb1[DAI, LUSD, crvUSD]
-  ab --> ab1[UST — collapsed 2022]
-  fb1 --> fbr[Custodian risk, censorship]
-  cb1 --> cbr[Capital inefficiency, liquidation risk]
-  ab1 --> abr[Reflexivity, death spiral risk]
-`}
+<SketchDiagram
+  src="/static/images/stablecoins/designs.svg"
+  alt="Stablecoin designs compared by backing and risk"
+  width={960}
+  height={655}
 />
 
 # Fiat-backed stablecoins
@@ -107,15 +98,11 @@ In a fiat-backed design, an issuer holds reserve assets intended to back circula
 
 **Arbitrage** is the attempt to profit from a price difference. As a simplified example, an eligible participant could mint 1 USDC for \$1 and sell it at \$1.02, or buy at \$0.98 and redeem at \$1. The quoted difference is before fees, execution changes, and settlement risk. Access is subject to the issuer's eligibility and redemption terms; it is not a risk-free trade available to every wallet. [USDC terms](https://www.circle.com/legal/usdc-terms).
 
-<Mermaid
-  chart={`
-flowchart LR
-  u[User] -->|wire $1M USD| issuer[Issuer — Circle]
-  issuer -->|mint 1M USDC| u
-  issuer -->|hold reserves| bank[Bank / T-bills]
-  u2[User] -->|send 1M USDC| issuer
-  issuer -->|redeem $1M USD| u2
-`}
+<SketchDiagram
+  src="/static/images/stablecoins/fiat-flow.svg"
+  alt="Fiat-backed stablecoin issuance and redemption"
+  width={960}
+  height={730}
 />
 
 ## Major issuers
@@ -164,16 +151,11 @@ In Maker's system, a CDP (now called a Vault) is a smart contract position. To o
 4. Pay a **stability fee** (an annual interest rate, set by governance) that accrues on the borrowed DAI.
 5. To recover collateral, repay the DAI plus accrued stability fees.
 
-<Mermaid
-  chart={`
-flowchart LR
-  u[User] -->|deposit 1.5 ETH @ $2000 = $3000| vault[Historical Maker Vault]
-  vault -->|mint up to $2000 DAI at 150% ratio| u
-  vault -->|watch collateral price| oracle[Configured price oracle]
-  oracle -->|ETH price falls| liq{CR below 150%?}
-  liq -->|yes| sell[Liquidate: sell collateral to repay DAI]
-  liq -->|no| ok[Position safe]
-`}
+<SketchDiagram
+  src="/static/images/stablecoins/collateral.svg"
+  alt="Collateral value and the liquidation threshold"
+  width={960}
+  height={740}
 />
 
 ### Price stability mechanisms
@@ -209,14 +191,11 @@ The mechanism:
 - If the stablecoin trades above \$1.00, users can burn \$1.00 of the volatile token to mint one stablecoin unit with a \$1 target. The minted stablecoin is then sold for profit, expanding supply and pushing the price back to \$1.00.
 - If the stablecoin trades below \$1.00, users can burn one stablecoin unit (target value \$1) to receive \$1 worth of the volatile token at the protocol's quoted rate. The burned stablecoin contracts supply, while the minted volatile token is sold for profit, pushing the stablecoin back to \$1.00.
 
-<Mermaid
-  chart={`
-flowchart TD
-  above["UST > $1.00"] -->|burn LUNA, mint UST| expand[Expand UST supply]
-  below["UST < $1.00"] -->|burn UST, mint LUNA| contract[Contract UST supply]
-  expand -->|sell UST on market| peg1[Price → $1.00]
-  contract -->|LUNA supply increases| peg2[UST price → $1.00]
-`}
+<SketchDiagram
+  src="/static/images/stablecoins/peg-mechanism.svg"
+  alt="Intended algorithmic peg adjustments above and below one dollar"
+  width={960}
+  height={592}
 />
 
 ## The ust/luna collapse
@@ -225,19 +204,11 @@ Terra's UST and LUNA were the most prominent algorithmic stablecoin pair. At pea
 
 In May 2022, a large holder began selling UST in size. The price fell below \$1.00. To restore the peg, holders burned UST to mint LUNA. As the LUNA supply rapidly inflated, its price fell. This triggered more panic selling of both UST and LUNA — the reflexive death spiral.
 
-<Mermaid
-  chart={`
-flowchart TD
-  sell[Large UST sell pressure] --> depeg[UST falls below \$1.00]
-  depeg --> burn[Arbitrageurs burn UST, mint LUNA]
-  burn --> inflate[LUNA supply inflates]
-  inflate --> lunafall[LUNA price falls]
-  lunafall --> panic[Market loses confidence in backing]
-  panic --> sell
-  style depeg fill:#dc2626,color:#fff
-  style panic fill:#dc2626,color:#fff
-  style lunafall fill:#dc2626,color:#fff
-`}
+<SketchDiagram
+  src="/static/images/stablecoins/death-spiral.svg"
+  alt="The circular UST–LUNA death spiral"
+  width={960}
+  height={830}
 />
 
 UST lost its dollar peg in May 2022 while LUNA supply expanded and its market price collapsed. For a primary account of the issuer's representations and the subsequent enforcement findings, see the [SEC's Terraform Labs case summary](https://www.sec.gov/newsroom/press-releases/2024-73). Do not treat a single unsourced market-value estimate or time window as a complete account of the losses.
