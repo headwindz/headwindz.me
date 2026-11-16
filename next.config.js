@@ -103,6 +103,10 @@ module.exports = () => {
       ]
     },
     webpack: (config, options) => {
+      if (options.dev) {
+        const { codeInspectorPlugin } = require('code-inspector-plugin')
+        config.plugins.push(codeInspectorPlugin({ bundler: 'webpack', hotKeys: ['altKey'] }))
+      }
       config.module.rules.push({
         test: /\.svg$/,
         use: ['@svgr/webpack'],

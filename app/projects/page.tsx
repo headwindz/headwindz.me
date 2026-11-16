@@ -1,3 +1,4 @@
+import HomeCommand from '@/components/HomeCommand'
 import projectsData from '@/data/projectsData'
 import Card from '@/components/ProjectCard'
 import { genPageMetadata } from 'app/seo'
@@ -26,6 +27,7 @@ export default function Projects() {
           ))}
         </div>
       </div>
+      <HomeCommand />
     </div>
   )
 }

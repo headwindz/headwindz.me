@@ -1,5 +1,6 @@
 'use client'
 
+import HomeCommand from '@/components/HomeCommand'
 import { usePathname, useRouter } from 'next/navigation'
 import { slug } from 'github-slugger'
 import { formatDate } from 'pliny/utils/formatDate'
@@ -145,6 +146,7 @@ export default function ListLayoutWithTags({
             {pagination && pagination.totalPages > 1 && (
               <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} />
             )}
+            <HomeCommand />
           </div>
         </div>
       </div>

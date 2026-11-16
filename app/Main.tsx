@@ -1,7 +1,6 @@
 import Link from '@/components/Link'
 import type { ReactNode } from 'react'
 import ArticlePreview from '@/components/ArticlePreview'
-import AgentLoop from '@/components/AgentLoop'
 import HomeProjects from '@/components/HomeProjects'
 import siteMetadata from '@/data/siteMetadata'
 import { formatDate } from 'pliny/utils/formatDate'
@@ -44,14 +43,14 @@ export default function Home({
               <p className="feature-subtitle">
                 {featured.slug.startsWith('ai-agents-and-harnesses')
                   ? 'From tool loops to reliable systems.'
-                  : 'An explanation worth spending time with.'}
+                  : featured.summary}
               </p>
 
               <Link href={`/blog/${featured.slug}`} className="notebook-text-link">
                 Read the article <ArrowUpRight size={17} aria-hidden="true" />
               </Link>
             </div>
-            <AgentLoop />
+            <ArticlePreview post={featured} />
           </article>
         )}
         <ul className="writing-list">
@@ -68,7 +67,7 @@ export default function Home({
                     <Link href={`/blog/${post.slug}`}>{post.title}</Link>
                   </h3>
                   <p className="article-summary">{post.summary}</p>
-                  <ArticlePreview slug={post.slug} />
+                  <ArticlePreview post={post} />
                   <Link
                     href={`/blog/${post.slug}`}
                     className="writing-read-link"

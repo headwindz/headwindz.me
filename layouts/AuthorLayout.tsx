@@ -14,18 +14,6 @@ export default function AuthorLayout({ children, content }: Props) {
   const { name, avatar, occupation, company, email, twitter, bluesky, linkedin, github } = content
   return (
     <div id="about" className="about-command-page home-profile">
-      <header className="about-command-heading">
-        <h1>
-          Hi, I’m Michael Zheng
-          <span className="terminal-dots" aria-hidden="true">
-            <span>.</span>
-            <span>.</span>
-            <span>.</span>
-          </span>
-          <span className="sr-only">.</span>
-        </h1>
-        <p>A full-stack engineer exploring AI agents, Web3, and the tools we build with.</p>
-      </header>
       <AboutTerminal
         identity={
           <>
@@ -33,7 +21,7 @@ export default function AuthorLayout({ children, content }: Props) {
               <Image src={avatar} alt={name} width={72} height={72} className="terminal-avatar" />
             )}
             <div>
-              <h2>{name}</h2>
+              <h1>{name}</h1>
               <p>
                 {occupation}
                 {company ? ` · ${company}` : ''}

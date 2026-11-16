@@ -581,23 +581,18 @@ input:-webkit-autofill:focus {
   color: var(--journal-ink);
 }
 .agent-drawing {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 560 / 360;
-}
-.agent-wires {
-  width: 100%;
-  height: 100%;
-  color: var(--journal-muted);
+  display: grid;
+  grid-template-columns: 1fr 2rem 1fr;
+  grid-template-rows: auto 1.5rem auto;
+  grid-template-areas: 'model right tools' 'up . down' 'evaluate left context';
+  align-items: center;
+  margin-block: 1rem;
 }
 .agent-node {
-  position: absolute;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 0.35rem;
-  width: 29%;
-  height: 15%;
   min-height: 40px;
   border: 1px solid var(--journal-rule);
   border-radius: 5px 8px 6px 9px;
@@ -615,26 +610,31 @@ input:-webkit-autofill:focus {
   border-color: var(--journal-ink);
 }
 .node-0 {
-  left: 35.5%;
-  top: 42.5%;
+  grid-area: model;
 }
 .node-1 {
-  left: 66%;
-  top: 42.5%;
+  grid-area: tools;
 }
 .node-2 {
-  left: 5%;
-  top: 42.5%;
+  grid-area: context;
 }
 .node-3 {
-  left: 35.5%;
-  top: 70%;
+  grid-area: evaluate;
 }
-.agent-repeat {
-  position: absolute;
-  top: 63%;
-  left: 56%;
-  font-size: 0.75rem;
+.arrow-0 {
+  grid-area: right;
+}
+.arrow-1 {
+  grid-area: down;
+}
+.arrow-2 {
+  grid-area: left;
+}
+.arrow-3 {
+  grid-area: up;
+}
+.loop-arrow {
+  text-align: center;
   color: var(--journal-muted);
 }
 .agent-console {
@@ -1358,9 +1358,9 @@ input:-webkit-autofill:focus {
   width: 64px;
   height: 64px;
   border-radius: 8px;
-  border: 1px solid #56665b;
+  border: 0;
 }
-.terminal-identity h2 {
+.terminal-identity h1 {
   font-size: 1.3rem;
   font-weight: 600;
   line-height: 1.4;
@@ -1589,7 +1589,7 @@ input:-webkit-autofill:focus {
     padding: 1.5rem 1rem 1rem;
     gap: 1rem;
   }
-  .terminal-identity h2 {
+  .terminal-identity h1 {
     font-size: 1.05rem;
   }
   .terminal-identity p {
@@ -1669,12 +1669,6 @@ input:-webkit-autofill:focus {
 .journal-feature > .agent-lab {
   width: min(100%, 340px);
   justify-self: center;
-}
-.agent-controls > summary {
-  cursor: pointer;
-  padding: 0.5rem 0;
-  color: var(--journal-ink);
-  font-size: 0.85rem;
 }
 .article-index summary {
   display: flex;
@@ -2639,4 +2633,141 @@ input:-webkit-autofill:focus {
   .eclipse-rays {
     transition: none;
   }
+}
+
+.writing-collection .journal-feature {
+  position: relative;
+  isolation: isolate;
+}
+.feature-copy h2 a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.journal-feature button,
+.feature-copy .notebook-text-link {
+  position: relative;
+  z-index: 1;
+}
+.terminal-status:empty {
+  display: none;
+}
+.terminal-command {
+  border: 1px solid #516557;
+  border-radius: 6px;
+  padding-inline: 0.65rem 0.25rem;
+  background: #18201d;
+}
+.terminal-command:focus-within {
+  border-color: #516557;
+  background: #202e25;
+}
+.terminal-entry {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+.terminal-entry input {
+  width: 100%;
+}
+.terminal-entry input:focus-visible {
+  outline: none;
+}
+
+.terminal-idle-caret {
+  position: absolute;
+  pointer-events: none;
+  left: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.46em;
+  height: 1em;
+  background: #c0df99;
+}
+.terminal-entry:focus-within .terminal-idle-caret {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .terminal-idle-caret {
+    animation: command-blink 1.2s step-end infinite;
+  }
+}
+@keyframes command-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.command-hints {
+  margin-top: 0.5rem;
+  color: #b1beb6;
+  font-size: 0.75rem;
+}
+.profile-terminal .terminal-entry input:focus,
+.profile-terminal .terminal-entry input:focus-visible {
+  outline: none;
+  box-shadow: none;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 #0000;
+}
+.terminal-ghost {
+  position: absolute;
+  inset: 0;
+  padding: 0.65rem 0.25rem;
+  color: #8c9d91;
+  pointer-events: none;
+  white-space: pre;
+  overflow: hidden;
+  font: inherit;
+}
+.terminal-ghost > span {
+  visibility: hidden;
+}
+.command-hints {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.6rem;
+}
+.command-hints button {
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  color: #c0df99;
+  cursor: pointer;
+}
+.command-hints button:hover {
+  background: #2e3d32;
+}
+
+.profile-terminal .terminal-command button:focus-visible {
+  outline: none;
+  box-shadow: none;
+  background: #354b39;
+}
+
+.profile-terminal .terminal-command > button {
+  align-self: stretch;
+  height: auto;
+  border: 0;
+  border-radius: 0 5px 5px 0;
+  background: transparent;
+}
+.profile-terminal .terminal-command > button:hover,
+.profile-terminal .terminal-command > button:focus-visible {
+  background: #354b39;
+}
+
+/* Keep the completion overlay and editable text on the same character grid. */
+.profile-terminal .terminal-entry {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: normal;
+}
+.profile-terminal .terminal-entry input,
+.profile-terminal .terminal-ghost {
+  font: inherit;
+  letter-spacing: inherit;
+  padding: 0.65rem 0.25rem;
+  border: 0;
 }

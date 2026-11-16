@@ -31,35 +31,6 @@ export default function AgentLoop() {
   return (
     <div className="agent-lab" aria-label="Interactive agent execution loop">
       <div className="agent-drawing">
-        <svg viewBox="0 0 560 360" className="agent-wires" aria-hidden="true">
-          <defs>
-            <marker
-              id="loop-arrow"
-              markerWidth="8"
-              markerHeight="8"
-              refX="6"
-              refY="3"
-              orient="auto"
-            >
-              <path d="M0 0 L6 3 L0 6" fill="none" stroke="currentColor" strokeWidth="1.3" />
-            </marker>
-          </defs>
-          {[
-            'M361 180H369',
-            'M450 153V80Q450 60 430 60H130Q110 60 110 80V153',
-            'M110 207V260Q110 280 130 280H198',
-            'M280 252V208',
-          ].map((d, i) => (
-            <path
-              key={i}
-              d={d}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              markerEnd="url(#loop-arrow)"
-            />
-          ))}
-        </svg>
         {steps.map(({ name, Icon }, index) => (
           <button
             key={name}
@@ -71,19 +42,20 @@ export default function AgentLoop() {
             <span>{name}</span>
           </button>
         ))}
-        <span className="agent-repeat">repeat</span>
+        {['→', '↓', '←', '↑'].map((arrow, i) => (
+          <span key={arrow} aria-hidden="true" className={`loop-arrow arrow-${i}`}>
+            {arrow}
+          </span>
+        ))}
       </div>
-      <details className="agent-controls">
-        <summary>Explore the loop</summary>
-        <div className="agent-console">
-          <p aria-live="polite">
-            <strong>{steps[active].name}.</strong> {steps[active].detail}
-          </p>
-          <button onClick={() => setActive((active + 1) % steps.length)} className="step-button">
-            Next step <ArrowRight size={16} aria-hidden="true" />
-          </button>
-        </div>
-      </details>
+      <div className="agent-console">
+        <p aria-live="polite">
+          <strong>{steps[active].name}.</strong> {steps[active].detail}
+        </p>
+        <button onClick={() => setActive((active + 1) % steps.length)} className="step-button">
+          Next step <ArrowRight size={16} aria-hidden="true" />
+        </button>
+      </div>
     </div>
   )
 }

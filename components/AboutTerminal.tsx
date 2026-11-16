@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Terminal } from 'lucide-react'
 
-const views = ['all', 'about', 'interests', 'opensource', 'help'] as const
+const views = ['about', 'interests', 'opensource'] as const
 type View = (typeof views)[number] | 'clear'
 
 export default function AboutTerminal({
@@ -13,11 +13,14 @@ export default function AboutTerminal({
   identity: ReactNode
   children: ReactNode
 }) {
+  const input = useRef<HTMLInputElement>(null)
   const [view, setView] = useState<View>('about')
   const [command, setCommand] = useState('')
-  const [message, setMessage] = useState('Showing about. Choose a section to explore more.')
+  const [message, setMessage] = useState('')
   const [history, setHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
+  const matches = [...views, 'clear'].filter((item) => item.startsWith(command.toLowerCase()))
+  const suggestion = command && matches[0] !== command.toLowerCase() ? matches[0] : undefined
   const run = (raw: string) => {
     const value = raw.trim().toLowerCase()
     if (!value) return
@@ -25,15 +28,11 @@ export default function AboutTerminal({
       setView(value as View)
       setMessage(
         value === 'clear'
-          ? 'Output cleared. Type all to restore the profile.'
-          : value === 'help'
-            ? 'Available commands are listed below.'
-            : `Showing ${value === 'all' ? 'all profile sections' : value}.`
+          ? 'Output cleared. Type about to restore the profile.'
+          : `Showing ${value}.`
       )
     } else {
-      setMessage(
-        `Unknown command: ${raw.trim()}. Try about, interests, opensource, all, help, or clear.`
-      )
+      setMessage(`Unknown command: ${raw.trim()}.`)
     }
     setHistory((previous) => [...previous.slice(-19), raw.trim()])
     setHistoryIndex(-1)
@@ -70,30 +69,9 @@ export default function AboutTerminal({
         ))}
       </nav>
       <div className="terminal-output">
-        {view === 'help' && (
-          <div className="terminal-help">
-            <h2>Available commands</h2>
-            <dl>
-              <dt>about</dt>
-              <dd>Background and the way I work.</dd>
-              <dt>interests</dt>
-              <dd>The topics I keep exploring.</dd>
-              <dt>opensource</dt>
-              <dd>Projects and open source contributions.</dd>
-              <dt>all</dt>
-              <dd>Show the complete profile.</dd>
-              <dt>clear</dt>
-              <dd>Clear the output. Use all to bring it back.</dd>
-            </dl>
-            <p>
-              Use the buttons above, or type a command below. Up and down arrows recall recent
-              commands.
-            </p>
-          </div>
-        )}
         {view === 'clear' && (
           <p className="terminal-cleared">
-            A clean slate. Type <code>all</code> to bring the profile back.
+            A clean slate. Type <code>about</code> to bring the profile back.
           </p>
         )}
         <div className="terminal-document">{children}</div>
@@ -107,37 +85,68 @@ export default function AboutTerminal({
             <span aria-hidden="true">❯</span>
             <span className="sr-only">Profile command</span>
           </label>
-          <input
-            id="profile-command"
-            value={command}
-            placeholder="Type a command, then press Enter"
-            autoComplete="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            onChange={(event) => {
-              setCommand(event.target.value)
-              setHistoryIndex(-1)
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Escape') {
-                setCommand('')
+          <div className="terminal-entry">
+            <input
+              ref={input}
+              id="profile-command"
+              value={command}
+              placeholder="Type a command"
+              aria-describedby="command-hints"
+              autoComplete="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              onChange={(event) => {
+                setCommand(event.target.value)
                 setHistoryIndex(-1)
-              }
-              if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && history.length) {
-                event.preventDefault()
-                const next =
-                  event.key === 'ArrowUp'
-                    ? Math.min(historyIndex + 1, history.length - 1)
-                    : Math.max(historyIndex - 1, -1)
-                setHistoryIndex(next)
-                setCommand(next < 0 ? '' : history[history.length - 1 - next])
-              }
-            }}
-          />
-          <span className="terminal-enter-hint" aria-hidden="true">
-            Enter ↵
-          </span>
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Tab' && !event.shiftKey && suggestion) {
+                  event.preventDefault()
+                  setCommand(suggestion)
+                }
+                if (event.key === 'Escape') {
+                  setCommand('')
+                  setHistoryIndex(-1)
+                }
+                if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && history.length) {
+                  event.preventDefault()
+                  const next =
+                    event.key === 'ArrowUp'
+                      ? Math.min(historyIndex + 1, history.length - 1)
+                      : Math.max(historyIndex - 1, -1)
+                  setHistoryIndex(next)
+                  setCommand(next < 0 ? '' : history[history.length - 1 - next])
+                }
+              }}
+            />
+            {suggestion && (
+              <span className="terminal-ghost" aria-hidden="true">
+                <span>{command}</span>
+                {suggestion.slice(command.length)}
+              </span>
+            )}
+            {!command && <i className="terminal-idle-caret" aria-hidden="true" />}
+          </div>
+          <button type="submit" aria-label="Run command">
+            ↵
+          </button>
         </form>
+        <div className="command-hints" id="command-hints">
+          <span>{suggestion ? 'Tab to complete' : 'Commands'}</span>
+          {matches.map((item) => (
+            <button
+              type="button"
+              key={item}
+              onClick={() => {
+                setCommand(item)
+                input.current?.focus()
+              }}
+            >
+              {item}
+            </button>
+          ))}
+          {!matches.length && <span>No matching command.</span>}
+        </div>
       </div>
     </section>
   )

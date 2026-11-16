@@ -1,3 +1,4 @@
+import HomeCommand from '@/components/HomeCommand'
 import Link from '@/components/Link'
 import { slug } from 'github-slugger'
 import tagData from 'app/tag-data.json'
@@ -28,6 +29,7 @@ export default async function Page() {
           </Link>
         ))}
       </div>
+      <HomeCommand />
     </div>
   )
 }
