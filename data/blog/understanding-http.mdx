@@ -3,21 +3,12 @@ title: Understanding the HTTP protocol
 date: 2024-11-15
 tags: ['HTTP', 'web', 'security', 'CORS']
 summary: Master HTTP protocol fundamentals. Learn status codes (301 vs 302, 401 vs 403 etc.), request/response headers, HTTP methods, proxy patterns and security best practices (CORS, XSS, CSRF).
+reviewed: 2026-11-17
 ---
 
 # Introduction
 
 HTTP describes request and response semantics: what a method means, how a status reports the result, and how headers control interpretation and caching. This is a reference for those decisions, followed by an overview of intermediaries and transport security. For a complete login flow, see the [authentication guide](/blog/guide-to-authentication).
-
-# Table of contents
-
-- [HTTP status codes](#http-status-codes)
-- [HTTP headers](#http-headers)
-- [HTTP methods](#http-methods)
-- [Proxy and gateway](#proxy-and-gateway)
-- [Security](#security)
-- [HTTPS and encryption](#https-and-encryption)
-- [Conclusion](#conclusion)
 
 # HTTP status codes
 
@@ -882,19 +873,11 @@ The following is a simplified full handshake using ephemeral key agreement, rath
 3. **Server authentication:** the server sends encrypted handshake messages including its certificate chain, a CertificateVerify signature, and Finished. The client checks the chain, hostname, validity, signature, and Finished value.
 4. **Client Finished:** the client completes the handshake. Application traffic uses derived symmetric traffic keys.
 
-<Mermaid
-  chart={`
-sequenceDiagram
-  participant C as Client
-  participant S as Server
-  C->>S: ClientHello and key share
-  S->>C: ServerHello and key share
-  Note over C,S: Derive handshake traffic keys
-  S->>C: EncryptedExtensions, Certificate, CertificateVerify, Finished
-  Note over C: Validate server identity and handshake
-  C->>S: Finished
-  C->>S: Protected HTTP application data
-`}
+<SketchDiagram
+  src="/static/images/understanding-http/tls-handshake.svg"
+  alt="TLS 1.3 handshake: client and server exchange key shares, derive handshake keys, authenticate the server, and exchange protected HTTP data."
+  width={960}
+  height={900}
 />
 
 The server's certificate key authenticates the handshake. It is not used to encrypt a client-generated premaster secret in TLS 1.3. That older RSA key-transport pattern was removed from the protocol. [TLS 1.3 specification](https://www.rfc-editor.org/rfc/rfc8446.html).

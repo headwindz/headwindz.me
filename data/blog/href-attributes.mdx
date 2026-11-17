@@ -3,6 +3,7 @@ title: How href attribute of the anchor element got me stuck
 tags: [web]
 date: 2019-03-06
 summary: An anchor element with an empty `href` attribute will cause the page to reload when clicked
+reviewed: 2026-11-17
 ---
 
 I used anchors for every item in a nested menu. Items with no destination reloaded the page instead of only expanding the submenu. The problem was treating a navigation element as an action control.
@@ -32,7 +33,7 @@ function MenuItem({ link, title, onClick = () => {} }) {
 
 ## Leaf menu items ✅
 
-Leaf menu items work fine as the source `{ link: '/aaa', title: 'abc'}` would be rendered as `<a href='/aaa'> abc </a>`
+Leaf menu items work fine as the source `{ link: '/aaa', title: 'abc'}` would be rendered as `<a href='/aaa'>abc</a>`
 
 ## Non-leaf menu items ❌
 

@@ -3,6 +3,7 @@ title: Demystifying third-party cookies
 date: 2026-01-03
 summary: A guide to understanding third-party cookies, their security implications, CORS requirements, and the future of cross-site tracking in modern browsers.
 tags: [web, security, cookies, privacy]
+reviewed: 2026-11-17
 ---
 
 # What are third-party cookies?
@@ -463,5 +464,3 @@ res.cookie('session', sessionId, cookieOptions)
 # Conclusion
 
 When a cookie is missing, identify whether the request is same-origin, cross-origin/same-site, or cross-site first. Then check its scope, SameSite eligibility, credentials mode, and browser storage policy. Configure CORS for script access to credentialed cross-origin responses. Changing one layer does not override the others.
-
-[MDN Set-Cookie reference](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie)

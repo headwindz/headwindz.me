@@ -3,13 +3,14 @@ title: Understanding client-side routing in single page applications
 tags: [react, nextjs, routing]
 date: 2024-05-15
 summary: A comprehensive guide to client-side routing, covering the differences between hash-based and html5 history api routing, and how to configure them in modern web applications.
+reviewed: 2026-11-17
 ---
 
 # What is client-side routing?
 
 Client-side routing updates an application's view and URL without replacing the whole document. A router can fetch additional data or code as needed. The transition cost depends on those requests and the work required to render the next view.
 
-## How next.js `Link` component works
+# How next.js `Link` component works
 
 In next.js, the `Link` component enables client-side navigation between pages:
 
@@ -33,7 +34,7 @@ For an internal client navigation, Next.js updates the route without replacing t
 - Preserved state in shared layouts and components that remain mounted; route components can still reset
 - Better user experience
 
-## How to verify client-side navigation
+# How to verify client-side navigation
 
 There's a simple way to verify that client-side navigation is working:
 
@@ -49,16 +50,16 @@ There's a simple way to verify that client-side navigation is working:
 
 If the background color persists, it confirms that the browser is not performing full page reloads and client-side navigation is indeed working!
 
-### Additional validation methods
+## Additional validation methods
 
 - **Network Tab**: Watch the Network tab in dev tools. With client-side routing, you'll see XHR/Fetch requests for data instead of full HTML document requests
 - **Loading Indicator**: The browser's native loading spinner in the address bar won't appear during client-side navigation
 
-## Hash-based routing vs html5 history api
+# Hash-based routing vs html5 history api
 
 There are two primary approaches to implementing client-side routing:
 
-### Hash-based routing
+## Hash-based routing
 
 Hash-based routing uses the URL fragment identifier (the `#` symbol) to manage routes:
 
@@ -99,9 +100,7 @@ window.location.hash = '#/about'
 - Not ideal for SEO (though modern search engines can handle it)
 - Cannot leverage the full browser history API
 
-[Try hash routing demo](https://codesandbox.io/s/hashhistory-vwk9n)
-
-### Html5 history api routing
+## Html5 history api routing
 
 The history api provides methods to manipulate the browser's session history without reloading the page:
 
@@ -136,13 +135,11 @@ window.addEventListener('popstate', (event) => {
 - Requires server configuration to handle direct URL access
 - Only works in modern browsers (though this is rarely an issue today)
 
-[Try history api demo](https://codesandbox.io/s/statehistory-ewj5j)
-
-## Server configuration for history api routing
+# Server configuration for history api routing
 
 For a static, client-rendered SPA, configure the server to fall back to `index.html` for application routes so direct visits can reach the client router. The examples below describe that deployment model. A server-rendered framework such as Next.js handles route requests through its own server or supported hosting setup. Do not replace those handlers with a blanket SPA fallback.
 
-### Webpack dev server for local development settings
+## Webpack dev server for local development settings
 
 ```js
 module.exports = {
@@ -160,7 +157,7 @@ module.exports = {
 
 The `historyApiFallback: true` option tells the dev server to serve `index.html` for any 404 responses.
 
-### Nginx configuration for production settings
+## Nginx configuration for production settings
 
 ```nginx
 server {
@@ -177,11 +174,11 @@ server {
 
 The `try_files` directive attempts to serve the requested file, then the directory, and finally falls back to `index.html` if neither exists.
 
-## Conclusion
+# Conclusion
 
 Client-side routing is fundamental to modern web applications, providing fast, seamless navigation experiences. While hash-based routing is simpler and works everywhere, the html5 history api offers cleaner urls and better SEO at the cost of requiring proper server configuration. When building with frameworks like next.js, react router, or vue router, much of this complexity is abstracted away—but understanding the underlying mechanisms helps you debug issues and make informed architectural decisions.
 
-## References
+# References
 
 - [MDN: SPA](https://developer.mozilla.org/en-US/docs/Glossary/SPA)
 - [MDN: History.pushState()](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)

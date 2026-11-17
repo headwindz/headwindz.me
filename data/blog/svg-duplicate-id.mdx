@@ -3,13 +3,14 @@ title: How to fix duplicate svg id collisions in React
 tags: [web, svg, react]
 date: 2025-10-12
 summary: Prevent duplicate SVG IDs in React with useId, and learn when simplifying an icon can remove the need for IDs.
+reviewed: 2026-11-17
 ---
 
 When building modern web applications, you'll often import SVG files as React components for icons, illustrations, or graphics. However, a common but subtle issue arises when using multiple instances of SVGs that contain same internal id: **duplicate id collisions**. This problem can cause visual glitches, broken gradients, incorrect clip paths, and accessibility issues. In this post, I'll explain what causes these collisions and show you multiple ways to fix them.
 
 # The problem
 
-Svg files often use internal id to reference elements like gradients, masks, filters, and clip paths. According to the HTML specification, **id must be unique within a document**. When you render the same svg multiple times on a page, or use different svgs that happen to have the same id, you violate this requirement. The browser can only reference the first element with that id, causing subsequent references to fail or behave unpredictably.
+Svg files often use internal id to reference elements like gradients, masks, filters, and clip paths. According to the HTML specification, **id must be unique within a document**. When you render the same svg multiple times on a page, or use different svgs that happen to have the same `id`, you violate this requirement. The browser can only reference the first element with that id, causing subsequent references to fail or behave unpredictably.
 
 ## Example: a broken svg
 
@@ -17,11 +18,11 @@ Svg files often use internal id to reference elements like gradients, masks, fil
 
 **Why does the second icon disappear when the first icon is hidden?**
 
-This demonstrates a critical aspect of the duplicate id problem. Both icons use `id="gradient"` for their gradient definitions. Since id must be unique, the browser only recognizes the first occurrence. When the second icon references `fill="url(#gradient)"`, it's actually pointing to the first icon's gradient—not its own.
+This demonstrates a critical aspect of the duplicate id problem. Both icons use `id="gradient"` for their gradient definitions. Since id must be unique, the browser only recognizes the first occurrence. When the second icon references `fill="url(#gradient)"`, it's actually pointing to the first icon's gradient — not its own.
 
 When you hide the first icon with `display: none`, its entire SVG subtree (including the `<linearGradient id="gradient">` definition) is removed from the rendering tree. The `url(#gradient)` reference in the second icon now points to nothing, causing it to lose its fill and appear invisible. This is why you'll see the second icon vanish even though it's still visible in the DOM.
 
-**Key takeaway**: Elements with duplicate IDs don't get their own independent definitions—they all share the same reference to whichever element appears first in the DOM.
+**Key takeaway**: Elements with duplicate IDs don't get their own independent definitions. They all share the same reference to whichever element appears first in the DOM.
 
 ## Real-world impact
 
@@ -35,29 +36,6 @@ When you hide the first icon with `display: none`, its entire SVG subtree (inclu
 ## Solution 1: runtime id generation with custom hook
 
 If you can't modify your build configuration or need more control, you can create id at runtime using a custom React hook:
-
-```tsx
-import { useId } from 'react'
-
-function IconWithGradient() {
-  const id = useId() // Generates a unique id like ":r1:"
-  const gradientId = `gradient-${id}`
-
-  return (
-    <svg viewBox="0 0 100 100">
-      <defs>
-        <linearGradient id={gradientId}>
-          <stop offset="0%" stopColor="blue" />
-          <stop offset="100%" stopColor="red" />
-        </linearGradient>
-      </defs>
-      <circle cx="50" cy="50" r="40" fill={`url(#${gradientId})`} />
-    </svg>
-  )
-}
-```
-
-For a controlled client-only React 17 application, a counter can distinguish instances within one module. It does not provide stable server/client IDs, and independently bundled copies can have separate counters. Do not use this fallback for server rendering or hydration; prefer an explicit ID supplied by the caller in that setting. [React useId](https://react.dev/reference/react/useId) handles matching IDs when the server and client trees agree.
 
 ```tsx
 import { useRef } from 'react'
@@ -90,6 +68,29 @@ function IconWithGradient() {
   )
 }
 ```
+
+```tsx
+import { useId } from 'react'
+
+function IconWithGradient() {
+  const id = useId() // Generates a unique id like ":r1:"
+  const gradientId = `gradient-${id}`
+
+  return (
+    <svg viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id={gradientId}>
+          <stop offset="0%" stopColor="blue" />
+          <stop offset="100%" stopColor="red" />
+        </linearGradient>
+      </defs>
+      <circle cx="50" cy="50" r="40" fill={`url(#${gradientId})`} />
+    </svg>
+  )
+}
+```
+
+For a controlled client-only React 17 application, a counter can distinguish instances within one module. It does not provide stable server/client IDs, and independently bundled copies can have separate counters. Do not use this fallback for server rendering or hydration. Prefer an explicit ID supplied by the caller in that setting. [React useId](https://react.dev/reference/react/useId) handles matching IDs when the server and client trees agree.
 
 ## Solution 2: inline svgs without ids
 
@@ -130,8 +131,3 @@ If a solid fill meets the design requirement, removing the gradient also removes
 SVG IDs belong to the document, so each rendered icon needs unique IDs for its definitions and matching references. Use `useId` in reusable React components to keep those references tied to the correct instance. If the design works without gradients or filters, simplifying the SVG can remove the need for IDs altogether.
 
 Test several instances together, including hidden-icon states and server rendering where supported. A single icon can look correct while duplicate IDs break another instance elsewhere on the page.
-
-# References
-
-- [SVGR Issue Discussion #322](https://github.com/gregberge/svgr/issues/322)
-- [React useId Documentation](https://react.dev/reference/react/useId)

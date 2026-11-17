@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1530" viewBox="0 0 1000 1530" role="img" aria-labelledby="title desc">
+<title id="title">Service worker lifecycle</title><desc id="desc">Five lifecycle stages, their registration slots, install and activate events, waitUntil, skipWaiting, clients.claim, and replacement. Arrows show the normal successful path; failures can also lead to redundant.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 L8 5 L1 9" fill="none" stroke="#475569" stroke-width="1.8"/></marker></defs>
+<style>text{font-family:'Comic Sans MS','Chalkboard SE',cursive;fill:#26374a;font-size:23px}.small{font-size:19px}.heading{font-size:29px;font-weight:bold}.line{fill:none;stroke:#475569;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}</style>
+<text x="500" y="43" text-anchor="middle" style="font-size:35px;font-weight:bold">Service worker lifecycle</text>
+<text x="500" y="78" text-anchor="middle">One worker’s states · registration slots shown at the right</text>
+<path d="M44 117 Q42 105 58 106 L943 104 Q957 105 956 121 L958 341 Q958 356 941 355 L57 357 Q42 355 44 341 Z" fill="#e5effb" stroke="#527fa5" stroke-width="2.5"/>
+<text x="67" y="147" class="heading">1. Installing</text>
+<text x="651" y="129" class="small">Registration slots</text>
+<rect x="650" y="139" width="90" height="35" rx="8" fill="#527fa5" stroke="#527fa5" stroke-dasharray="none"/>
+<text x="695" y="163" text-anchor="middle" style="font-size:17px;fill:#fff">installing</text>
+<rect x="746" y="139" width="90" height="35" rx="8" fill="#fff" stroke="#527fa5" stroke-dasharray="4 4"/>
+<text x="791" y="163" text-anchor="middle" style="font-size:17px;fill:#526174">waiting</text>
+<rect x="842" y="139" width="90" height="35" rx="8" fill="#fff" stroke="#527fa5" stroke-dasharray="4 4"/>
+<text x="887" y="163" text-anchor="middle" style="font-size:17px;fill:#526174">active</text>
+<text x="68" y="201">Registration or an update starts worker setup.</text>
+<text x="68" y="228">Prepare worker-specific resources, such as offline caches.</text>
+<text x="68" y="255">install event → event.waitUntil(promise) extends installation</text>
+<text x="68" y="282">until the supplied work completes successfully.</text>
+<text x="68" y="309">self.skipWaiting() requests activation after installation,</text>
+<text x="68" y="336">without waiting for the old worker’s controlled clients to close.</text>
+<path d="M500 360 Q497 375 500 388" class="line" marker-end="url(#arrow)"/>
+<path d="M44 413 Q42 401 58 402 L943 400 Q957 401 956 417 L958 592 Q958 607 941 606 L57 608 Q42 606 44 592 Z" fill="#eee8fa" stroke="#8263a6" stroke-width="2.5"/>
+<text x="67" y="443" class="heading">2. Installed / waiting</text>
+<text x="651" y="425" class="small">Registration slots</text>
+<rect x="650" y="435" width="90" height="35" rx="8" fill="#fff" stroke="#8263a6" stroke-dasharray="4 4"/>
+<text x="695" y="459" text-anchor="middle" style="font-size:17px;fill:#526174">installing</text>
+<rect x="746" y="435" width="90" height="35" rx="8" fill="#8263a6" stroke="#8263a6" stroke-dasharray="none"/>
+<text x="791" y="459" text-anchor="middle" style="font-size:17px;fill:#fff">waiting</text>
+<rect x="842" y="435" width="90" height="35" rx="8" fill="#fff" stroke="#8263a6" stroke-dasharray="4 4"/>
+<text x="887" y="459" text-anchor="middle" style="font-size:17px;fill:#526174">active</text>
+<text x="68" y="497">Setup has finished successfully.</text>
+<text x="68" y="524">If an older worker controls clients, this worker normally waits</text>
+<text x="68" y="551">until those clients close. First installs can proceed directly.</text>
+<text x="68" y="578">skipWaiting() lets the new worker bypass that wait.</text>
+<path d="M500 611 Q497 626 500 639" class="line" marker-end="url(#arrow)"/>
+<path d="M44 664 Q42 652 58 653 L943 651 Q957 652 956 668 L958 888 Q958 903 941 902 L57 904 Q42 902 44 888 Z" fill="#fff0dc" stroke="#ad7837" stroke-width="2.5"/>
+<text x="67" y="694" class="heading">3. Activating</text>
+<text x="651" y="676" class="small">Registration slots</text>
+<rect x="650" y="686" width="90" height="35" rx="8" fill="#fff" stroke="#ad7837" stroke-dasharray="4 4"/>
+<text x="695" y="710" text-anchor="middle" style="font-size:17px;fill:#526174">installing</text>
+<rect x="746" y="686" width="90" height="35" rx="8" fill="#fff" stroke="#ad7837" stroke-dasharray="4 4"/>
+<text x="791" y="710" text-anchor="middle" style="font-size:17px;fill:#526174">waiting</text>
+<rect x="842" y="686" width="90" height="35" rx="8" fill="#ad7837" stroke="#ad7837" stroke-dasharray="none"/>
+<text x="887" y="710" text-anchor="middle" style="font-size:17px;fill:#fff">active</text>
+<text x="68" y="748">Normally begins after the old worker has no controlled clients;</text>
+<text x="68" y="775">skipWaiting() can allow activation while old clients remain.</text>
+<text x="68" y="802">Finish setup and remove resources such as old caches.</text>
+<text x="68" y="829">activate event → event.waitUntil(promise) extends activation.</text>
+<text x="68" y="856">self.clients.claim() in the activate handler takes control of</text>
+<text x="68" y="883">eligible open clients in scope without reloading them.</text>
+<path d="M500 907 Q497 922 500 935" class="line" marker-end="url(#arrow)"/>
+<path d="M44 960 Q42 948 58 949 L943 947 Q957 948 956 964 L958 1139 Q958 1154 941 1153 L57 1155 Q42 1153 44 1139 Z" fill="#e4f1e7" stroke="#578361" stroke-width="2.5"/>
+<text x="67" y="990" class="heading">4. Activated</text>
+<text x="651" y="972" class="small">Registration slots</text>
+<rect x="650" y="982" width="90" height="35" rx="8" fill="#fff" stroke="#578361" stroke-dasharray="4 4"/>
+<text x="695" y="1006" text-anchor="middle" style="font-size:17px;fill:#526174">installing</text>
+<rect x="746" y="982" width="90" height="35" rx="8" fill="#fff" stroke="#578361" stroke-dasharray="4 4"/>
+<text x="791" y="1006" text-anchor="middle" style="font-size:17px;fill:#526174">waiting</text>
+<rect x="842" y="982" width="90" height="35" rx="8" fill="#578361" stroke="#578361" stroke-dasharray="none"/>
+<text x="887" y="1006" text-anchor="middle" style="font-size:17px;fill:#fff">active</text>
+<text x="68" y="1044">Ready to handle functional events, including fetch and push.</text>
+<text x="68" y="1071">Controlled clients send their fetch events to this worker.</text>
+<text x="68" y="1098">Newly activated does not automatically mean every open page</text>
+<text x="68" y="1125">is controlled; clients.claim() can take over eligible pages.</text>
+<path d="M500 1158 Q497 1173 500 1186" class="line" marker-end="url(#arrow)"/>
+<path d="M44 1211 Q42 1199 58 1200 L943 1198 Q957 1199 956 1215 L958 1390 Q958 1405 941 1404 L57 1406 Q42 1404 44 1390 Z" fill="#f4e6e6" stroke="#ad7373" stroke-width="2.5"/>
+<text x="67" y="1241" class="heading">5. Redundant</text>
+<text x="651" y="1223" class="small">Registration slots</text>
+<rect x="650" y="1233" width="90" height="35" rx="8" fill="#fff" stroke="#ad7373" stroke-dasharray="4 4"/>
+<text x="695" y="1257" text-anchor="middle" style="font-size:17px;fill:#526174">installing</text>
+<rect x="746" y="1233" width="90" height="35" rx="8" fill="#fff" stroke="#ad7373" stroke-dasharray="4 4"/>
+<text x="791" y="1257" text-anchor="middle" style="font-size:17px;fill:#526174">waiting</text>
+<rect x="842" y="1233" width="90" height="35" rx="8" fill="#fff" stroke="#ad7373" stroke-dasharray="4 4"/>
+<text x="887" y="1257" text-anchor="middle" style="font-size:17px;fill:#526174">active</text>
+<text x="68" y="1295">This worker has been replaced by another worker, or failed</text>
+<text x="68" y="1322">during installation. It no longer handles functional events.</text>
+<text x="68" y="1349">It occupies none of this registration’s three worker slots.</text>
+<text x="500" y="1500" text-anchor="middle" class="small">Normal successful path shown. Installation failure can also lead to redundant.</text></svg>

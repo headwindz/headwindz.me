@@ -9,7 +9,7 @@ export default function HomeProjects() {
   return (
     <section className="home-projects" aria-labelledby="home-projects-title">
       <div className="section-heading">
-        <h2 id="home-projects-title">Things I’ve been making</h2>
+        <h2 id="home-projects-title">Projects</h2>
         <Link href="/projects">
           All projects <ArrowUpRight size={16} aria-hidden="true" />
         </Link>

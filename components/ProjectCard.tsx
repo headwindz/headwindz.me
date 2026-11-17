@@ -10,8 +10,8 @@ const Card = ({ title, description, imgSrc, href }) => {
   const [isImageOpen, setIsImageOpen] = useState(false)
 
   return (
-    <div className="flex flex-col items-start lg:flex-row lg:items-start">
-      <div className="relative w-full lg:w-2/5">
+    <div className="flex flex-col items-start md:flex-row">
+      <div className="relative w-full md:w-2/5">
         {imgSrc && (
           <>
             <button
@@ -57,8 +57,8 @@ const Card = ({ title, description, imgSrc, href }) => {
           </>
         )}
       </div>
-      <div className="flex min-w-0 flex-1 flex-col justify-between space-y-4 pt-6 lg:pt-0 lg:pl-8">
-        <div className="space-y-4">
+      <div className="flex min-w-0 flex-1 flex-col justify-between space-y-3 pt-4 md:pt-0 md:pl-6">
+        <div className="space-y-2">
           <h2 className="project-title text-gray-900 dark:text-gray-100">
             {href ? (
               <Link href={href} aria-label={`Link to ${title}`}>

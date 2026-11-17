@@ -8,6 +8,7 @@ import TableWrapper from './TableWrapper'
 import LiveDemo from './LiveDemo'
 import Mermaid from './Mermaid'
 import SketchDiagram from './SketchDiagram'
+import Web3Explainer from './demos/introduction-to-web3/Web3Explainer'
 
 export const components: MDXComponents = {
   Image,
@@ -20,4 +21,5 @@ export const components: MDXComponents = {
   LiveDemo,
   Mermaid,
   SketchDiagram,
+  Web3Explainer,
 }

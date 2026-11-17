@@ -1,8 +1,10 @@
 ---
 title: 'Building enterprise design systems: from design patterns to frontend architecture'
 date: 2026-10-18
+featured: true
 tags: ['architecture', 'react', 'css', 'web']
 summary: 'How to build and maintain an enterprise design system: shared patterns, component APIs, tokens, themes, documentation, and upgrades across product teams.'
+reviewed: 2026-11-17
 ---
 
 Suppose three product teams need a date picker and start with the same library. A few months later, one has added date ranges, another has patched keyboard navigation, and the third has copied the component to change its styling. An upgrade now means checking three implementations and preserving each team's changes.
@@ -110,14 +112,11 @@ Tabs illustrate the distinction. Their functional pattern defines selection, key
 
 In code, behavior and appearance meet in a styled component, which the product composes into a screen:
 
-<Mermaid
-  chart={`
-flowchart TD
-  behavior["Behavior: state, keyboard, focus"] --> component["Styled component"]
-  theme["Appearance: tokens and visual states"] --> component
-  component --> page["Product screen"]
-  product["Composition: content and business rules"] --> page
-`}
+<SketchDiagram
+  src="/static/images/building-enterprise-design-systems/component-layers.svg"
+  alt="Behavior and appearance combine in a styled component. Product content and business rules combine with that component to form the screen."
+  width={760}
+  height={660}
 />
 
 Behavior and appearance meet in the shared component; task-specific content and business rules stay with the product.
@@ -186,16 +185,11 @@ A component API defines who owns state, which parts consumers can arrange, and h
 
 In controlled mode, a form control reads the parent's `value` prop and reports user changes through `onChange`. In uncontrolled mode, it stores the value internally, initialized from `defaultValue`:
 
-<Mermaid
-  chart={`
-flowchart TD
-  action["User changes the selection"] --> mode{"Who owns the value?"}
-  mode -->|Controlled| notify["Component calls onChange"]
-  notify --> parent["Parent updates value"]
-  parent --> render["Component renders the new value"]
-  mode -->|Uncontrolled| local["Component updates internal state"]
-  local --> render
-`}
+<SketchDiagram
+  src="/static/images/building-enterprise-design-systems/state-ownership.svg"
+  alt="A user change calls onChange in controlled mode; the parent decides whether to provide a new value. In uncontrolled mode the component updates internal state, initialized from defaultValue. Both can report changes."
+  width={760}
+  height={740}
 />
 
 In controlled mode, the parent decides whether to update the value. In uncontrolled mode, the component stores the new value itself.
@@ -242,15 +236,11 @@ Ask for concrete usage examples and try expressing them with existing parts. Ind
 
 Choose one authoritative token source and generate downstream formats. A small web-only system can begin with CSS variables. When several tools or platforms need the same values, a token build makes the transformations explicit:
 
-<Mermaid
-  chart={`
-flowchart TD
-  source["Versioned token source"] --> validate["Validate types and resolve aliases"]
-  validate --> build["Style Dictionary transforms"]
-  build --> css["CSS variables for web styles"]
-  build --> js["JavaScript values and TypeScript declarations"]
-  build --> native["Platform-specific outputs when needed"]
-`}
+<SketchDiagram
+  src="/static/images/building-enterprise-design-systems/token-build.svg"
+  alt="Versioned tokens are validated and aliases resolved before Style Dictionary transforms generate CSS variables, JavaScript values and TypeScript declarations, and platform-specific outputs when needed."
+  width={760}
+  height={760}
 />
 
 The same token source can produce several outputs; each platform receives the format it needs.
@@ -284,15 +274,11 @@ Document the supported combinations, such as a brand in light and dark modes. De
 
 The palette provides raw values, the semantic layer chooses a value for each theme, and the component consumes that role. Here is the path for a primary button:
 
-<Mermaid
-  chart={`
-flowchart TD
-  palette["Palette: blue 600 / blue 300"] --> light["Light theme: action background = blue 600"]
-  palette --> dark["Dark theme: action background = blue 300"]
-  light --> alias["Component alias: button background = action background"]
-  dark --> alias
-  alias --> button["Button style uses the component alias"]
-`}
+<SketchDiagram
+  src="/static/images/building-enterprise-design-systems/theme-alias.svg"
+  alt="The palette offers blue 600 and blue 300. Light and dark themes map action background to different palette values. The button background aliases action background, so the button CSS rule stays the same."
+  width={760}
+  height={665}
 />
 
 Light and dark themes change the semantic mapping while the button keeps the same CSS rule.
@@ -320,18 +306,11 @@ Declare the component alias at each theme boundary. If `--button-bg` were declar
 
 A React portal renders content at a different location in the document's element tree, or DOM. CSS inheritance follows that tree, not the React component hierarchy. A dialog opened from a dark panel can therefore inherit light colors if its portal renders under the light page body:
 
-<Mermaid
-  chart={`
-flowchart TD
-  body["Page body: light theme"] --> panel["Panel: dark theme"]
-  panel --> trigger["Dialog trigger"]
-  panel --> host["Portal host inside panel"]
-  host --> correct["Dialog inherits dark tokens"]
-  body --> outside["Default body-level portal"]
-  outside --> mismatch["Dialog inherits light tokens"]
-  style correct fill:#166534,color:#fff
-  style mismatch fill:#9f1239,color:#fff
-`}
+<SketchDiagram
+  src="/static/images/building-enterprise-design-systems/portal-inheritance.svg"
+  alt="A light page contains a dark panel. A dialog portal hosted inside that panel inherits dark tokens. The same dialog hosted directly under the page body inherits light tokens instead."
+  width={760}
+  height={790}
 />
 
 The two branches show alternative DOM locations for the same dialog. Its rendered location determines which theme it inherits.
@@ -430,17 +409,11 @@ For example, suppose a library moves a button's danger styling from `type` to `s
 
 A codemod rewrites source code automatically. To make this change safely, it must check where `Button` was imported from and whether a local variable shadows that name. Matching the JSX name alone could change an unrelated component:
 
-<Mermaid
-  chart={`
-flowchart TD
-  find["Find a Button usage"] --> binding{"Imported from the intended package?"}
-  binding -->|No| unchanged["Leave unchanged"]
-  binding -->|Yes| safe{"Literal danger value, no conflicts or spreads?"}
-  safe -->|Yes| rewrite["Rename type to status"]
-  safe -->|No| review["Report for manual review"]
-  rewrite --> verify["Review diff and run consumer checks"]
-  review --> verify
-`}
+<SketchDiagram
+  src="/static/images/building-enterprise-design-systems/safe-codemod.svg"
+  alt='Resolve the Button import binding, including aliases and local shadowing. Leave unrelated components unchanged. Rename a literal type="danger" only when no spreads or conflicting props exist; report other cases for manual review. Review the diff and run consumer checks.'
+  width={760}
+  height={940}
 />
 
 An import alias should still match; a local variable with the same name should not. Skip boolean attributes, expression values, unsupported namespace imports, spreads, and existing `status` props unless the transform explicitly handles them. Use fixtures for each case, and verify that running the migration twice produces no further changes.

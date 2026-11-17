@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function AuthorLayout({ children, content }: Props) {
-  const { name, avatar, occupation, company, email, twitter, bluesky, linkedin, github } = content
+  const { name, avatar, occupation, company, email, twitter, linkedin, github } = content
   return (
     <div id="about" className="about-command-page home-profile">
       <AboutTerminal
@@ -28,11 +28,10 @@ export default function AuthorLayout({ children, content }: Props) {
               </p>
             </div>
             <div className="terminal-socials">
-              <SocialIcon kind="github" href={github || siteMetadata.github} />
+              <SocialIcon kind="github" size={6} href={github || siteMetadata.github} />
               <SocialIcon kind="mail" href={email ? `mailto:${email}` : undefined} />
               <SocialIcon kind="linkedin" href={linkedin} />
-              <SocialIcon kind="x" href={twitter || siteMetadata.x} />
-              <SocialIcon kind="bluesky" href={bluesky} />
+              <SocialIcon kind="x" size={5.5} href={twitter || siteMetadata.x} />
             </div>
           </>
         }

@@ -9,15 +9,6 @@ A login flow needs to answer several different questions: how the user proves id
 
 This guide explains those boundaries, then follows a server-managed browser login, a token lifecycle, federated sign-in, and cross-device confirmation. Code examples isolate the mechanism being discussed. Application-specific database and identity-provider helpers must implement the contracts stated beside them.
 
-# Table of contents
-
-- [Cookie + session authentication](#cookie--session-authentication)
-- [Token-based authentication (JWT)](#token-based-authentication-jwt)
-- [Federated sign-in with OAuth and OpenID Connect](#federated-sign-in-with-oauth-and-openid-connect)
-- [Single Sign-On (SSO)](#single-sign-on-sso)
-- [QR code authentication](#qr-code-authentication)
-- [Comparison & best practices](#comparison--best-practices)
-
 ## Cookie + session authentication
 
 ### Understanding HTTP statelessness

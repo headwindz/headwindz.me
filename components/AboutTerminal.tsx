@@ -4,7 +4,7 @@ import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Terminal } from 'lucide-react'
 
 const views = ['about', 'interests', 'opensource'] as const
-type View = (typeof views)[number] | 'clear'
+type View = (typeof views)[number]
 
 export default function AboutTerminal({
   identity,
@@ -19,18 +19,14 @@ export default function AboutTerminal({
   const [message, setMessage] = useState('')
   const [history, setHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
-  const matches = [...views, 'clear'].filter((item) => item.startsWith(command.toLowerCase()))
+  const matches = views.filter((item) => item.startsWith(command.toLowerCase()))
   const suggestion = command && matches[0] !== command.toLowerCase() ? matches[0] : undefined
   const run = (raw: string) => {
     const value = raw.trim().toLowerCase()
     if (!value) return
-    if (views.includes(value as (typeof views)[number]) || value === 'clear') {
+    if (views.includes(value as View)) {
       setView(value as View)
-      setMessage(
-        value === 'clear'
-          ? 'Output cleared. Type about to restore the profile.'
-          : `Showing ${value}.`
-      )
+      setMessage(`Showing ${value}.`)
     } else {
       setMessage(`Unknown command: ${raw.trim()}.`)
     }
@@ -69,11 +65,6 @@ export default function AboutTerminal({
         ))}
       </nav>
       <div className="terminal-output">
-        {view === 'clear' && (
-          <p className="terminal-cleared">
-            A clean slate. Type <code>about</code> to bring the profile back.
-          </p>
-        )}
         <div className="terminal-document">{children}</div>
       </div>
       <div className="terminal-input-area">

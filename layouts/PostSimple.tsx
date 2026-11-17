@@ -57,7 +57,7 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
           {prev && (
             <Link href={`/${prev.path}`}>
               <span>
-                <ArrowLeft size={16} aria-hidden="true" /> Previous article
+                <ArrowLeft size={16} aria-hidden="true" /> Previous Post
               </span>
               <strong>{prev.title}</strong>
             </Link>
@@ -65,7 +65,7 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
           {next && (
             <Link href={`/${next.path}`}>
               <span>
-                Next article <ArrowRight size={16} aria-hidden="true" />
+                Next Post <ArrowRight size={16} aria-hidden="true" />
               </span>
               <strong>{next.title}</strong>
             </Link>

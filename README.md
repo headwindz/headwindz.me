@@ -74,6 +74,8 @@ Only `title` and `date` are required by the schema; include tags and a summary f
 
 Preview posts with `pnpm dev`. Set `draft: true` in frontmatter while writing, then remove it or set it to `false` when the post is ready to publish.
 
+Set `featured: true` in a post’s frontmatter to show it on the homepage. Featured posts appear newest first.
+
 Use kebab-case filenames, concise sentences, and sentence case headings, preserving proper names and acronyms. Register shared MDX components in `components/MDXComponents.tsx`. Contentlayer generates post data, tag counts, and the local search index.
 
 ## Configuration

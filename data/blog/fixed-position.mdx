@@ -3,6 +3,7 @@ title: CSS position fixed
 tags: [web, css]
 date: 2021-12-15
 summary: CSS fixed position is not always relative to viewport. It becomes relative to the closest ancestor with transform, perspective, filter, will-change, contain, or backdrop-filter properties set.
+reviewed: 2026-11-17
 ---
 
 # `fixed` position
@@ -36,7 +37,7 @@ A containing block and a stacking context are different concepts. Some propertie
 
 ## Practical use cases
 
-### 1. Containing third-party components
+### 1. Positioning third-party components within a container
 
 When using a third-party plugin/component with `position: fixed` but you want it positioned relative to your container rather than the viewport. If you can't modify the source code, wrap it with a container that has `transform: translateX(0)`:
 

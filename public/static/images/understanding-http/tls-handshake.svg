@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="900" viewBox="0 0 960 900" role="img" aria-labelledby="title desc">
+<title id="title">TLS 1.3: agree keys, verify identity, protect HTTP</title>
+<desc id="desc">A simplified certificate-authenticated handshake with ephemeral key agreement. ClientHello and ServerHello exchange key shares. Both peers derive handshake keys. The server sends encrypted authentication messages; the client validates them and sends Finished. Symmetric application keys protect HTTP in both directions.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1 L8 5 L1 9" fill="none" stroke="#334155" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<style>text{font-family:'Comic Sans MS','Chalkboard SE',cursive;fill:#243449;font-size:23px} .small{font-size:20px}.line{fill:none;stroke:#334155;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}.arrow{marker-end:url(#arrow)}.box{stroke-width:2.5;stroke-linejoin:round}</style>
+<text x="480" y="45" text-anchor="middle" style="font-size:31px;font-weight:bold">TLS 1.3 handshake</text>
+<text x="480" y="78" text-anchor="middle" class="small">Simplified full handshake · ephemeral key agreement</text>
+<path d="M70 107 Q68 100 82 101 L276 99 Q289 100 287 112 L290 162 Q289 175 275 173 L81 175 Q68 173 70 161 Z" fill="#e4efff" stroke="#4876ad" class="box"/>
+<path d="M672 104 Q670 99 684 100 L877 102 Q891 99 889 114 L891 162 Q890 176 877 174 L684 172 Q670 175 672 161 Z" fill="#eee8fa" stroke="#8265ac" class="box"/>
+<text x="180" y="147" text-anchor="middle">Client</text><text x="780" y="147" text-anchor="middle">Server</text>
+<path d="M180 177 L182 796 M780 178 L778 796" class="line" stroke-dasharray="7 9" opacity=".45"/>
+<text x="480" y="215" text-anchor="middle">1. ClientHello + key share</text><path d="M183 234 Q470 231 776 235" class="line arrow"/>
+<text x="480" y="280" text-anchor="middle">2. ServerHello + key share</text><path d="M777 299 Q470 302 184 298" class="line arrow"/>
+<rect x="220" y="325" width="520" height="62" rx="14" fill="#e4f2e6" stroke="#548363" class="box" stroke-dasharray="7 5"/>
+<text x="480" y="364" text-anchor="middle">Both derive handshake traffic keys</text>
+<text x="480" y="431" text-anchor="middle">3. Encrypted server authentication</text>
+<text x="480" y="461" text-anchor="middle" class="small">EncryptedExtensions · Certificate</text>
+<text x="480" y="489" text-anchor="middle" class="small">CertificateVerify · Finished</text>
+<path d="M776 510 Q480 507 184 511" class="line arrow"/>
+<rect x="60" y="539" width="430" height="93" rx="14" fill="#fff0db" stroke="#b17a36" class="box"/>
+<text x="275" y="573" text-anchor="middle">Client validates server identity</text>
+<text x="275" y="606" text-anchor="middle" class="small">Certificate chain, hostname + handshake</text>
+<text x="480" y="677" text-anchor="middle">4. Client Finished (encrypted)</text><path d="M184 696 Q480 700 775 697" class="line arrow"/>
+<text x="480" y="752" text-anchor="middle">Protected HTTP application data</text>
+<path d="M185 776 Q480 772 774 777" class="line arrow" marker-start="url(#arrow)"/>
+<rect x="100" y="810" width="760" height="63" rx="15" fill="#e4f2e6" stroke="#548363" class="box"/>
+<text x="480" y="850" text-anchor="middle">Symmetric application traffic keys protect both directions</text>
+</svg>

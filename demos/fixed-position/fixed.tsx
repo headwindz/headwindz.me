@@ -6,24 +6,31 @@ export default function App() {
   const [isRelativeToViewport, setIsRelativeToViewport] = useState(false)
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <label className="flex cursor-pointer items-center gap-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
           <input
             type="checkbox"
             checked={isRelativeToViewport}
             onChange={(e) => setIsRelativeToViewport(e.target.checked)}
-            className="h-4 w-4"
+            style={{ width: '1rem', height: '1rem' }}
           />
           <span>Relative to viewport</span>
         </label>
       </div>
 
       <div
-        className="wrapper relative h-40 w-full overflow-auto border border-gray-300 p-4 dark:border-gray-600"
-        style={{ transform: isRelativeToViewport ? 'none' : 'translateX(0)' }}
+        style={{
+          position: 'relative',
+          height: '10rem',
+          width: '100%',
+          overflow: 'auto',
+          border: '1px solid #d1d5db',
+          padding: '1rem',
+          transform: isRelativeToViewport ? 'none' : 'translateX(0)',
+        }}
       >
-        <div className={`fixed top-2 left-2`}>
+        <div style={{ position: 'fixed', top: '0.5rem', left: '0.5rem' }}>
           I am fixed {isRelativeToViewport ? 'to viewport' : 'to wrapper container'}
         </div>
       </div>

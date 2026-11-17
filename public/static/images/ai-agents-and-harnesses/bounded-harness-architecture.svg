@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1120" viewBox="0 0 900 1120" role="img" aria-labelledby="title desc"><title id="title">A bounded harness</title><desc id="desc">A supervisor limits the model and tools. History supplies context and records results. Completion requests pass through a snapshot verifier. Limits produce incomplete results; interruptions preserve history.</desc><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#68716c" stroke-width="1.6"/></marker></defs><g font-family="'Chalkboard SE','Comic Sans MS',cursive" font-size="25" fill="#4b5563" stroke-linecap="round" stroke-linejoin="round">
+<text x="450" y="48" text-anchor="middle" fill="#2476a2" font-size="34">A bounded harness</text>
+<path d="M73 91 Q450.0 87 827 91 Q846 90 845 110 L844 167 Q847 186 825 185 L73 186 Q53 185 55 165 L56 110 Q54 90 73 91 Z" fill="#8054ad" fill-opacity=".05" stroke="#8054ad" stroke-width="2.8"/>
+<text x="450.0" y="128.5" text-anchor="middle" fill="#8054ad" font-size="25">Run supervisor: shared deadline + decision budget</text>
+<text x="450.0" y="162.5" text-anchor="middle" fill="#8054ad" font-size="25">Illustrative limits: 2 minutes / 12 decisions</text>
+<rect x="35" y="220" width="830" height="590" rx="25" fill="none" stroke="#8054ad" stroke-width="2" stroke-dasharray="9 9"/>
+<text x="450" y="255" text-anchor="middle" fill="#8054ad" font-size="25">Decision and execution boundary</text>
+<path d="M98 301 Q230.0 297 362 301 Q381 300 380 320 L379 392 Q382 411 360 410 L98 411 Q78 410 80 390 L81 320 Q79 300 98 301 Z" fill="#2476a2" fill-opacity=".05" stroke="#2476a2" stroke-width="2.8"/>
+<text x="230.0" y="346.0" text-anchor="middle" fill="#2476a2" font-size="25">History + task state</text>
+<text x="230.0" y="380.0" text-anchor="middle" fill="#2476a2" font-size="25">Context, actions, results</text>
+<path d="M538 301 Q670.0 297 802 301 Q821 300 820 320 L819 392 Q822 411 800 410 L538 411 Q518 410 520 390 L521 320 Q519 300 538 301 Z" fill="#2476a2" fill-opacity=".05" stroke="#2476a2" stroke-width="2.8"/>
+<text x="670.0" y="346.0" text-anchor="middle" fill="#2476a2" font-size="25">Model decision</text>
+<text x="670.0" y="380.0" text-anchor="middle" fill="#2476a2" font-size="25">Tool or finish request</text>
+<path d="M380 330 L520 330" fill="none" stroke="#68716c" stroke-width="2.5" marker-end="url(#arrow)"/>
+<text x="450" y="310" text-anchor="middle" fill="#4b5563" font-size="20">context</text>
+<path d="M538 506 Q670.0 502 802 506 Q821 505 820 525 L819 597 Q822 616 800 615 L538 616 Q518 615 520 595 L521 525 Q519 505 538 506 Z" fill="#a9561d" fill-opacity=".05" stroke="#a9561d" stroke-width="2.8"/>
+<text x="670.0" y="551.0" text-anchor="middle" fill="#a9561d" font-size="25">Tool dispatcher</text>
+<text x="670.0" y="585.0" text-anchor="middle" fill="#a9561d" font-size="25">Validate + run tool</text>
+<path d="M670 410 L670 505" fill="none" stroke="#68716c" stroke-width="2.5" marker-end="url(#arrow)"/>
+<text x="750" y="465" text-anchor="middle" fill="#4b5563" font-size="20">tool request</text>
+<path d="M520 560 L230 560 L230 410" fill="none" stroke="#68716c" stroke-width="2.5" marker-end="url(#arrow)"/>
+<text x="337" y="540" text-anchor="middle" fill="#4b5563" font-size="22">observation</text>
+<path d="M98 676 Q450.0 672 802 676 Q821 675 820 695 L819 757 Q822 776 800 775 L98 776 Q78 775 80 755 L81 695 Q79 675 98 676 Z" fill="#8054ad" fill-opacity=".05" stroke="#8054ad" stroke-width="2.8"/>
+<text x="450.0" y="716.0" text-anchor="middle" fill="#8054ad" font-size="25">Finish request → fixed workspace snapshot</text>
+<text x="450.0" y="750.0" text-anchor="middle" fill="#8054ad" font-size="25">Independent verifier records checks + code version</text>
+<path d="M820 355 L843 355 L843 645 L450 645 L450 675" fill="none" stroke="#68716c" stroke-width="2.5" marker-end="url(#arrow)"/>
+<text x="700" y="638" text-anchor="middle" fill="#4b5563" font-size="21">finish</text>
+<path d="M83 876 Q245.0 872 407 876 Q426 875 425 895 L424 952 Q427 971 405 970 L83 971 Q63 970 65 950 L66 895 Q64 875 83 876 Z" fill="#24763d" fill-opacity=".05" stroke="#24763d" stroke-width="2.8"/>
+<text x="245.0" y="913.5" text-anchor="middle" fill="#24763d" font-size="25">COMPLETE</text>
+<text x="245.0" y="947.5" text-anchor="middle" fill="#24763d" font-size="25">All required checks pass</text>
+<path d="M493 876 Q655.0 872 817 876 Q836 875 835 895 L834 952 Q837 971 815 970 L493 971 Q473 970 475 950 L476 895 Q474 875 493 876 Z" fill="#a9561d" fill-opacity=".05" stroke="#a9561d" stroke-width="2.8"/>
+<text x="655.0" y="913.5" text-anchor="middle" fill="#a9561d" font-size="25">INCOMPLETE</text>
+<text x="655.0" y="947.5" text-anchor="middle" fill="#a9561d" font-size="25">Check fails / budget exhausted</text>
+<path d="M300 775 L245 875" fill="none" stroke="#68716c" stroke-width="2.5" marker-end="url(#arrow)"/>
+<path d="M600 775 L655 875" fill="none" stroke="#68716c" stroke-width="2.5" marker-end="url(#arrow)"/>
+<path d="M83 1011 Q450.0 1007 817 1011 Q836 1010 835 1030 L834 1072 Q837 1091 815 1090 L83 1091 Q63 1090 65 1070 L66 1030 Q64 1010 83 1011 Z" fill="#8054ad" fill-opacity=".05" stroke="#8054ad" stroke-width="2.8"/>
+<text x="450.0" y="1041.0" text-anchor="middle" fill="#8054ad" font-size="25">INTERRUPTED: timeout, cancellation, unexpected error</text>
+<text x="450.0" y="1075.0" text-anchor="middle" fill="#8054ad" font-size="25">Preserve reason + history for reconciliation</text>
+<text x="450" y="995" text-anchor="middle" fill="#4b5563" font-size="21">Supervisor stops work at limits; every exit retains evidence.</text>
+</g></svg>

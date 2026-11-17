@@ -32,39 +32,38 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
   const nextPage = currentPage + 1 <= totalPages
 
   return (
-    <div className="space-y-2 py-4 md:space-y-5">
-      <nav
-        aria-label="Pagination"
-        className="flex items-center justify-between border-t border-gray-200 py-6 dark:border-gray-800"
-      >
-        {!prevPage && (
-          <button className="min-h-11 cursor-auto disabled:opacity-50" disabled={!prevPage}>
-            Previous
-          </button>
-        )}
-        {prevPage && (
-          <Link
-            href={currentPage - 1 === 1 ? `/${basePath}/` : `/${basePath}/page/${currentPage - 1}`}
-            rel="prev"
-          >
-            Previous
-          </Link>
-        )}
-        <span>
-          {currentPage} of {totalPages}
-        </span>
-        {!nextPage && (
-          <button className="min-h-11 cursor-auto disabled:opacity-50" disabled={!nextPage}>
-            Next
-          </button>
-        )}
-        {nextPage && (
-          <Link href={`/${basePath}/page/${currentPage + 1}`} rel="next">
-            Next
-          </Link>
-        )}
-      </nav>
-    </div>
+    <nav
+      aria-label="Pagination"
+      className="flex items-center justify-between border-t border-gray-200 py-2 dark:border-gray-800"
+    >
+      {!prevPage && (
+        <button className="min-h-11 cursor-auto disabled:opacity-50" disabled={!prevPage}>
+          Previous
+        </button>
+      )}
+      {prevPage && (
+        <Link
+          href={currentPage - 1 === 1 ? `/${basePath}/` : `/${basePath}/page/${currentPage - 1}`}
+          className="inline-flex min-h-11 items-center"
+          rel="prev"
+        >
+          Previous
+        </Link>
+      )}
+      <span>
+        {currentPage} of {totalPages}
+      </span>
+      {!nextPage && (
+        <button className="min-h-11 cursor-auto disabled:opacity-50" disabled={!nextPage}>
+          Next
+        </button>
+      )}
+      {nextPage && (
+        <Link href={`/${basePath}/page/${currentPage + 1}`} rel="next">
+          Next
+        </Link>
+      )}
+    </nav>
   )
 }
 
@@ -86,7 +85,7 @@ export default function ListLayoutWithTags({
     <>
       <div>
         <div className="archive-heading">
-          <h1 className="journal-page-title">{title === 'All Posts' ? 'Blogs' : title}</h1>
+          <h1 className="journal-page-title">{title === 'All Posts' ? 'All Posts' : title}</h1>
           <label className="topic-picker">
             <span>Topic</span>
             <select
@@ -112,7 +111,7 @@ export default function ListLayoutWithTags({
                 const { path, date, title, summary, tags } = post
                 return (
                   <li key={path} className="py-8 first:pt-0">
-                    <article className="flex flex-col space-y-2 xl:space-y-3">
+                    <article className="flex flex-col gap-1.5">
                       <dl>
                         <dt className="sr-only">Published on</dt>
                         <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
@@ -121,7 +120,7 @@ export default function ListLayoutWithTags({
                           </time>
                         </dd>
                       </dl>
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         <div>
                           <h2 className="archive-post-title">
                             <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">

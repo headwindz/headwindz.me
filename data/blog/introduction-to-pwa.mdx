@@ -3,6 +3,7 @@ title: Progressive web apps and service workers
 date: 2025-03-20
 tags: ['pwa', 'service worker', 'web']
 summary: Master Progressive Web Apps from fundamentals to production. Learn service worker lifecycle, caching strategies, offline patterns and best practices with a hands-on demo.
+reviewed: 2026-11-17
 ---
 
 # Introduction
@@ -10,18 +11,6 @@ summary: Master Progressive Web Apps from fundamentals to production. Learn serv
 Progressive Web Apps (PWA) represent a paradigm shift in web development: combining the reach and accessibility of the web with the user experience of native applications. A properly implemented PWA can be installed to the home screen, work reliably on poor network conditions, load instantly, and provide app-like interactions.
 
 This guide covers what you need to build production-ready PWAs: from service worker fundamentals to advanced caching strategies, lifecycle management, and real-world implementation tips. By the end, you'll have a solid understanding of how to leverage service workers to create fast, reliable, and engaging web applications.
-
-# Table of contents
-
-- [What is a PWA](#what-is-a-pwa)
-- [Core PWA technologies](#core-pwa-technologies)
-- [Service worker fundamentals](#service-worker-fundamentals)
-- [Service worker lifecycle](#service-worker-lifecycle)
-- [Important non-lifecycle service worker events](#important-non-lifecycle-service-worker-events)
-- [Caching strategies](#caching-strategies)
-- [Connect the dots: step by step demo example](#connect-the-dots-step-by-step-demo-example)
-- [Common pitfalls](#common-pitfalls)
-- [Real world PWA](#real-world-pwa)
 
 # What is a PWA
 
@@ -198,8 +187,15 @@ Understanding the lifecycle is crucial for proper PWA implementation. The servic
 - Activated: The service worker is now in control and will handle fetch events. It is ready to intercept network requests, manage caches, and perform background tasks.
 - Redundant: If a new service worker is detected while an old one is active, the new one will be installed but will wait until the old one is no longer controlling any clients before it activates. This ensures a smooth transition without disrupting the user experience.
 
-![Service worker lifecycle](/static/blogs/service-worker.png)
-_Source: [delapuente/service-workers-101](https://github.com/delapuente/service-workers-101)_
+<SketchDiagram
+  src="/static/images/pwa/service-worker-lifecycle.svg"
+  alt="Service worker lifecycle showing installing, installed and waiting, activating, activated, and redundant; registration slots and the effects of waitUntil, skipWaiting, and clients.claim."
+  width={1000}
+  height={1530}
+/>
+_Redrawn from [delapuente/service-workers-101](https://github.com/delapuente/service-workers-101),
+with lifecycle details checked against the [Service Workers
+specification](https://www.w3.org/TR/service-workers/)._
 
 ## Lifecycle stages
 
@@ -635,10 +631,9 @@ self.addEventListener('fetch', (event) => {
 
 ## Run and test
 
-[pwa demo repo](https://github.com/headwindz/pwa-demo)
+Save the files above in one directory, then serve that directory locally:
 
 ```bash
-git clone https://github.com/headwindz/pwa-demo
 http-server -p 8080
 # Open http://localhost:8080
 ```

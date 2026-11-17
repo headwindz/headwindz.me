@@ -1,15 +1,17 @@
 ---
 title: 'AI agents and harnesses: from tool loops to reliable systems'
 date: '2026-10-24'
+featured: true
 tags: ['ai', 'architecture', 'agents', 'harnesses']
 summary: 'How models, tools, and harnesses form an agent, with a bounded execution loop and practical extensions for context, permissions, recovery, evaluation, and coordination among agents.'
+reviewed: 2026-11-17
 ---
 
 A coding agent can read a failing test, inspect an implementation, edit a file, and run the test again. Each step depends on what the previous step revealed. The model proposes an action. The surrounding software decides whether and how to execute it.
 
 That division explains much of an agent's behavior. A capable model needs useful tools, relevant context, reliable feedback, and an execution environment that enforces its boundaries. A mistake in any one of those parts can undermine the whole task.
 
-The shorthand **agent = model + harness** provides a starting point for the engineering design: how to build the loop, define completion, manage context, recover from interruptions, and measure whether a change actually helps.
+The shorthand `agent = model + harness` provides a starting point for the engineering design: how to build the loop, define completion, manage context, recover from interruptions, and measure whether a change actually helps.
 
 For a broader glossary of tools, skills, plugins, and orchestration, see [Demystifying modern AI](/blog/ai-concepts-from-llms-to-multi-agent-systems). Here, the focus is the execution path from a user request to a verified result.
 
@@ -44,7 +46,7 @@ The task is: “Accept absolute HTTPS URLs, reject other inputs, and preserve HT
 | `/docs`                    | `null`                     |
 | `not a URL`                | `null`                     |
 
-The agent uses file tools to read the parser's source code and tests. The harness returns those file contents to the model so it can understand the implementation and decide what to change. The repository is not automatically visible to the model. For this example, one possible sequence is:
+The agent uses file `tools` to read the parser's source code and tests. The harness returns those file contents to the model so it can understand the implementation and decide what to change. The repository is not automatically visible to the model. For this example, one possible sequence is:
 
 1. Read the project instructions, parser source code, and relevant tests to understand the existing behavior.
 2. Run the parser tests and reproduce the failure: `http://example.com/docs` is accepted.
@@ -69,31 +71,14 @@ The model chooses the investigation path. The harness dispatches tools and recor
 
 ## Build a bounded loop before adding orchestration
 
-The harness needs a few rules: limit how long the agent can run, record what happened, and check the result before accepting completion. In pseudocode:
+The harness needs a few rules: limit how long the agent can run, record what happened, and check the result before accepting completion. The architecture below separates model decisions, tool execution, persistent history, and verification. A shared supervisor enforces the run's limits across these components.
 
-```text
-history = [task]
-deadline = now + 2 minutes
-
-try:
-    repeat at most 12 decisions:
-        action = ask the model using history, within deadline
-
-        if action requests completion:
-            snapshot = capture the current workspace
-            checks = verify snapshot, within deadline
-            save checks and snapshot version in history
-            status = COMPLETE if all checks pass, otherwise INCOMPLETE
-            return status, model summary, checks, snapshot version, history
-
-        result = validate and run the requested tool, within deadline
-        save action and result in history
-
-    return INCOMPLETE with the decision limit and history
-
-on timeout, cancellation, or unexpected error:
-    return INTERRUPTED with the reason and history
-```
+<SketchDiagram
+  src="/static/images/ai-agents-and-harnesses/bounded-harness-architecture.svg"
+  alt="Bounded harness architecture: a supervisor enforces a shared deadline and decision budget; the model requests tools or completion, tools return observations to history, and an independent verifier checks a fixed snapshot before producing a completed or incomplete result. Interruptions preserve history."
+  width={900}
+  height={1120}
+/>
 
 The limits here are illustrative. Every model call and tool operation shares the same deadline. A rejected tool request or an expected tool failure becomes a result the model can inspect before choosing another action.
 
@@ -118,7 +103,9 @@ The saved evidence shows which cases passed or failed and which version of the c
 
 In this illustrative implementation, the corrected parser passes all six cases. The original implementation fails the HTTP and JavaScript scheme cases. A function that always returns `null` also fails, because the verifier checks that supported HTTPS URLs still work. These checks establish the behavior listed in the table, not every possible property of the parser.
 
-In a real package, verification should also run the existing regression suite and inspect the final patch scope. Record those results alongside the acceptance cases.
+In a real package, verification should also run the existing regression suite and inspect the final patch scope. If the parser feeds a user interface, exercise that path in the browser: submit a valid HTTPS URL, check that unsupported schemes show an appropriate error, and confirm that rejected input is not saved. For UI changes, also check keyboard interaction, loading and error states, and layout at the affected screen sizes. Passing parser tests alone does not establish that the interface works.
+
+Record the browser steps and observed results alongside the acceptance cases, tied to the same code version. Screenshots can document layout and visible states, while interaction checks establish what happens when a user submits or edits input. If the browser flow could not be tested, report that gap explicitly.
 
 ### Account for execution limits
 
@@ -171,7 +158,7 @@ Anthropic's [context engineering guide](https://www.anthropic.com/research/effec
 
 ### Preserve provenance during compaction
 
-A summary can accidentally turn a hypothesis into a fact. “The parser probably normalizes the scheme too early” must not become “The parser normalizes the scheme too early” merely because the conversation was shortened.
+A summary can accidentally turn a hypothesis into a fact. `The parser probably normalizes the scheme too early` must not become `The parser normalizes the scheme too early` merely because the conversation was shortened.
 
 Keep compacted state structured enough to distinguish:
 
@@ -230,7 +217,9 @@ Persisted state should distinguish **planned**, **dispatched**, **confirmed**, a
 
 ## Add multiple agents when work can be separated
 
-Subagents can investigate separate parts of a problem with their own working context. That helps when the main task would otherwise accumulate several unrelated investigations. It also creates coordination and integration work.
+Subagents can investigate separate parts of a problem with their own working context. This makes delegation a context engineering choice: a worker can inspect detailed files and logs for one question, then return a focused report so the coordinator does not need to carry the entire investigation in its own context. The coordinator retains the overall goal, shared constraints, and decisions needed to integrate the results. Anthropic's [context engineering guide](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents) describes this use of separate agent contexts for focused investigations.
+
+That separation has costs. A worker may miss a constraint that was never passed to it, and its summary may omit evidence or uncertainty the coordinator needs. Workers can duplicate searches, reach incompatible assumptions, or propose conflicting edits. Extra model calls and coordination also consume time and tokens. Delegate when the value of focused context or parallel work outweighs the handoff and integration effort.
 
 For the parser bug, one agent is likely enough. For a migration across several independent packages, separate agents could inspect compatibility risks while one owner integrates the changes.
 
@@ -275,3 +264,9 @@ When the agent fails, locate the broken mechanism:
 | It loops through the same unsuccessful action | Progress detection and retry budgets               |
 
 This makes harness improvement a concrete engineering activity. For your first implementation, choose one bounded task, give it a few narrow tools, define an observable acceptance check, and save enough evidence to explain each failure. Extend the harness when those failures reveal a missing capability or control.
+
+## Conclusion
+
+A reliable agent needs a harness that turns model decisions into bounded actions and ties completion to observable evidence. In the parser example, that means preserving valid HTTPS behavior, rejecting unsupported inputs, checking the resulting code, and exercising the user-facing path when it is affected.
+
+Start with one task and a small tool loop. Keep requirements and evidence available, preserve enough state to resume safely, and verify the final artifact before reporting success. Add memory, skills, or subagents when a specific failure shows why they are needed. Each extension should make the work easier to verify or recover, with its context, coordination, and execution costs accounted for.

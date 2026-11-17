@@ -123,6 +123,7 @@ export default function LiveDemoEditor({ initialCode }: { initialCode: string })
               <textarea
                 aria-label="Edit demo code"
                 spellCheck={false}
+                wrap="off"
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
                 onScroll={(event) => {
@@ -131,7 +132,7 @@ export default function LiveDemoEditor({ initialCode }: { initialCode: string })
                     highlightRef.current.scrollLeft = event.currentTarget.scrollLeft
                   }
                 }}
-                className="selection:bg-primary-500/40 relative block h-full w-full resize-none border-0 bg-transparent p-4 font-mono text-xs leading-5 text-transparent caret-white focus:ring-0"
+                className="selection:bg-primary-500/40 relative block h-full w-full resize-none overflow-auto border-0 bg-transparent p-4 font-mono text-xs leading-5 whitespace-pre text-transparent caret-white focus:ring-0"
               />
             </div>
           </div>

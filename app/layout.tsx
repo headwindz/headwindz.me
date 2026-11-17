@@ -4,7 +4,7 @@ import 'remark-github-blockquote-alert/alert.css'
 
 import { Space_Grotesk } from 'next/font/google'
 import { Analytics, AnalyticsConfig } from 'pliny/analytics'
-import { SearchProvider, SearchConfig } from 'pliny/search'
+import SearchProvider from '@/components/SearchProvider'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import Header from '@/components/Header'
 import SectionContainer from '@/components/SectionContainer'
@@ -79,9 +79,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProviders>
           <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />
           <SectionContainer>
-            <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
+            <SearchProvider>
               <Header />
-              <main id="main-content" tabIndex={-1} className="min-h-[60vh] pb-4 outline-none">
+              <main id="main-content" tabIndex={-1} className="pb-4 outline-none">
                 {children}
               </main>
             </SearchProvider>

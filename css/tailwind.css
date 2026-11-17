@@ -341,7 +341,7 @@ input:-webkit-autofill:focus {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 100px;
+  min-height: 80px;
 }
 .site-wordmark {
   position: relative;
@@ -663,11 +663,11 @@ input:-webkit-autofill:focus {
 }
 .section-heading {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  padding: 0 0 1.5rem;
+  padding: 0 0 0.75rem;
 }
 .section-heading h2 {
   font-size: 1.6rem;
@@ -787,10 +787,10 @@ input:-webkit-autofill:focus {
 }
 .journal-archive > div:last-child > ul > li {
   border: 1px solid var(--journal-rule);
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
   border-radius: 8px 12px 9px 11px;
   background: var(--journal-card);
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
   box-shadow: var(--notebook-shadow);
 }
 .more-topics {
@@ -812,7 +812,7 @@ input:-webkit-autofill:focus {
 }
 .article-masthead {
   border-bottom: 1px dashed var(--journal-rule);
-  padding: 1.5rem 0 2rem;
+  padding: 0.5rem 0 1rem;
 }
 .article-topline {
   display: flex;
@@ -839,7 +839,7 @@ input:-webkit-autofill:focus {
   font-weight: 650;
   letter-spacing: -0.035em;
   max-width: 25ch;
-  padding: 1.25rem 0 1.5rem;
+  padding: 0.5rem 0 0.75rem;
 }
 .article-provenance {
   display: flex;
@@ -857,7 +857,7 @@ input:-webkit-autofill:focus {
   grid-template-columns: minmax(0, 75ch);
   justify-content: center;
   gap: 2.5rem;
-  padding: 2.5rem 0;
+  padding: 1.5rem 0;
 }
 .article-reading-layout.has-index {
   grid-template-columns: 190px minmax(0, 75ch);
@@ -868,6 +868,11 @@ input:-webkit-autofill:focus {
   width: 100%;
   max-width: 75ch;
   color: var(--journal-ink);
+}
+.article-body :where(p, li, blockquote, figcaption) a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+  text-decoration-skip-ink: none;
 }
 .article-body :where(h2, h3) {
   font-family: var(--font-sans);
@@ -971,16 +976,13 @@ input:-webkit-autofill:focus {
     max-height: 200px;
     overflow: auto;
   }
-  .article-index li.is-nested {
-    display: none;
-  }
 }
 @media (max-width: 767px) {
   .site-container {
     width: calc(100% - 2rem);
   }
   .site-header {
-    min-height: 82px;
+    min-height: 68px;
   }
   .desktop-nav {
     margin-right: 0.4rem;
@@ -1061,7 +1063,8 @@ input:-webkit-autofill:focus {
     font-size: clamp(2rem, 8vw, 2.6rem);
   }
   .article-reading-layout {
-    padding: 1.75rem 0;
+    padding: 1rem 0;
+    row-gap: 1rem;
   }
   .article-index ol {
     grid-template-columns: 1fr;
@@ -1075,7 +1078,7 @@ input:-webkit-autofill:focus {
     font-size: 2.5rem;
   }
   .journal-archive > div:last-child > ul > li {
-    padding: 1.25rem;
+    padding: 1rem;
   }
 }
 .notebook-project-image {
@@ -1194,7 +1197,7 @@ input:-webkit-autofill:focus {
 }
 
 .home-projects {
-  margin: 3rem 0;
+  margin-top: 2rem;
 }
 .home-project-grid {
   display: grid;
@@ -1432,6 +1435,9 @@ input:-webkit-autofill:focus {
   line-height: 1.85;
   margin: 1rem 0;
 }
+.terminal-section > p:last-child {
+  margin-bottom: 0;
+}
 .terminal-section > p:first-of-type {
   margin-top: 0;
 }
@@ -1473,7 +1479,7 @@ input:-webkit-autofill:focus {
 .profile-terminal[data-view='about'] :is(.terminal-interests, .terminal-opensource),
 .profile-terminal[data-view='interests'] :is(.terminal-profile, .terminal-opensource),
 .profile-terminal[data-view='opensource'] :is(.terminal-profile, .terminal-interests),
-.profile-terminal:is([data-view='help'], [data-view='clear']) .terminal-document {
+.profile-terminal[data-view='help'] .terminal-document {
   display: none;
 }
 .profile-terminal:not([data-view='all']) .terminal-section {
@@ -1494,8 +1500,7 @@ input:-webkit-autofill:focus {
 .terminal-help dt {
   color: #c0df99;
 }
-.terminal-help p,
-.terminal-cleared {
+.terminal-help p {
   color: #b1beb6;
   line-height: 1.8;
 }
@@ -1638,8 +1643,8 @@ input:-webkit-autofill:focus {
 
 /* Profile first: preserve the terminal while keeping the opening concise. */
 .home-profile {
-  padding-top: 2rem;
-  margin-bottom: 3rem;
+  padding-top: 1rem;
+  margin-bottom: 2rem;
 }
 .home-profile .about-command-heading {
   margin-bottom: 1.5rem;
@@ -1657,7 +1662,8 @@ input:-webkit-autofill:focus {
   padding-block: 0 1rem;
 }
 .home-profile .terminal-output {
-  padding-block: 1.25rem;
+  min-height: 0;
+  padding-block: 1rem;
 }
 .home-profile .about-command-footer {
   margin-top: 1rem;
@@ -1879,7 +1885,7 @@ input:-webkit-autofill:focus {
 }
 
 .writing-collection {
-  margin-bottom: 3.5rem;
+  margin-bottom: 2rem;
 }
 .writing-collection .journal-feature {
   margin-bottom: 1.25rem;
@@ -1894,10 +1900,25 @@ input:-webkit-autofill:focus {
 }
 .writing-list article {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 40px;
-  gap: 0.35rem 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
   padding: 1.1rem 0;
   border-bottom: 1px solid var(--journal-rule);
+}
+.writing-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.writing-copy-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.writing-copy .article-summary {
+  margin: 0;
 }
 .writing-list .article-row-meta {
   grid-column: 1;
@@ -1908,23 +1929,29 @@ input:-webkit-autofill:focus {
   font-weight: 600;
   line-height: 1.4;
 }
+.writing-list h3 a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  cursor: pointer;
+}
+.writing-list article > :is(.post-cover, .agent-lab) {
+  position: relative;
+  z-index: 2;
+}
 .writing-list h3 a:hover {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
 .writing-list .article-summary {
   grid-column: 1;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 .writing-read-link {
-  grid-column: 2;
-  grid-row: 1 / 4;
-  display: grid;
-  place-items: center;
-  min-height: 44px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 .writing-read-link:hover {
   color: var(--journal-accent);
@@ -2109,7 +2136,7 @@ input:-webkit-autofill:focus {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  padding-block: 1.5rem;
+  padding-block: 0.75rem;
 }
 .topic-picker {
   display: flex;
@@ -2157,17 +2184,17 @@ input:-webkit-autofill:focus {
     opacity 200ms ease-out,
     transform 250ms ease-out;
 }
-.writing-list article:is(:hover, :focus-within) {
+.writing-list article:has(h3 a:is(:hover, :focus-visible)) {
   background: color-mix(in srgb, var(--notebook-mark) 12%, transparent);
 }
-.writing-list article:is(:hover, :focus-within)::before {
+.writing-list article:has(h3 a:is(:hover, :focus-visible))::before {
   opacity: 1;
   transform: scaleY(1);
 }
 .writing-read-link svg {
   transition: transform 200ms ease-out;
 }
-.writing-list article:is(:hover, :focus-within) .writing-read-link svg {
+.writing-list article:has(h3 a:is(:hover, :focus-visible)) .writing-read-link svg {
   transform: translate(2px, -2px);
 }
 .article-preview {
@@ -2280,18 +2307,18 @@ input:-webkit-autofill:focus {
 .writing-list article::before {
   content: none;
 }
-.writing-list article:is(:hover, :focus-within) {
+.writing-list article:has(h3 a:is(:hover, :focus-visible)) {
   background: transparent;
 }
 @media (hover: hover) and (pointer: fine) {
-  .writing-list article:hover h3 a {
+  .writing-list article:has(h3 a:hover) h3 a {
     color: var(--journal-accent);
   }
-  .writing-list article:hover .writing-read-link svg {
+  .writing-list article:has(h3 a:hover) .writing-read-link svg {
     transform: translate(2px, -2px);
   }
 }
-.writing-list article:focus-within .writing-read-link svg {
+.writing-list article:has(h3 a:focus-visible) .writing-read-link svg {
   transform: none;
 }
 .post-cover {
@@ -2443,6 +2470,222 @@ input:-webkit-autofill:focus {
   border-radius: 5px;
   background: var(--notebook-mark);
 }
+/* Web3 article map and interactive explanations */
+.web3-overview,
+.web3-explainer {
+  color: var(--journal-ink);
+  background: var(--journal-card);
+  padding: 1rem;
+}
+.web3-concepts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+.web3-concepts button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.3rem;
+  border-radius: 7px;
+  color: var(--journal-muted);
+}
+.web3-concepts button[aria-pressed='true'] {
+  background: var(--notebook-mark);
+  color: var(--journal-ink);
+}
+.web3-concept-detail {
+  margin-top: 0.75rem;
+  border-top: 1px dashed var(--journal-rule);
+  padding-top: 0.85rem;
+  min-height: 6lh;
+}
+.web3-concept-detail strong {
+  font-weight: 600;
+}
+.web3-concept-detail p {
+  margin-top: 0.4rem;
+  line-height: 1.6;
+}
+.web3-explainer {
+  margin-block: 2rem;
+  border: 1px solid var(--journal-rule);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.web3-explainer figcaption {
+  margin-bottom: 1.5rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-wrap: balance;
+}
+.web3-explainer p {
+  margin-block: 1rem 0.5rem;
+}
+.web3-explainer small {
+  display: block;
+  color: var(--journal-muted);
+  font-size: 0.8rem;
+}
+.web3-control,
+.web3-options button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  border-radius: 7px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+}
+.web3-control {
+  margin-top: 1rem;
+  background: var(--notebook-mark);
+}
+:is(.web3-control, .web3-concepts button, .web3-options button):hover {
+  color: var(--journal-accent);
+}
+:is(
+  .web3-control,
+  .web3-concepts button,
+  .web3-options button,
+  .web3-gas-inputs input
+):focus-visible {
+  outline: 2px solid var(--journal-accent);
+  outline-offset: 3px;
+}
+.web3-blocks {
+  display: flex;
+  gap: 0.5rem;
+}
+.web3-block-unit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+.web3-block-unit > svg {
+  flex-shrink: 0;
+  width: 20px;
+  color: var(--journal-accent);
+}
+.web3-block {
+  flex: 1;
+  border: 1px solid var(--journal-rule);
+  border-radius: 7px;
+  padding: 0.75rem;
+  min-width: 0;
+}
+.web3-block :is(strong, span, code) {
+  display: block;
+}
+.web3-block code {
+  color: var(--journal-ink);
+}
+.web3-block span {
+  margin-block: 0.5rem;
+}
+.web3-block[data-invalid='true'] {
+  border-style: dashed;
+  background: var(--notebook-note);
+}
+.web3-fork-origin {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.web3-branches {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.web3-branches > div {
+  border-top: 2px solid var(--journal-rule);
+  padding-top: 0.75rem;
+}
+.web3-branches > div[data-selected='true'] {
+  border-top-color: var(--journal-accent);
+}
+.web3-chain-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-block: 0.75rem;
+}
+.web3-chain-strip span {
+  padding: 0.4rem;
+  background: var(--notebook-mark);
+  border-radius: 5px;
+}
+.web3-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.web3-options button {
+  border: 1px solid var(--journal-rule);
+}
+.web3-options button[aria-pressed='true'] {
+  background: var(--notebook-mark);
+}
+.web3-gas-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-block: 1.5rem;
+}
+.web3-gas-inputs input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  accent-color: var(--journal-accent);
+  cursor: pointer;
+}
+.web3-fee-split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.web3-fee-split span {
+  padding: 0.75rem;
+  background: var(--notebook-mark);
+  text-align: center;
+}
+.web3-fee-split span + span {
+  background: var(--notebook-note);
+}
+.web3-fee-result {
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 550px) {
+  .web3-concepts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .web3-concept-detail {
+    min-height: 9lh;
+  }
+  .web3-blocks {
+    flex-direction: column;
+  }
+  .web3-block-unit {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .web3-block-unit > svg {
+    align-self: center;
+    transform: rotate(90deg);
+  }
+  .web3-branches,
+  .web3-gas-inputs {
+    grid-template-columns: 1fr;
+  }
+}
 .reserve-cover {
   padding: 1rem;
   background: var(--journal-card);
@@ -2508,21 +2751,13 @@ input:-webkit-autofill:focus {
 @media (min-width: 900px) {
   .writing-list article {
     grid-template-columns: minmax(0, 1fr) minmax(280px, 40%);
-    gap: 0.5rem 2rem;
-    align-items: start;
+    gap: 2rem;
+    align-items: center;
     padding-block: 1.5rem;
   }
-  .writing-list .post-cover {
+  .writing-list :is(.post-cover, .agent-lab) {
     grid-column: 2;
-    grid-row: 1 / 5;
     margin-top: 0;
-    align-self: center;
-  }
-  .writing-list .writing-read-link {
-    grid-column: 1;
-    grid-row: 4;
-    width: 40px;
-    justify-self: start;
   }
 }
 
@@ -2565,7 +2800,7 @@ input:-webkit-autofill:focus {
   min-width: 0;
 }
 .writing-list article {
-  padding: 1.25rem;
+  padding: 1rem;
   border: 1px solid var(--journal-rule);
   border-radius: 12px;
   background: var(--journal-card);
@@ -2574,14 +2809,14 @@ input:-webkit-autofill:focus {
     box-shadow 220ms ease-out,
     border-color 220ms ease-out;
 }
-.writing-list article:is(:hover, :focus-within) {
+.writing-list article:has(h3 a:is(:hover, :focus-visible)) {
   background: var(--journal-card);
 }
-.writing-list article:focus-within {
+.writing-list article:has(h3 a:focus-visible) {
   border-color: var(--journal-accent);
 }
 @media (hover: hover) and (pointer: fine) {
-  .writing-list article:hover {
+  .writing-list article:has(h3 a:hover) {
     transform: translateY(-3px);
     border-color: var(--journal-accent);
     box-shadow: 0 8px 20px #0000000d;
@@ -2592,7 +2827,7 @@ input:-webkit-autofill:focus {
   .writing-list article {
     transition: none;
   }
-  .writing-list article:hover {
+  .writing-list article:has(h3 a:hover) {
     transform: none;
   }
 }
