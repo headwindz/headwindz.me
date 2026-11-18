@@ -3,16 +3,20 @@
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react'
 import { Fragment, useState } from 'react'
 import Link from './Link'
+import { useLocale } from './LocaleProvider'
+import { dictionaries, localizedHref } from '../lib/i18n'
 import headerNavLinks from '@/data/headerNavLinks'
 
 const MobileNav = () => {
+  const locale = useLocale()
+  const t = dictionaries[locale]
   const [navShow, setNavShow] = useState(false)
   const onToggleNav = () => setNavShow((status) => !status)
 
   return (
     <>
       <button
-        aria-label="Toggle Menu"
+        aria-label={t.toggleMenu}
         onClick={onToggleNav}
         aria-expanded={navShow}
         className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-md hover:bg-gray-100 sm:hidden dark:hover:bg-gray-900"
@@ -56,23 +60,23 @@ const MobileNav = () => {
             unmount={false}
           >
             <DialogPanel className="fixed top-0 left-0 z-70 h-dvh w-full bg-white duration-300 dark:bg-gray-950">
-              <DialogTitle className="sr-only">Navigation</DialogTitle>
+              <DialogTitle className="sr-only">{t.navigation}</DialogTitle>
               <nav className="flex h-full flex-col items-start gap-2 overflow-y-auto px-8 pt-24 pb-8 text-left">
                 {headerNavLinks.map((link) => (
                   <Link
-                    key={link.title}
-                    href={link.href}
+                    key={t[link.title.toLowerCase() as 'home' | 'blogs' | 'projects' | 'tags']}
+                    href={localizedHref(link.href, locale)}
                     className="hover:text-primary-500 dark:hover:text-primary-400 py-3 pr-4 text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100"
                     onClick={onToggleNav}
                   >
-                    {link.title}
+                    {t[link.title.toLowerCase() as 'home' | 'blogs' | 'projects' | 'tags']}
                   </Link>
                 ))}
               </nav>
 
               <button
                 className="hover:text-primary-500 dark:hover:text-primary-400 fixed top-7 right-4 z-80 h-16 w-16 cursor-pointer p-4 text-gray-900 dark:text-gray-100"
-                aria-label="Close menu"
+                aria-label={t.closeMenu}
                 onClick={onToggleNav}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">

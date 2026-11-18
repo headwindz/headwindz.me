@@ -1,5 +1,7 @@
 'use client'
 
+import ChineseSearch from './ChineseSearch'
+import { useLocale } from './LocaleProvider'
 import { useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { SearchProvider as PlinySearchProvider, type SearchConfig } from 'pliny/search'
@@ -15,6 +17,7 @@ type SearchPost = {
 }
 
 export default function SearchProvider({ children }: { children: React.ReactNode }) {
+  const locale = useLocale()
   const router = useRouter()
   const onSearchDocumentsLoad = useCallback(
     (posts: SearchPost[]) =>
@@ -29,6 +32,8 @@ export default function SearchProvider({ children }: { children: React.ReactNode
     [router]
   )
   const searchConfig = siteMetadata.search as SearchConfig
+
+  if (locale === 'zh') return <ChineseSearch>{children}</ChineseSearch>
 
   return (
     <PlinySearchProvider

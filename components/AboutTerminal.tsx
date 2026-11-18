@@ -1,5 +1,8 @@
 'use client'
 
+import { useLocale } from './LocaleProvider'
+import { dictionaries } from '../lib/i18n'
+
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Terminal } from 'lucide-react'
 
@@ -13,6 +16,8 @@ export default function AboutTerminal({
   identity: ReactNode
   children: ReactNode
 }) {
+  const locale = useLocale()
+  const t = dictionaries[locale]
   const input = useRef<HTMLInputElement>(null)
   const [view, setView] = useState<View>('about')
   const [command, setCommand] = useState('')
@@ -26,9 +31,13 @@ export default function AboutTerminal({
     if (!value) return
     if (views.includes(value as View)) {
       setView(value as View)
-      setMessage(`Showing ${value}.`)
+      setMessage(locale === 'zh' ? `正在显示：${t[value as View]}。` : `Showing ${value}.`)
     } else {
-      setMessage(`Unknown command: ${raw.trim()}.`)
+      setMessage(
+        locale === 'zh'
+          ? `未知命令：${raw.trim()}。请选择下方命令。`
+          : `Unknown command: ${raw.trim()}.`
+      )
     }
     setHistory((previous) => [...previous.slice(-19), raw.trim()])
     setHistoryIndex(-1)
@@ -40,11 +49,7 @@ export default function AboutTerminal({
   }
 
   return (
-    <section
-      className="profile-terminal"
-      data-view={view}
-      aria-label="Interactive profile terminal"
-    >
+    <section className="profile-terminal" data-view={view} aria-label={t.terminal}>
       <div className="terminal-titlebar">
         <div className="terminal-lights" aria-hidden="true">
           <i />
@@ -57,10 +62,10 @@ export default function AboutTerminal({
         <span className="terminal-file">profile.md</span>
       </div>
       <div className="terminal-identity">{identity}</div>
-      <nav className="terminal-shortcuts" aria-label="Profile sections">
+      <nav className="terminal-shortcuts" aria-label={t.profileSections}>
         {views.map((item) => (
           <button key={item} onClick={() => run(item)} aria-pressed={view === item}>
-            {item}
+            {t[item]}
           </button>
         ))}
       </nav>
@@ -74,14 +79,14 @@ export default function AboutTerminal({
         <form onSubmit={submit} className="terminal-command">
           <label htmlFor="profile-command">
             <span aria-hidden="true">❯</span>
-            <span className="sr-only">Profile command</span>
+            <span className="sr-only">{t.profileCommand}</span>
           </label>
           <div className="terminal-entry">
             <input
               ref={input}
               id="profile-command"
               value={command}
-              placeholder="Type a command"
+              placeholder={t.commandPlaceholder}
               aria-describedby="command-hints"
               autoComplete="off"
               autoCapitalize="none"
@@ -118,12 +123,12 @@ export default function AboutTerminal({
             )}
             {!command && <i className="terminal-idle-caret" aria-hidden="true" />}
           </div>
-          <button type="submit" aria-label="Run command">
+          <button type="submit" aria-label={t.run}>
             ↵
           </button>
         </form>
         <div className="command-hints" id="command-hints">
-          <span>{suggestion ? 'Tab to complete' : 'Commands'}</span>
+          <span>{suggestion ? t.complete : t.commands}</span>
           {matches.map((item) => (
             <button
               type="button"
@@ -136,7 +141,7 @@ export default function AboutTerminal({
               {item}
             </button>
           ))}
-          {!matches.length && <span>No matching command.</span>}
+          {!matches.length && <span>{t.noMatch}</span>}
         </div>
       </div>
     </section>

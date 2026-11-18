@@ -1,18 +1,24 @@
+import { ChineseSearchButton } from './ChineseSearch'
+import { dictionaries, type Locale } from '../lib/i18n'
 import { AlgoliaButton } from 'pliny/search/AlgoliaButton'
 import { KBarButton } from 'pliny/search/KBarButton'
 import siteMetadata from '@/data/siteMetadata'
 
-const SearchButton = () => {
+const SearchButton = ({ locale = 'en' }: { locale?: Locale }) => {
   if (
     siteMetadata.search &&
     (siteMetadata.search.provider === 'algolia' || siteMetadata.search.provider === 'kbar')
   ) {
     const SearchButtonWrapper =
-      siteMetadata.search.provider === 'algolia' ? AlgoliaButton : KBarButton
+      locale === 'zh'
+        ? ChineseSearchButton
+        : siteMetadata.search.provider === 'algolia'
+          ? AlgoliaButton
+          : KBarButton
 
     return (
       <SearchButtonWrapper
-        aria-label="Search"
+        aria-label={dictionaries[locale].search}
         className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-900"
       >
         <svg

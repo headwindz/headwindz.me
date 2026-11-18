@@ -1,13 +1,15 @@
+import { localizedHref, type Locale } from '../lib/i18n'
 import Link from 'next/link'
 import { slug } from 'github-slugger'
 interface Props {
   text: string
+  locale?: Locale
 }
 
-const Tag = ({ text }: Props) => {
+const Tag = ({ text, locale = 'en' }: Props) => {
   return (
     <Link
-      href={`/tags/${slug(text)}`}
+      href={localizedHref(`/tags/${slug(text)}`, locale)}
       className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 mr-2 inline-flex min-h-8 items-center py-1 text-xs font-medium tracking-wide uppercase"
     >
       {text.split(' ').join('-')}

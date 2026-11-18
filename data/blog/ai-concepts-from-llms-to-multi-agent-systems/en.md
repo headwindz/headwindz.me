@@ -65,14 +65,12 @@ A **workflow** follows application-defined control flow, such as a pipeline or s
 | **Failure mode**   | Step errors or incorrect model output     | Model hallucination / infinite loop |
 
 <Mermaid
-  chart={`
-flowchart LR
+chart={`flowchart LR
   input[Raw Document] --> step1[Node 1: OCR & Chunking]
   step1 --> step2[Node 2: LLM Information Extraction]
   step2 --> step3{Node 3: Deterministic Schema Validation}
   step3 -- Valid --> step4[Node 4: Database Ingestion]
-  step3 -- Invalid --> step5[Node 5: Human Review Queue]
-`}
+  step3 -- Invalid --> step5[Node 5: Human Review Queue]`}
 />
 
 ### When to use workflows
@@ -107,16 +105,14 @@ While a raw LLM answers a question, an agent pursues an objective. The user prov
 **ReAct** is one useful pattern for interleaving reasoning and actions. It is not a requirement for every agent architecture. In this conceptual loop, the model proposes the next action and the host executes it:
 
 <Mermaid
-  chart={`
-flowchart TD
+chart={`flowchart TD
   goal([User Goal]) --> think[Think: Evaluate state and hypotheses]
   think --> plan[Plan: Select next concrete action]
   plan --> act[Act: Execute tool call]
   act --> observe[Observe: Inspect tool execution output]
   observe --> check{Goal achieved?}
   check -- No: Error or next step needed --> think
-  check -- Yes: Final result ready --> done([Final Response])
-`}
+  check -- Yes: Final result ready --> done([Final Response])`}
 />
 
 1. **Think (Reasoning)**: The LLM analyzes the current goal, conversation history, and prior tool outputs to synthesize an updated internal state.
@@ -248,13 +244,13 @@ The **Model Context Protocol (MCP)** is an open standard designed to solve the $
 Without MCP, every AI platform (ChatGPT, Claude, Cursor, custom company agents) must author proprietary integrations for every tool (GitHub, Postgres, Slack, Jira). MCP standardizes this interface via a universal client-host-server protocol built over JSON-RPC 2.0.
 
 <Mermaid
-  chart={`
+chart={`
 flowchart LR
-  subgraph Clients[AI Applications / Hosts]
-    c1[Claude Desktop]
-    c2[Cursor IDE]
-    c3[Custom Agent Runtime]
-  end
+subgraph Clients[AI Applications / Hosts]
+c1[Claude Desktop]
+c2[Cursor IDE]
+c3[Custom Agent Runtime]
+end
 
 subgraph Protocol[Model Context Protocol - JSON-RPC]
 mcp[Standardized MCP Client / Server Spec]
@@ -379,11 +375,11 @@ In large codebases or enterprise environments, an agent may have access to 50+ s
 Progressive disclosure solves this by loading skills in three progressive tiers:
 
 <Mermaid
-  chart={`
+chart={`
 flowchart TD
-  subgraph Tier1[Tier 1: Catalog Index - Always in Context]
-    idx[Skill Manifest: Name + 1-sentence Description <br/> illustrative compact metadata]
-  end
+subgraph Tier1[Tier 1: Catalog Index - Always in Context]
+idx[Skill Manifest: Name + 1-sentence Description <br/> illustrative compact metadata]
+end
 
 subgraph Tier2[Tier 2: On-Demand Activation - Loaded when Triggered]
 full[SKILL.md Body: Full Playbook, Instructions, Rules & Examples <br/> size depends on the skill]
@@ -521,14 +517,14 @@ While separate contexts can reduce irrelevant material, it introduces significan
 There are five major topological patterns for orchestrating sub-agents:
 
 <Mermaid
-  chart={`
+chart={`
 flowchart TD
-  subgraph Pattern1[1. Hierarchical Supervisor]
-    s1[Supervisor] --> w1[Worker A]
-    s1 --> w2[Worker B]
-    w1 -->|Summary| s1
-    w2 -->|Summary| s1
-  end
+subgraph Pattern1[1. Hierarchical Supervisor]
+s1[Supervisor] --> w1[Worker A]
+s1 --> w2[Worker B]
+w1 -->|Summary| s1
+w2 -->|Summary| s1
+end
 
 subgraph Pattern2[2. Sequential Pipeline]
 p1[Planner] -->|Specs| p2[Coder]
@@ -636,8 +632,7 @@ Implement an orchestrator whenever your architecture spans:
 An LLM is inherently probabilistic, non-deterministic, and black-box. **Hooks provide the deterministic software boundaries** required to observe, inspect, mutate, or abort agent operations. Similar to Git hooks, Webhooks, or React lifecycle methods, agent hooks give software engineers application-defined interception points. Enforcement depends on which operations pass through those points.
 
 <Mermaid
-  chart={`
-flowchart LR
+chart={`flowchart LR
   up[User Prompt] -->|beforePrompt| hp[Input Hook: Scrub PII & Sanitize]
   hp --> agent[Agent Reasoning]
   agent -->|beforeToolCall| ht[Tool Hook: Auth Check & Sandbox Gate]
@@ -645,8 +640,7 @@ flowchart LR
   tool -->|afterToolCall| htr[Output Hook: Truncate & Format]
   htr --> agent
   agent -->|afterModelCall| ho[Model Hook: Check Hallucinations & Leaks]
-  ho --> res([Final Response])
-`}
+  ho --> res([Final Response])`}
 />
 
 ### Common agent lifecycle hooks
@@ -741,8 +735,7 @@ Real safety requires **deterministic code execution outside the model**.
 Because prompts cannot enforce safety, **guardrails are typically implemented directly inside lifecycle hooks**:
 
 <Mermaid
-  chart={`
-flowchart LR
+chart={`flowchart LR
   subgraph Agent Runtime
     p[User Input] --> bph[Hook: beforePrompt]
     bph -->|1. Input Guardrail: PII & Injection Filter| llm[LLM Reasoning]
@@ -752,8 +745,7 @@ flowchart LR
     ath -->|Sanitize output| llm
     llm --> amh[Hook: afterModelCall]
     amh -->|3. Output Guardrail: Hallucination & Leak Check| out[User Response]
-  end
-`}
+  end`}
 />
 
 1. **Input guardrails (hooked at `beforePrompt`)**:
@@ -815,9 +807,9 @@ An agent harness fulfills four core engineering functions:
    - Runs test runners (`pytest`, `jest`, `pnpm test`), compiles code, checks git diffs, or runs an LLM-as-a-judge grader to produce a recorded result. A model-based grader remains an uncertain judgment; deterministic checks also establish only the conditions they actually test.
 
 <Mermaid
-  chart={`
+chart={`
 flowchart TD
-  task([Task / Benchmark Prompt]) --> harness
+task([Task / Benchmark Prompt]) --> harness
 
 subgraph harness[AI Runtime & Evaluation Harness]
 prov[1. Workspace Provisioning: Git Worktree & Sandbox]
@@ -927,14 +919,14 @@ A harness is essential in four primary engineering scenarios:
 Understanding modern AI requires seeing how these twelve pieces fit together in a compound system:
 
 <Mermaid
-  chart={`
+chart={`
 flowchart TB
-  subgraph Harness[Runtime, Sandbox & Evaluation Harness]
-    subgraph Control[Control & Interception Layer]
-      hooks[Hooks: Lifecycle Interception Points]
-      gr[Guardrails: Input, Execution & Output Validation]
-      hooks --> gr
-    end
+subgraph Harness[Runtime, Sandbox & Evaluation Harness]
+subgraph Control[Control & Interception Layer]
+hooks[Hooks: Lifecycle Interception Points]
+gr[Guardrails: Input, Execution & Output Validation]
+hooks --> gr
+end
 
     subgraph Orchestration[Orchestration & Coordination Layer]
       orch[Orchestrator: Routing & State Management]

@@ -2,12 +2,16 @@
 
 import { usePathname } from 'next/navigation'
 import Link from './Link'
+import { useLocale } from './LocaleProvider'
+import { dictionaries, localizedHref } from '../lib/i18n'
 import headerNavLinks from '@/data/headerNavLinks'
 
 export default function DesktopNav() {
-  const pathname = usePathname()
+  const locale = useLocale()
+  const t = dictionaries[locale]
+  const pathname = usePathname().replace(/^\/zh(?=\/|$)/, '') || '/'
   return (
-    <nav aria-label="Main navigation" className="desktop-nav">
+    <nav aria-label={t.navigation} className="desktop-nav">
       {headerNavLinks
         .filter((link) => link.href !== '/')
         .map((link) => {
@@ -16,8 +20,12 @@ export default function DesktopNav() {
             pathname.startsWith(`${link.href}/`) ||
             (link.href === '/blog' && pathname === '/')
           return (
-            <Link key={link.href} href={link.href} aria-current={active ? 'page' : undefined}>
-              {link.title}
+            <Link
+              key={link.href}
+              href={localizedHref(link.href, locale)}
+              aria-current={active ? 'page' : undefined}
+            >
+              {t[link.title.toLowerCase() as 'home' | 'blogs' | 'projects' | 'tags']}
             </Link>
           )
         })}

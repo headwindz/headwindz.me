@@ -1,10 +1,14 @@
 'use client'
 
+import { useLocale } from './LocaleProvider'
+import { dictionaries } from '../lib/i18n'
+
 import { useEffect, useState, useId, type MouseEvent } from 'react'
 import { flushSync } from 'react-dom'
 import { useTheme } from 'next-themes'
 
 export default function ThemeSwitch() {
+  const t = dictionaries[useLocale()]
   const maskId = useId()
   const [mounted, setMounted] = useState(false)
   const { setTheme, resolvedTheme } = useTheme()
@@ -46,8 +50,8 @@ export default function ThemeSwitch() {
       <button
         className="reading-light-switch"
         disabled={!mounted}
-        aria-label={light ? 'Switch to dark mode' : 'Switch to light mode'}
-        title={light ? 'Switch to night' : 'Switch to day'}
+        aria-label={light ? t.dark : t.light}
+        title={light ? t.dark : t.light}
         onClick={toggle}
       >
         <svg

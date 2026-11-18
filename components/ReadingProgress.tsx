@@ -1,8 +1,10 @@
 'use client'
 
+import { useLocale } from './LocaleProvider'
 import { useEffect, useRef, useState } from 'react'
 
 export default function ReadingProgress() {
+  const locale = useLocale()
   const fillRef = useRef<HTMLDivElement>(null)
   const [percent, setPercent] = useState(0)
 
@@ -47,7 +49,7 @@ export default function ReadingProgress() {
     <div
       className="reading-progress"
       role="progressbar"
-      aria-label="Reading progress"
+      aria-label={locale === 'zh' ? '阅读进度' : 'Reading progress'}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={percent}

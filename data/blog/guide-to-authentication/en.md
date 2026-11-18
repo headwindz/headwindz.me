@@ -1,0 +1,1012 @@
+---
+title: Complete guide to web authentication methods
+tags: [authentication, web, cookie, session, token, jwt, sso, oauth]
+date: 2026-02-19
+summary: A comprehensive guide to modern web authentication methods including Cookie + Session, Token (JWT), Single Sign-On (SSO), OAuth, and QR Code login with implementation details and security best practices.
+---
+
+A login flow needs to answer several different questions: how the user proves identity, what credential represents the login afterward, where that credential is stored, and how it is revoked. Cookies, JWTs, OAuth, SSO, and QR codes describe different parts of that flow. They are not five mutually exclusive authentication protocols.
+
+This guide explains those boundaries, then follows a server-managed browser login, a token lifecycle, federated sign-in, and cross-device confirmation. Code examples isolate the mechanism being discussed. Application-specific database and identity-provider helpers must implement the contracts stated beside them.
+
+## Cookie + session authentication
+
+### Understanding HTTP statelessness
+
+HTTP is stateless: the protocol does not automatically make a later request part of a previous application login. That is independent of transport connections, which can remain open or multiplex requests. An application uses a credential on subsequent requests to associate them with an authenticated session. [HTTP semantics](https://www.rfc-editor.org/rfc/rfc9110.html).
+
+To solve this problem, [Lou Montulli](https://en.wikipedia.org/wiki/Lou_Montulli) introduced `cookies` in 1994.
+
+### How cookies work
+
+A `cookie` is a piece of data sent from the server and stored on the client-side. The browser automatically includes these cookies in subsequent requests to the **same domain**, allowing the server to recognize returning users.
+
+A cookie is a browser storage and transport mechanism, not an identity check. It can carry an opaque session ID or a signed token. In the server-side session design below, the server verifies credentials and associates a random session ID with the authenticated user.
+
+A `session` is server-side storage (in memory, files, or databases) that holds user state information, identified by a unique session id.
+
+### Implementation flow
+
+```
+┌─────────┐                                  ┌──────────────┐                    ┌─────────────┐
+│ Browser │                                  │  Web Server  │                    │   Session   │
+└────┬────┘                                  └──────┬───────┘                    └──────┬──────┘
+     │                                              │                                   │
+     │  1. POST /login (username, password)         │                                   │
+     │─────────────────────────────────────────────>│                                   │
+     │                                              │                                   │
+     │                                              │  2. Validate credentials          │
+     │                                              │  (check against database)         │
+     │                                              │                                   │
+     │                                              │  3. Create session                │
+     │                                              │  sessionId = generateId()         │
+     │                                              │──────────────────────────────────>│
+     │                                              │                                   │
+     │                                              │  4. Store session data            │
+     │                                              │  { userId, loginTime, ... }       │
+     │                                              │<──────────────────────────────────│
+     │                                              │                                   │
+     │  5. Set-Cookie: sessionId=abc123;            │                                   │
+     │     HttpOnly; Secure; SameSite=Strict        │                                   │
+     │<─────────────────────────────────────────────│                                   │
+     │                                              │                                   │
+     │  6. GET /dashboard                           │                                   │
+     │     Cookie: sessionId=abc123                 │                                   │
+     │─────────────────────────────────────────────>│                                   │
+     │                                              │                                   │
+     │                                              │  7. Retrieve session              │
+     │                                              │  GET session by sessionId         │
+     │                                              │──────────────────────────────────>│
+     │                                              │                                   │
+     │                                              │  8. Return session data           │
+     │                                              │  { userId: 123, valid: true }     │
+     │                                              │<──────────────────────────────────│
+     │                                              │                                   │
+     │  9. Return protected resource                │                                   │
+     │     (dashboard HTML)                         │                                   │
+     │<─────────────────────────────────────────────│                                   │
+     │                                              │                                   │
+     │  10. GET /api/profile                        │                                   │
+     │      Cookie: sessionId=abc123                │                                   │
+     │─────────────────────────────────────────────>│                                   │
+     │                                              │  Session automatically validated  │
+     │  11. Return user profile                     │  (repeat steps 7-8)               │
+     │<─────────────────────────────────────────────│                                   │
+```
+
+**Initial login:**
+
+1. User visits `example.com/page` and enters credentials
+2. Server validates credentials and creates a unique session id
+3. Session id is stored server-side (in memory, Redis, database, etc.)
+4. Server responds with `Set-Cookie` header containing the session id
+5. Browser stores the cookie automatically
+
+**Subsequent requests:**
+
+1. User navigates to `example.com/another-page`
+2. Browser automatically includes the session id cookie in the request
+3. Server retrieves the session data using the session id
+4. If valid, server grants access to the requested resource
+
+### Limitations
+
+While `Cookie + Session` authentication is battle-tested, it has several drawbacks:
+
+**Scalability issues:**
+
+- Active sessions need server-side storage, which can be an external datastore rather than application-process memory
+- In a clustered environment, sessions must be synchronized across servers (using Redis or sticky sessions)
+- Horizontal scaling needs a deliberate shared-session or routing strategy; it is not inherently impossible
+
+**Security concerns:**
+
+- Vulnerable to CSRF (Cross-Site Request Forgery) attacks
+- Requires careful domain and path configuration
+
+**Cross-domain challenges:**
+
+- Cookies don't work across different domains
+- Requires workarounds for microservices architectures
+
+### Security best practices
+
+When implementing `Cookie + Session` authentication, always:
+
+- **Set `HttpOnly` flag** - Prevents JavaScript access, mitigating XSS attacks
+- **Set `Secure` flag** - Ensures cookies only sent over HTTPS
+- **Set `SameSite` attribute** - Prevents CSRF attacks (`SameSite=Strict` or `SameSite=Lax`), alongside appropriate CSRF protections for state-changing requests
+
+E.g.
+
+```bash
+Set-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict; Max-Age=3600; Path=/
+```
+
+## Token-based authentication (JWT)
+
+A signed access token is another way to represent authenticated access. It can also be carried in a cookie, so distinguish credential format from browser transport.
+
+### What is a token?
+
+A **token** is a credential. It may be an opaque random value that the server looks up, or a structured value such as a signed JWT. A signed JWT can carry claims that a resource server verifies without loading a session record. Storage, revocation, and authorization policies can still require server-side state.
+
+### Implementation flow
+
+```
+┌─────────┐                                  ┌──────────────┐
+│ Client  │                                  │  API Server  │
+└────┬────┘                                  └──────┬───────┘
+     │                                              │
+     │  1. POST /api/login                          │
+     │     { username, password }                   │
+     │─────────────────────────────────────────────>│
+     │                                              │
+     │                                              │  2. Validate credentials
+     │                                              │     (check database)
+     │                                              │
+     │                                              │  3. Generate token
+     │                                              │     - Create payload
+     │                                              │     - Sign with secret
+     │                                              │
+     │  4. Return token                             │
+     │     { token: "eyJhbGc...", expiresIn }       │
+     │<─────────────────────────────────────────────│
+     │                                              │
+     │  5. Store token locally                      │
+     │     (e.g. localStorage/memory)               │
+     │                                              │
+     │  6. GET /api/profile                         │
+     │     Authorization: Bearer eyJhbGc...         │
+     │─────────────────────────────────────────────>│
+     │                                              │
+     │                                              │  7. Extract token from header
+     │                                              │
+     │                                              │  8. Verify token signature
+     │                                              │     (using secret key)
+     │                                              │
+     │                                              │  9. Check token expiration
+     │                                              │     (exp claim)
+     │                                              │
+     │                                              │  10. Decode payload
+     │                                              │      (extract user info)
+     │                                              │
+     │  11. Return user data                        │
+     │      { id, name, email, ... }                │
+     │<─────────────────────────────────────────────│
+     │                                              │
+     │  12. GET /api/posts                          │
+     │      Authorization: Bearer eyJhbGc...        │
+     │─────────────────────────────────────────────>│
+     │                                              │
+     │                                              │  Token validation
+     │                                              │  (repeat steps 7-10)
+     │                                              │
+     │  13. Return posts                            │
+     │<─────────────────────────────────────────────│
+```
+
+**Initial login:**
+
+1. User authenticates (through username/password, MFA, etc.)
+2. Server generates a token and returns it to the client
+3. Client stores the token according to its threat model. Browser memory, persistent storage, and HttpOnly cookies have different XSS, CSRF, and lifetime tradeoffs
+
+**Subsequent requests:**
+
+1. Client includes the token in the request header (typically `Authorization: Bearer <token>`)
+2. Server validates the token signature and expiration
+3. If valid, server processes the request
+
+### Advantages and disadvantages
+
+**Advantages:**
+
+- **Stateless** - No server-side session storage required
+- **Scalable** - Works seamlessly in distributed/clustered environments
+- **Cross-domain** - Can be sent in headers, bypassing cookie domain restrictions
+
+**Disadvantages:**
+
+- **Cannot be revoked easily** - Once issued, tokens remain valid until expiration
+- **Larger payload** - Tokens are larger than session id, consuming more bandwidth
+- **Storage concerns** - Vulnerable to XSS if stored in localStorage
+
+### Understanding JWT (JSON web token)
+
+The most popular token format is **JWT**, which consists of three parts separated by dots (`.`):
+
+```bash
+header.payload.signature
+```
+
+#### 1. Header
+
+Specifies the algorithm and token type:
+
+```javascript
+const header = {
+  alg: 'HS256', // HMAC-SHA256 algorithm
+  typ: 'JWT', // Token type
+}
+```
+
+#### 2. Payload
+
+Contains claims (user data and metadata):
+
+```js
+const payload = {
+  sub: '123456', // Subject (user ID)
+  name: 'headwindz', // User name
+  iat: 1422779638, // Issued at timestamp
+  exp: 1422783238, // Expiration timestamp
+  role: 'admin', // Custom claim
+}
+```
+
+**Standard claims:**
+
+- `iss` (issuer) - Who issued the token
+- `sub` (subject) - User identifier
+- `aud` (audience) - Intended recipient
+- `exp` (expiration) - Expiration time
+- `iat` (issued at) - Token creation time
+- `nbf` (not before) - Token not valid before this time
+
+#### 3. Signature
+
+Ensures token integrity and authenticity:
+
+```js
+// Generate signature
+const base64Header = base64UrlEncode(JSON.stringify(header))
+const base64Payload = base64UrlEncode(JSON.stringify(payload))
+const unsignedToken = `${base64Header}.${base64Payload}`
+
+// Sign with secret key
+const signature = HMAC_SHA256(secretKey, unsignedToken)
+const base64Signature = base64UrlEncode(signature)
+
+// Final token
+const token = `${base64Header}.${base64Payload}.${base64Signature}`
+```
+
+**Example jwt:**
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+```
+
+Since JWTs are base64 encoded, you can easily decode them to inspect the header and payload:
+
+[JWT decoder](https://toolhub.run/tools/jwt-decoder)
+
+Note: JWTs are **not encrypted** by default. They are only encoded and signed. Therefore, avoid putting sensitive information in the payload. Backends should always verify the signature and validate claims before trusting the data in the token.
+
+### Token verification process
+
+Use a maintained JWT implementation instead of comparing a hand-written HMAC and decoding claims yourself. For example, with `jsonwebtoken` in a Node.js service:
+
+```js
+import jwt from 'jsonwebtoken'
+
+function verifyToken(token, secretKey, issuer, audience) {
+  const payload = jwt.verify(token, secretKey, {
+    algorithms: ['HS256'],
+    issuer,
+    audience,
+  })
+  if (typeof payload === 'string' || typeof payload.exp !== 'number') {
+    throw new Error('An exp claim is required')
+  }
+  return payload
+}
+```
+
+The allowed algorithm and key must be chosen by the server, not accepted from an untrusted token header. Require the claims your application depends on, including expiry, and match issuer and audience to the token contract. Do not treat decoding as verification. The later abbreviated revocation snippets focus on datastore checks; apply the same verification contract when integrating them. [JWT best current practices](https://www.rfc-editor.org/rfc/rfc8725.html).
+
+### Refresh tokens and token rotation
+
+Short-lived access tokens limit how long a stolen access credential can be used. A refresh token allows the client to obtain a replacement without asking for the password again. Lifetimes depend on the application; 15-minute access tokens and a seven-day refresh session are example choices, not universal security requirements.
+
+The client must possess the refresh credential. The server stores a verification/revocation record, preferably using a hash of an opaque random token instead of retaining the raw bearer secret. For a same-site browser application, a server can set that credential in an `HttpOnly; Secure; SameSite=Lax` cookie and return an access token for memory storage. The browser does not set an HttpOnly cookie from JavaScript.
+
+<Mermaid
+chart={`sequenceDiagram
+  participant B as Browser
+  participant A as Auth server
+  participant D as Token store
+  B->>A: Login credentials over HTTPS
+  A->>D: Create refresh family and hashed token record
+  A->>B: Access token and HttpOnly refresh cookie
+  B->>A: Refresh request with cookie and CSRF protection
+  A->>D: Atomically consume old token and store replacement
+  D->>A: Rotation committed
+  A->>B: New access token and replacement refresh cookie
+  Note over A,D: Reuse of a consumed token revokes the refresh family`}
+/>
+
+#### Atomic rotation contract
+
+The following is datastore pseudocode. `transaction` must provide row locking or an equivalent compare-and-set guarantee; two concurrent requests cannot both consume the same active token. Keep consumed records until the family expires so reuse can be recognized.
+
+```text
+refresh(request):
+    validate the request's CSRF protection and expected origin
+    require the HttpOnly refresh cookie
+    presented_hash = SHA256(cookie_value)
+    replacement = cryptographically_random_secret()
+
+    transaction:
+        old = lock token record by presented_hash
+        if missing or expired or its family is revoked:
+            outcome = REJECT
+        else if old was already consumed:
+            revoke its refresh family
+            outcome = REUSE_DETECTED
+        else:
+            mark old as consumed
+            insert hash(replacement), same family, same absolute family expiry
+            outcome = ROTATED
+    commit transaction, including any family revocation
+
+    if outcome is not ROTATED:
+        clear refresh cookie and require login
+    otherwise:
+        set replacement HttpOnly cookie
+        return a new short-lived access token
+```
+
+Do not throw an exception inside a transaction in a way that rolls back the reuse revocation. Coordinate refresh requests in the client so tabs do not routinely race with the same credential. If a response is lost after rotation commits, the old credential may no longer be usable; choose and document your recovery policy rather than blindly retrying it.
+
+Revoking the refresh family prevents further refreshes. Already-issued access tokens remain usable until expiry unless the resource server also checks revocation state. Device metadata may help detect anomalies, but a fingerprint is not cryptographic proof that a credential stayed on one device. [OAuth refresh-token replay protection](https://www.rfc-editor.org/rfc/rfc9700.html#section-4.14.2).
+
+#### Verify the lifecycle
+
+Check that one valid refresh returns a replacement, the consumed credential cannot refresh again, reuse commits family revocation, and two simultaneous refreshes cannot both succeed. Also check expiry, logout, missing cookies, invalid CSRF protection, and recovery after a lost response. These are different cases from merely accepting a valid JWT signature.
+
+### Token revocation strategies
+
+Even with refresh tokens, you need ways to **immediately invalidate tokens** (e.g., user logout, security breach, account suspension).
+
+#### Strategy 1: token blacklist (simple)
+
+Maintain a server-side list of revoked tokens. When a token is presented, check if it's blacklisted.
+
+**Pros:** Simple to implement, works for all token types
+
+**Cons:** Each protected request needs a revocation lookup with a defined freshness policy; use indexed identifiers and expire records when tokens expire.
+
+#### Strategy 2: track token identifiers
+
+Add a unique identifier (`jti`) to every token and track which ones are invalidated. This can make records smaller than storing whole tokens, but still needs a lookup and an expiry/cleanup policy.
+
+**Pros:** Per-token revocation with compact identifiers. The allowlist example below stores issued identifiers; a denylist would instead store revoked identifiers.
+
+**Cons:** Requires a datastore check, retention policy, and consistent failure handling
+
+```js
+// Generate token with JTI
+const jti = generateRandomId() // Unique token ID
+const token = jwt.sign(
+  {
+    userId: user.id,
+    jti: jti, // Add unique ID
+    type: 'access',
+  },
+  SECRET,
+  { expiresIn: '15m' }
+)
+
+// Store JTI in database when issued
+await db.tokenJtis.create({
+  jti: jti,
+  userId: user.id,
+  issuedAt: new Date(),
+  expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+  isRevoked: false,
+})
+
+// Logout - revoke by marking JTI as revoked
+app.post('/logout', verifyAccessToken, async (req, res) => {
+  const token = req.headers.authorization.split(' ')[1]
+  const payload = jwt.decode(token)
+
+  await db.tokenJtis.updateOne({ jti: payload.jti }, { isRevoked: true })
+
+  res.json({ message: 'Logged out successfully' })
+})
+
+// Verification middleware
+async function verifyToken(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1]
+
+  try {
+    const payload = jwt.verify(token, SECRET)
+
+    // Check if JTI is revoked
+    const jti = await db.tokenJtis.findOne({ jti: payload.jti })
+    if (!jti || jti.isRevoked) {
+      return res.status(401).json({ error: 'Token has been revoked' })
+    }
+
+    req.user = payload
+    next()
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token' })
+  }
+}
+```
+
+#### Strategy 3: token version/rotation - advanced
+
+Assign a version number to tokens and rotate it on logout. Only tokens with current version are valid.
+
+**Pros:** One database lookup per user (not per token), instant revocation, can revoke all user tokens
+
+**Cons:** Requires tracking per user, less granular than JTI
+
+```js
+// Login - include user's current token version
+const tokenVersion = user.tokenVersion // Read the stored value; do not reset it at login.
+const token = jwt.sign(
+  {
+    userId: user.id,
+    version: tokenVersion,
+  },
+  SECRET,
+  { expiresIn: '15m' }
+)
+
+// User logout - increment their token version
+app.post('/logout', verifyAccessToken, async (req, res) => {
+  await db.users.updateOne(
+    { id: req.user.userId },
+    { $inc: { tokenVersion: 1 } } // Invalidates all existing tokens for this user
+  )
+
+  res.json({ message: 'Logged out, all devices logged out' })
+})
+
+// Verification - compare token version against user's current version
+async function verifyToken(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1]
+
+  try {
+    const payload = jwt.verify(token, SECRET)
+    const user = await db.users.findOne({ id: payload.userId })
+
+    if (!user || payload.version !== user.tokenVersion) {
+      return res.status(401).json({ error: 'Token has been revoked' })
+    }
+
+    req.user = payload
+    next()
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token' })
+  }
+}
+```
+
+#### Choose revocation granularity
+
+| Strategy               | Stored state                                     | Effect of revocation                   |
+| ---------------------- | ------------------------------------------------ | -------------------------------------- |
+| Token denylist         | Revoked token hashes or identifiers until expiry | Reject that token on a checked request |
+| Issued-token allowlist | Active token identifiers and expiry              | Reject a removed or revoked identifier |
+| User/session version   | Current version for that scope                   | Reject older tokens in that scope      |
+
+All three need a current lookup, directly or through a cache with an explicit freshness policy. An index can make a per-token lookup efficient; a per-user version does not eliminate the need to consult state. Choose the scope needed for logout and incident response instead of ranking the strategies as universally scalable or unscalable.
+
+### Security recommendations
+
+1. **Use strong secret keys** - At least 256 bits, randomly generated
+2. **Never expose secrets** - Keep secret keys secure, use environment variables
+3. **Set appropriate expiration** - Balance security and user experience
+4. **Avoid sensitive data in payload** - jwt payload is base64 encoded, not encrypted
+
+## Federated sign-in with OAuth and OpenID Connect
+
+**OAuth 2.0** provides delegated authorization: an application obtains scoped access to a resource. **OpenID Connect (OIDC)** adds an identity layer and ID tokens for sign-in. Google supports OIDC; other providers can expose different identity APIs. Do not assume an OAuth access token from any provider is itself a login assertion. [OIDC Core](https://openid.net/specs/openid-connect-core-1_0.html).
+
+### Why OAuth?
+
+**For users:**
+
+- No need to create yet another account
+- Faster registration process
+- Trust established providers' security
+- One less password to remember
+
+**For developers:**
+
+- Reduce development time (no need to build authentication from scratch)
+- Lower security risks (password storage handled by provider)
+- Access user data with permission (email, profile picture, etc.)
+
+### OAuth 2.0 flow
+
+The following example uses a confidential server-side web application and Google OIDC. Its backend holds the client secret. Public clients such as browser-only applications do not safely hold that secret and use their provider's supported authorization-code/PKCE flow.
+
+#### Setup phase
+
+1. **Register your application** at [Google Cloud Console](https://console.cloud.google.com/)
+2. **Create OAuth 2.0 credentials** and receive:
+   - `client_id` - Public identifier for your app
+   - `client_secret` - Secret key for server communication
+3. **Configure authorized redirect URIs** (e.g., `https://yourapp.com/auth/google/callback`)
+
+#### Authentication flow
+
+```
+┌─────────┐                                  ┌──────────┐                     ┌─────────────┐
+│  User   │                                  │ Your App │                     │   Google    │
+└────┬────┘                                  └────┬─────┘                     └──────┬──────┘
+     │                                            │                                  │
+     │  1. Click "Login with Google"              │                                  │
+     │───────────────────────────────────────────>│                                  │
+     │                                            │                                  │
+     │  2. Redirect to Google OAuth               │                                  │
+     │<───────────────────────────────────────────│                                  │
+     │                                                                               │
+     │  https://accounts.google.com/o/oauth2/v2/auth?                                │
+     │     client_id=YOUR_CLIENT_ID&                                                 │
+     │     redirect_uri=yourapp.com/callback&                                        │
+     │     response_type=code&                                                       │
+     │     scope=openid%20profile%20email                                            │
+     │                                                                               │
+     │  3. User logs in & authorizes                                                 │
+     │──────────────────────────────────────────────────────────────────────────────>│
+     │                                            │                                  │
+     │                                              4. Redirect back with code       │
+     │                                              yourapp.com/callback?code=xx     │
+     │                                            |<─────────────────────────────────│
+     │                                            │                                  │
+     │                                            │                                  │
+     │                                            │  5. Exchange code for token      │
+     │                                            │  POST /oauth/token               │
+     │                                            │  - code: xx                      │
+     │                                            │  - client_id                     │
+     │                                            │  - client_secret                 │
+     │                                            │─────────────────────────────────>│
+     │                                            │                                  │
+     │                                            │  6. Return access_token          │
+     │                                            │<─────────────────────────────────│
+     │                                            │                                  │
+     │                                            │  7. Fetch user info              │
+     │                                            │  GET /api/user                   │
+     │                                            │  Authorization: Bearer TOKEN     │
+     │                                            │─────────────────────────────────>│
+     │                                            │                                  │
+     │                                            │  8. Return user data             │
+     │                                            │<─────────────────────────────────│
+     │                                            │                                  │
+     │  9. Create session & redirect              │                                  │
+     │<───────────────────────────────────────────│                                  │
+```
+
+### Detailed steps
+
+**Step 1: Initiate login**
+
+User clicks "Login with Google" on your site.
+
+**Step 2: Redirect to OAuth provider**
+
+The application needs a server-side session for the temporary state below. Configure secure cookies and a production session store. These Express-style excerpts show where state and PKCE values live; use the provider's maintained OIDC library for discovery and token validation in a deployed application.
+
+```js
+import { randomBytes, createHash } from 'node:crypto'
+
+app.get('/auth/google', (req, res) => {
+  const state = randomBytes(32).toString('base64url')
+  const codeVerifier = randomBytes(32).toString('base64url')
+  req.session.oauth = { state, codeVerifier, createdAt: Date.now() }
+
+  const query = new URLSearchParams({
+    client_id: CLIENT_ID,
+    redirect_uri: CALLBACK_URL,
+    response_type: 'code',
+    scope: 'openid profile email',
+    state,
+    code_challenge: createHash('sha256').update(codeVerifier).digest('base64url'),
+    code_challenge_method: 'S256',
+  })
+  // Persist the session before following the redirect.
+  req.session.save((error) => {
+    if (error) return res.sendStatus(500)
+    res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${query}`)
+  })
+})
+```
+
+**Step 3: User authorizes**
+
+User logs in to Google (if not already) and approves the requested permissions (profile, email, etc.)
+
+**Step 4: Provider redirects with code**
+
+Google redirects back to your specified callback:
+
+```
+https://yourapp.com/callback?code=AUTHORIZATION_CODE&state=RANDOM_STATE&scope=openid+profile+email
+```
+
+**Step 5: Exchange code for access token**
+
+For this confidential web client, the server callback validates and consumes state before exchanging the code. `codeVerifier` is read from that same session; it is not a client secret. Then the server exchanges the code:
+
+```js
+// Inside the server callback, before the token request:
+const pending = req.session.oauth
+delete req.session.oauth // Consume state once.
+if (
+  !pending ||
+  typeof req.query.state !== 'string' ||
+  req.query.state !== pending.state ||
+  Date.now() - pending.createdAt > 10 * 60 * 1000 ||
+  typeof req.query.code !== 'string'
+) {
+  return res.sendStatus(400)
+}
+const authorizationCode = req.query.code
+const codeVerifier = pending.codeVerifier
+// Persist state consumption even if the exchange later fails.
+await new Promise((resolve, reject) => {
+  req.session.save((error) => (error ? reject(error) : resolve()))
+})
+
+const response = await fetch('https://oauth2.googleapis.com/token', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: new URLSearchParams({
+    code: authorizationCode,
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    redirect_uri: CALLBACK_URL,
+    code_verifier: codeVerifier,
+    grant_type: 'authorization_code',
+  }),
+})
+
+if (!response.ok) throw new Error('Token exchange failed')
+const { access_token, id_token } = await response.json()
+```
+
+**Why this backend?** This example authenticates a confidential client using its server-held secret. Authorization-code exchange is not universally backend-only; public clients use a supported PKCE flow without embedding a shared secret.
+
+**Step 6-8: validate identity and fetch profile data**
+
+Use a maintained [Google/OIDC library](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token) to verify the ID token's signature, issuer, audience, expiry, and any required nonce binding before creating a login. The validated `(issuer, sub)` pair identifies the account; do not automatically merge accounts merely because email strings match. If you fetch UserInfo, verify that its `sub` matches the validated ID token. The HTTP call below only shows profile retrieval; it does not replace those checks.
+
+```js
+// Install google-auth-library for this Node.js example.
+import { OAuth2Client } from 'google-auth-library'
+
+const oidcClient = new OAuth2Client(CLIENT_ID)
+const ticket = await oidcClient.verifyIdToken({ idToken: id_token, audience: CLIENT_ID })
+const identity = ticket.getPayload()
+if (!identity?.sub) throw new Error('Missing verified subject')
+
+const userResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+  headers: {
+    Authorization: `Bearer ${access_token}`,
+  },
+})
+
+if (!userResponse.ok) throw new Error('UserInfo failed')
+const userData = await userResponse.json()
+if (userData.sub !== identity.sub) throw new Error('Subject mismatch')
+```
+
+**Step 9: create session**
+
+Create your own application session/token for the user:
+
+```js
+// Create user in your database (if new)
+const user = await User.findOrCreate({
+  issuer: identity.iss,
+  subject: identity.sub,
+  email: userData.email,
+  name: userData.name,
+  picture: userData.picture,
+})
+
+// Generate your app's session token
+const sessionToken = jwt.sign({ userId: user.id }, YOUR_SECRET, {
+  algorithm: 'HS256',
+  expiresIn: '15m',
+})
+
+// Set cookie or return token to client
+res.cookie('session', sessionToken, { httpOnly: true, secure: true, sameSite: 'lax' })
+```
+
+### OAuth scopes
+
+Scopes define what data your app can access. Each provider has its own set of scopes. E.g.
+
+| Scope     | Description                            |
+| --------- | -------------------------------------- |
+| `openid`  | Requests OpenID Connect authentication |
+| `profile` | Basic profile (name, picture)          |
+| `email`   | Email address                          |
+| `repo`    | GitHub repositories (GitHub)           |
+
+**Important:** Only request scopes you actually need! Users are less likely to authorize apps that request excessive permissions.
+
+### Security considerations
+
+1. Validate one-time state in the same server session that initiated sign-in, as shown above. Browser `sessionStorage` is not accessible to a server-side callback.
+2. Use PKCE and the provider's supported code flow; keep confidential-client secrets on the server.
+3. Validate the OIDC identity assertion and subject binding before creating an application session.
+4. Regenerate the application session identifier after successful sign-in, set cookie security attributes, and restrict post-login redirects to allowed application routes.
+
+[OAuth security best current practice](https://www.rfc-editor.org/rfc/rfc9700.html).
+
+### Popular OAuth providers
+
+| Provider   | Use Cases                          | Documentation                                                                  |
+| ---------- | ---------------------------------- | ------------------------------------------------------------------------------ |
+| **Google** | General purpose, wide reach        | [Google OAuth](https://developers.google.com/identity/protocols/oauth2)        |
+| **GitHub** | Developer tools, code repositories | [GitHub OAuth](https://docs.github.com/en/developers/apps/building-oauth-apps) |
+
+### Why exchange a code?
+
+An authorization code is short-lived, single-use, and bound to the client and redirect URI. PKCE additionally binds redemption to the verifier created for that request. The browser can carry the code back to the application without putting an API access token in the redirect URL.
+
+The backend handling in this example is one client architecture, not a property of every OAuth flow. A code can also leak, so protect callback URLs, logs, session binding, and token exchange. Keep access and refresh credentials out of URLs.
+
+## Single sign-on (SSO)
+
+**Single Sign-On (SSO)** allows users to authenticate once and gain access to multiple applications without re-entering credentials. It's a centralized authentication mechanism commonly used in enterprise environments.
+
+### The problem SSO solves
+
+Imagine a large organization with multiple internal applications:
+
+- HR portal
+- Project management tool
+- CRM system
+
+Without SSO, users would need to:
+
+- Remember different passwords for each system
+- Log in separately to each application
+- Deal with password reset requests across multiple platforms
+
+SSO solves this by providing `one authentication point` for all services.
+
+### How SSO works
+
+SSO relies on a **central authentication server** (often called an Identity Provider or IdP) that all applications trust.
+
+```
+┌─────────┐                 ┌──────────┐                 ┌──────────┐                 ┌──────────┐
+│  User   │                 │  App A   │                 │  App B   │                 │   SSO    │
+└────┬────┘                 └────┬─────┘                 └────┬─────┘                 └────┬─────┘
+     │                           │                            │                            │
+     │  1. Visit app-a.com       │                            │                            │
+     │──────────────────────────>│                            │                            │
+     │                           │                            │                            │
+     │                           │  2. No session found       │                            │
+     │                           │     redirect to SSO        │                            │
+     │                           │                            │                            │
+     │  3. Redirect to SSO login                                                           │
+     │     sso.com?returnUrl=app-a.com&appId=app-a                                         │
+     │────────────────────────────────────────────────────────────────────────────────────>│
+     │                           │                            │                            │
+     │  4. Show login page                                                                 │
+     │<────────────────────────────────────────────────────────────────────────────────────│
+     │                           │                            │                            │
+     │  5. Submit credentials and authenticates                                            │
+     │────────────────────────────────────────────────────────────────────────────────────>│
+     │                           │                            │                            │
+     │                           │                            │  6. Validate credentials   │
+     │                           │                            │     Create session         │
+     │                           │                            │     Generate ticket        │
+     │                           │                            │                            │
+     │  7. Redirect with ticket                                                            │
+     │     app-a.com?ticket=xyz123                                                         │
+     │     Set-Cookie: ssoSession=abc (sso.com domain)                                     │
+     │<────────────────────────────────────────────────────────────────────────────────────│
+     │                           │                            │                            │
+     │  8. Request with ticket   │                            │                            │
+     │──────────────────────────>│                            │                            │
+     │                           │                            │                            │
+     │                           │  9. Validate ticket (server-to-server)                  │
+     │                           │     POST sso.com/validate                               │
+     │                           │     { ticket: "xyz123", appId: "app_a" }                │
+     │                           │────────────────────────────────────────────────────────>│
+     │                           │                            │                            │
+     │                           │  10. Return user info      │                            │
+     │                           │      { userId, email, name, valid: true }               │
+     │                           │<────────────────────────────────────────────────────────│
+     │                           │                            │                            │
+     │                           │  11. Create session        │                            │
+     │                           │                            │                            │
+     │ 12.Return app-a.com page                               │                            │
+     │    Set-Cookie: appASession                             │                            │
+     │<──────────────────────────│                            │                            │
+     │                           │                            │                            │
+     │  --- User now has 2 sessions: sso.com & app-a.com ---  │                            │
+     │                           │                            │                            │
+     │  13. Visit app-b.com                                                                │
+     │───────────────────────────────────────────────────────>│                            │
+     │                           │                            │                            │
+     │                           │                            │  14. No session            │
+     │                           │                            │      redirect to SSO       │
+     │                           │                            │                            │
+     │  15. Redirect to SSO                                                                │
+     │     sso.com?returnUrl=app-b.com&appId=app-b                                         │
+     │────────────────────────────────────────────────────────────────────────────────────>│
+     │                           │                            │                            │
+     │                           │                            │  16. Check SSO cookie      │
+     │                           │                            │      Session exists!       │
+     │                           │                            │      No login needed       │
+     │                           │                            │      Generate ticket       │
+     │                           │                            │                            │
+     │  17. Redirect with ticket                              │                            │
+     │      app-b.com?ticket=abc789                           │                            │
+     │<────────────────────────────────────────────────────────────────────────────────────│
+     │                           │                            │                            │
+     │  18. Request with ticket                               │                            │
+     │───────────────────────────────────────────────────────>│                            │
+     │                           │                            │                            │
+     │                           │                            │  19. Validate ticket       │
+     │                           │                            │──────────────────────────> │
+     │                           │                            │                            │
+     │                           │                            │  20. Return user info      │
+     │                           │                            │<────────────────────────── │
+     │                           │                            │                            │
+     │                           │                            │  21. Create session        │
+     │                           │                            │                            │
+     │  22. Return app-b.com page                                                          │
+     │      Set-Cookie: appBSession                                                        │
+     │<───────────────────────────────────────────────────────│                            │
+     │                           │                            │                            │
+     │  --- User now has 3 sessions: sso.com, app-a.com, app-b.com ---                     │
+```
+
+#### First-time access flow
+
+1. User visits `app-a.com`
+2. App A checks if user has a valid session → No
+3. Redirect to SSO `sso.example.com?returnUrl=app-a.com`
+4. User authenticates at the central SSO server (through username/password, MFA, etc.)
+5. SSO creates session and stores it in a cookie for `sso.example.com`
+6. SSO generates ticket (one-time use token) and redirects to `app-a.com?ticket=xyz123`
+7. App A validates ticket with SSO server backend-to-backend
+8. SSO confirms ticket is valid and provides user information
+9. App A creates session for the user and sets its own session cookie
+10. User accesses the requested resource
+
+Now the user has **two active sessions**:
+
+- One with the SSO server (`sso.example.com`)
+- One with App A (`app-a.com`)
+
+#### Accessing another application
+
+1. User visits `app-b.com`
+2. App B checks if user has a valid session → No
+3. Redirect to SSO `sso.example.com?returnUrl=app-b.com`
+4. SSO detects existing session (from step 5 above)
+5. No login required! SSO immediately generates a ticket
+6. Redirects to `app-b.com?ticket=abc789`
+7. App B validates and creates its own session
+8. User accesses the resource without re-entering credentials
+
+### Benefits and challenges
+
+**Benefits:**
+
+- Better UX - Users log in once, access everything
+- Centralized security - Single point for security policies, MFA, auditing
+- Reduced password fatigue - Fewer passwords to remember
+- IT efficiency - Easier user management and access control
+
+**Challenges:**
+
+- Implementation complexity - Requires coordination across applications
+- Security risk - Compromised SSO credentials expose all applications
+
+### Popular SSO providers
+
+| Provider         | Use Cases                        | Documentation                                                     |
+| ---------------- | -------------------------------- | ----------------------------------------------------------------- |
+| Okta             | Enterprise identity management   | [Okta Developer](https://developer.okta.com/)                     |
+| Auth0            | Developer-friendly, customizable | [Auth0 Docs](https://auth0.com/docs)                              |
+| Google Workspace | Google-integrated organizations  | [Google Workspace SSO](https://support.google.com/a/answer/60224) |
+
+### SSO describes the experience, not one ticket protocol
+
+SSO means a user can reach several applications without re-entering credentials after authenticating with the identity provider. It can be implemented with OIDC, SAML, CAS, or other protocols. The one-time-ticket diagram above is a conceptual ticket-based example, not a rule that SSO bypasses authorization codes or client authentication.
+
+Internal applications still need authenticated exchanges, bounded assertions, redirect validation, and protection against replay. Belonging to one organization does not make a bearer credential safe to expose. State which protocol and client type you use before deciding which credentials and validation steps are required.
+
+## QR code authentication
+
+A QR code transports data. It does not authenticate a user by itself. In a cross-device login, an already authenticated phone approves a pending browser login, and the server binds that approval to the initiating browser.
+
+[QRCode generator](https://toolhub.run/tools/qr-generator) and [QRCode parser](https://toolhub.run/tools/qr-parser) help inspect the encoded data; do not put access credentials in a QR you intend to display publicly.
+
+### Separate the public identifier from token retrieval
+
+Use two boundaries:
+
+- A public `qrCodeId` identifies the pending login shown in the QR.
+- A private browser session, absent from the QR, authorizes polling and consumption of that login result.
+
+An authenticated mobile session approves the public ID. A device name, IP address, or browser fingerprint can provide context for the confirmation screen, but is not proof that a polling client is the initiating browser.
+
+<Mermaid
+chart={`sequenceDiagram
+  participant B as Initiating browser
+  participant S as Server
+  participant M as Authenticated phone
+  B->>S: Create pending login in browser session
+  S->>B: Public QR ID, with private session cookie
+  M->>S: Scan public QR ID using authenticated mobile session
+  S->>M: Show requesting application and login context
+  M->>S: Explicit approval with one-time confirmation credential
+  S->>S: Bind user to pending login, enforce state and expiry
+  B->>S: Poll with private browser session cookie
+  S->>S: Atomically consume approved pending login
+  S->>B: Rotate browser session ID and establish authenticated session`}
+/>
+
+### Server-side state transitions
+
+The following is pseudocode for the server contract, not a complete endpoint implementation. Browser endpoints also need their applicable CSRF and origin checks.
+
+```text
+create(browser_session):
+    create unpredictable public qrCodeId and a short expiry
+    bind it to browser_session.id, state = WAITING
+    return public qrCodeId; do not encode browser session secrets in the QR
+
+scan(qrCodeId, authenticated_mobile_session):
+    require WAITING, not expired, and a valid mobile login
+    bind the approving user and a one-time confirmation credential
+    set state = SCANNED
+    return login context and confirmation credential to that mobile session
+
+approve(qrCodeId, confirmation_credential, authenticated_mobile_session):
+    atomically require SCANNED, matching user/credential, and not expired
+    consume confirmation credential; set state = APPROVED
+
+consume(qrCodeId, browser_session):
+    atomically require APPROVED, not expired, and the initiating browser binding
+    set state = CONSUMED; return the approved user to the server handler
+    regenerate the browser session ID and establish the application login
+    never return a login token merely because a caller knows qrCodeId
+```
+
+Also support explicit cancellation and expiry. Stop browser polling on completion, cancellation, or expiry; a polling interval is not a security property. Make consumption atomic so two requests cannot both exchange the same approval.
+
+### Verify the cross-device boundary
+
+With the same public QR ID, a different browser session must not retrieve or consume the approved login. Reject approvals after expiry, confirmation credentials from a different user, and repeated consumption. Test cancellation and a lost network response as well as the successful path.
+
+A relayed or substituted QR can still trick a person into approving the attacker's browser. Show the requesting application and context clearly, require explicit approval, and document that scanning alone is not proof of intent. A temporary bearer credential limits its lifetime; it does not independently prove that a message came from one physical device.
+
+## Comparison & best practices
+
+### Choose the relevant layer
+
+| Question                                              | Mechanism                                        | Design work that remains                                           |
+| ----------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
+| How does a browser carry a credential?                | Cookie                                           | Host scope, SameSite, CSRF, secure attributes                      |
+| How is a login represented?                           | Server session ID or access token                | Storage, expiry, verification, revocation                          |
+| How is an external identity asserted?                 | OIDC or another provider-specific login protocol | Client type, redirect/state binding, assertion validation          |
+| How do several apps reuse an identity-provider login? | SSO                                              | Protocol choice, per-app sessions, logout scope                    |
+| How does a phone approve a browser login?             | QR-assisted cross-device flow                    | Private browser binding, expiry, approval and one-time consumption |
+
+For a same-site browser application, begin with a server-managed session and secure cookie unless a requirement justifies a different arrangement. For a resource API, decide whether an opaque token or a signed access token better fits validation and revocation needs. Federation and QR approval can establish either kind of application login; they do not replace those decisions.
+
+Use HTTPS, validate inputs and redirects, protect state-changing requests, and rate-limit login attempts according to the threat model. Consider passkeys or other phishing-resistant authentication where supported. Token lifetime, lockout duration, and retry limits are application policies, not fixed universal numbers.
+
+Before accepting an implementation, test its failure paths: expired credentials, replay, logout, concurrent refresh, denied consent, lost responses, and a different browser attempting to consume a QR approval. A successful login alone does not verify those boundaries.

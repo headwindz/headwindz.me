@@ -5,7 +5,7 @@ import PageTitle from '@/components/PageTitle'
 import { components } from '@/components/MDXComponents'
 import { MDXLayoutRenderer } from 'pliny/mdx-components'
 import { sortPosts, coreContent, allCoreContent } from 'pliny/utils/contentlayer'
-import { allBlogs, allAuthors } from 'contentlayer/generated'
+import { allBlogs, allAuthors, allTranslatedBlogs } from 'contentlayer/generated'
 import type { Authors, Blog } from 'contentlayer/generated'
 import PostSimple from '@/layouts/PostSimple'
 import PostLayout from '@/layouts/PostLayout'
@@ -51,6 +51,12 @@ export async function generateMetadata(props: {
   })
 
   return {
+    alternates: {
+      canonical: `/blog/${slug}`,
+      ...(allTranslatedBlogs.some((p) => p.sourceSlug === slug)
+        ? { languages: { en: `/blog/${slug}`, 'zh-CN': `/zh/blog/${slug}` } }
+        : {}),
+    },
     title: post.title,
     description: post.summary,
     openGraph: {

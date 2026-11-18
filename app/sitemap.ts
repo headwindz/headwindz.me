@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next'
-import { allBlogs } from 'contentlayer/generated'
+import { allBlogs, allTranslatedBlogs } from 'contentlayer/generated'
 import siteMetadata from '@/data/siteMetadata'
 
 export const dynamic = 'force-static'
@@ -19,5 +19,30 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date().toISOString().split('T')[0],
   }))
 
-  return [...routes, ...blogRoutes]
+  const translatedRoutes = allTranslatedBlogs.flatMap((translation) => {
+    const original = allBlogs.find((post) => post.slug === translation.sourceSlug && !post.draft)
+    return original
+      ? [
+          {
+            url: `${siteUrl}/zh/blog/${translation.sourceSlug}`,
+            lastModified: original.lastmod || original.date,
+            alternates: {
+              languages: {
+                en: `${siteUrl}/blog/${original.slug}`,
+                'zh-CN': `${siteUrl}/zh/blog/${original.slug}`,
+              },
+            },
+          },
+        ]
+      : []
+  })
+  return [
+    ...routes,
+    ...blogRoutes,
+    {
+      url: `${siteUrl}/zh/`,
+      alternates: { languages: { en: `${siteUrl}/`, 'zh-CN': `${siteUrl}/zh/` } },
+    },
+    ...translatedRoutes,
+  ]
 }

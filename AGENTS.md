@@ -15,7 +15,7 @@ Read [README.md](./README.md) for setup, commands, authoring examples, and deplo
 | Pages, API handlers, metadata       | `app/`, including `app/seo.tsx`, `app/sitemap.ts`, `app/robots.ts`                                    |
 | Shared UI and MDX registration      | `components/`, `components/MDXComponents.tsx`                                                         |
 | Post, list, and author presentation | `layouts/`                                                                                            |
-| Posts and author profiles           | `data/blog/**/*.mdx`, `data/authors/**/*.mdx`                                                         |
+| Posts and author profiles           | `data/blog/**/{en,ch}.md`, `data/authors/**/*.mdx`                                                    |
 | Site configuration                  | `data/siteMetadata.js`, `data/projectsData.ts`, `data/headerNavLinks.ts`                              |
 | Styling and theme tokens            | `css/tailwind.css`; there is no `tailwind.config.js`                                                  |
 | MDX schema and processing           | `contentlayer.config.ts`, `lib/remark-demo.mjs`                                                       |
@@ -36,7 +36,7 @@ Read [README.md](./README.md) for setup, commands, authoring examples, and deplo
 
 ## Content conventions
 
-- Add posts under `data/blog/` as `.mdx`, optionally in subdirectories.
+- Add posts as `data/blog/<slug>/en.md`, optionally under a category folder. Put the Chinese version in `ch.md` alongside it. Both files support MDX.
 - Include `title`, `date`, `tags`, and `summary`. The schema requires only `title` and `date`; tags default to an empty list.
 - Consult `contentlayer.config.ts` before introducing or changing frontmatter fields.
 - Use sentence case headings, preserving acronyms and proper names: `## Getting started`, `### Using the API`.

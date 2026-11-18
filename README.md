@@ -55,7 +55,7 @@ Environment variables are optional for basic local development. For integrations
 
 ## Writing a post
 
-Create `data/blog/my-post.mdx`:
+Create `data/blog/my-post/en.md`:
 
 ```mdx
 ---
@@ -102,8 +102,16 @@ For application changes, run `pnpm lint` and `pnpm build`, then check affected r
 
 Deploy with a Next.js-compatible Node.js runtime. Although `next.config.js` supports `EXPORT`, live demo previews require the Node.js API handler and cannot run on static-only hosting. `BASE_PATH` and `UNOPTIMIZED` are also supported flags; the editor currently uses an absolute `/api/demo-preview` URL, so verify it before deploying under a subpath.
 
-Metadata lives in `app/seo.tsx` and `app/layout.tsx`; sitemap and robots routes live in `app/`. `scripts/postbuild.mjs` generates RSS feeds after the production build.
+Metadata lives in `app/seo.tsx`, the route-group layouts, and `components/SiteDocument.tsx`; sitemap and robots routes live in `app/`. `scripts/postbuild.mjs` generates RSS feeds after the production build.
 
 ## Attribution
 
 Based on [tailwind-nextjs-starter-blog](https://github.com/timlrx/tailwind-nextjs-starter-blog). See [LICENSE](./LICENSE).
+
+## Chinese pilot
+
+The homepage at `/zh` and the article at `/zh/blog/introduction-to-web3` have Chinese versions. The header switches between equivalent English and Chinese URLs. Chinese navigation includes the archive, tags, and projects. Articles without a translation display the English body with a notice.
+
+Each article has a folder under `data/blog/` containing `en.md` and, when translated, `ch.md`. Both files support MDX. The folder path determines the public slug. Chinese files provide a title and summary and inherit dates and English tags from the English file. Contentlayer indexes translations separately from English listings, search, and RSS.
+
+Homepage copy lives in `lib/i18n/index.ts` and `data/translations/authors/default.mdx`. Diagrams and interactive examples retain English text. Both route groups use `components/SiteDocument.tsx` for the shared shell and render their document language on the server.

@@ -3006,3 +3006,76 @@ input:-webkit-autofill:focus {
   padding: 0.65rem 0.25rem;
   border: 0;
 }
+
+/* The bilingual pilot shares the notebook surfaces and uses local CJK fonts. */
+html[lang='zh-CN'] {
+  --font-sans:
+    var(--font-space-grotesk), 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    'Noto Sans CJK SC', system-ui, sans-serif;
+}
+
+html[lang='zh-CN'] :is(.article-masthead h1, .article-body h2, .article-body h3, .writing-copy h3) {
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+html[lang='zh-CN'] .article-body {
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+
+html[lang='zh-CN'] .terminal-document {
+  font-family: var(--font-sans);
+  line-height: 1.9;
+}
+
+.language-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  white-space: nowrap;
+  font-size: 0.75rem;
+}
+
+.language-switch a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding-inline: 0.3rem;
+}
+
+.language-switch a[aria-current='page'] {
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--journal-accent, currentColor);
+  text-underline-offset: 5px;
+}
+
+.localized-search {
+  background: var(--journal-card, var(--color-white));
+  color: var(--journal-ink, var(--color-gray-900));
+}
+
+.search-result:is(:hover, :focus-visible, [data-selected='true']) {
+  background: var(--notebook-note);
+  color: var(--journal-ink);
+}
+
+@media (max-width: 639px) {
+  .site-header {
+    gap: 0.25rem;
+  }
+
+  .site-wordmark {
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 359px) {
+  .language-switch a[aria-current='page'],
+  .language-switch > span {
+    display: none;
+  }
+}

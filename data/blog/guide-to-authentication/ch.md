@@ -1,31 +1,29 @@
 ---
-title: Complete guide to web authentication methods
-tags: [authentication, web, cookie, session, token, jwt, sso, oauth]
-date: 2026-02-19
-summary: A comprehensive guide to modern web authentication methods including Cookie + Session, Token (JWT), Single Sign-On (SSO), OAuth, and QR Code login with implementation details and security best practices.
+title: 'Web 身份验证方法完整指南'
+summary: '从实现与安全边界出发，了解 Cookie 与会话、JWT、单点登录、OAuth 和扫码登录。'
 ---
 
-A login flow needs to answer several different questions: how the user proves identity, what credential represents the login afterward, where that credential is stored, and how it is revoked. Cookies, JWTs, OAuth, SSO, and QR codes describe different parts of that flow. They are not five mutually exclusive authentication protocols.
+登录流程需要回答几个不同的问题:用户如何证明身份，在之后代表登录的证书，该证书存储在何处，以及如何被撤销。库克、JWTs、OAuth、SSO和QR代码描述该流程的不同部分。它们不是五个相互排斥的认证协议。
 
-This guide explains those boundaries, then follows a server-managed browser login, a token lifecycle, federated sign-in, and cross-device confirmation. Code examples isolate the mechanism being discussed. Application-specific database and identity-provider helpers must implement the contracts stated beside them.
+此指南解释这些界限，然后遵循服务器管理的浏览器登录、 符号生命周期、 联合签名和交叉设备确认。 代码示例将正在讨论的机制隔离开来 。 应用程序专用数据库和身份提供者帮助者必须执行旁边声明的合同 。
 
-## Cookie + session authentication
+## Cookie +会话认证
 
-### Understanding HTTP statelessness
+### 理解HTTP无国籍状态
 
-HTTP is stateless: the protocol does not automatically make a later request part of a previous application login. That is independent of transport connections, which can remain open or multiplex requests. An application uses a credential on subsequent requests to associate them with an authenticated session. [HTTP semantics](https://www.rfc-editor.org/rfc/rfc9110.html).
+HTTP是无国籍的: 协议不会自动使后期请求成为前一个应用程序登录的一部分。这独立于运输连接，运输连接可以保持开放或多功能请求。 应用程序会使用对后续请求的证书，将它们与经认证的会话联系起来 。[HTTP 语义学](https://www.rfc-editor.org/rfc/rfc9110.html)。
 
-To solve this problem, [Lou Montulli](https://en.wikipedia.org/wiki/Lou_Montulli) introduced `cookies` in 1994.
+为了解决这个问题，[Lou Montulli](https://en.wikipedia.org/wiki/Lou_Montulli)于1994年引入了`cookies`.
 
-### How cookies work
+### Cookie的操作方式
 
-A `cookie` is a piece of data sent from the server and stored on the client-side. The browser automatically includes these cookies in subsequent requests to the **same domain**, allowing the server to recognize returning users.
+`cookie`是服务器发送并存储在客户端的一块数据，浏览器在之后向**相同的域**提出的请求中自动包括这些cookie,使服务器能够识别返回的用户。
 
-A cookie is a browser storage and transport mechanism, not an identity check. It can carry an opaque session ID or a signed token. In the server-side session design below, the server verifies credentials and associates a random session ID with the authenticated user.
+Cookie 是一个浏览器存储和运输机制，而不是身份检查。它可以携带不透明的会话ID或一个签名的令牌。在下面的服务器侧会话设计中，服务器会验证证书并将随机会话ID与认证的用户关联。
 
-A `session` is server-side storage (in memory, files, or databases) that holds user state information, identified by a unique session id.
+一个`session`是服务器侧存储的(,位于内存，文件，或数据库中的),它持有用户状态信息，由独有的会话id识别。
 
-### Implementation flow
+### 执行流程
 
 ```
 ┌─────────┐                                  ┌──────────────┐                    ┌─────────────┐
@@ -74,48 +72,48 @@ A `session` is server-side storage (in memory, files, or databases) that holds u
      │<─────────────────────────────────────────────│                                   │
 ```
 
-**Initial login:**
+**初始登录:**
 
-1. User visits `example.com/page` and enters credentials
-2. Server validates credentials and creates a unique session id
-3. Session id is stored server-side (in memory, Redis, database, etc.)
-4. Server responds with `Set-Cookie` header containing the session id
-5. Browser stores the cookie automatically
+1. 用户访问`example.com/page`并输入证书
+2. 服务器验证证书并创建独特的会话 ID
+3. 会话 id是存储在服务器侧(的内存，Redis, 数据库等.)
+4. 服务器用包含会话 id 的`Set-Cookie`头响应
+5. 浏览器自动存储Cookie
 
-**Subsequent requests:**
+**后续请求:**
 
-1. User navigates to `example.com/another-page`
-2. Browser automatically includes the session id cookie in the request
-3. Server retrieves the session data using the session id
-4. If valid, server grants access to the requested resource
+1. 用户导航到`example.com/another-page`
+2. 浏览器在请求中自动包含会话 id cookie
+3. 服务器使用会话 ID 检索会话数据
+4. 如果有效，服务器将允许访问请求的资源
 
-### Limitations
+### 限制
 
-While `Cookie + Session` authentication is battle-tested, it has several drawbacks:
+`Cookie + Session`认证虽然经过了战斗测试，但有一些缺点:
 
-**Scalability issues:**
+**可扩展性问题:**
 
-- Active sessions need server-side storage, which can be an external datastore rather than application-process memory
-- In a clustered environment, sessions must be synchronized across servers (using Redis or sticky sessions)
-- Horizontal scaling needs a deliberate shared-session or routing strategy; it is not inherently impossible
+- 活动会话需要服务器侧存储，它可以是外部数据存储而非应用程序处理内存
+- 在集群环境中，会话必须在服务器之间同步进行(使用 Redis 或粘度会话)
+- 横向规模的扩大需要审慎的共享会话或路线战略；这在本质上并非不可能
 
-**Security concerns:**
+**安全问题:**
 
-- Vulnerable to CSRF (Cross-Site Request Forgery) attacks
-- Requires careful domain and path configuration
+- 易遭CSRF(跨场请求 Forgery)攻击
+- 需要仔细的域和路径配置
 
-**Cross-domain challenges:**
+**跨域挑战:**
 
-- Cookies don't work across different domains
-- Requires workarounds for microservices architectures
+- 曲奇不在不同领域工作
+- 微服务架构需要变通操作
 
-### Security best practices
+### 安保最佳做法
 
-When implementing `Cookie + Session` authentication, always:
+执行`Cookie + Session`认证时，总是:
 
-- **Set `HttpOnly` flag** - Prevents JavaScript access, mitigating XSS attacks
-- **Set `Secure` flag** - Ensures cookies only sent over HTTPS
-- **Set `SameSite` attribute** - Prevents CSRF attacks (`SameSite=Strict` or `SameSite=Lax`), alongside appropriate CSRF protections for state-changing requests
+- **设置`HttpOnly`旗**- 防止 JavaScript 访问，减轻XSS 攻击
+- **设置`Secure`旗子**-确保 cookie只通过 HTTPS 发送
+- **设置`SameSite`属性**- 防止CSRF攻击(`SameSite=Strict`或`SameSite=Lax`),同时为改变状态的请求提供相应的CSRF保护。
 
 E.g.
 
@@ -123,15 +121,15 @@ E.g.
 Set-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict; Max-Age=3600; Path=/
 ```
 
-## Token-based authentication (JWT)
+## 基于托肯的认证(JWT)
 
-A signed access token is another way to represent authenticated access. It can also be carried in a cookie, so distinguish credential format from browser transport.
+签名访问令牌是另一种代表认证访问的方法，也可以用Cookie来携带，因此区分证书格式与浏览器传输。
 
-### What is a token?
+### 何为符号。
 
-A **token** is a credential. It may be an opaque random value that the server looks up, or a structured value such as a signed JWT. A signed JWT can carry claims that a resource server verifies without loading a session record. Storage, revocation, and authorization policies can still require server-side state.
+**令牌**是证书。它可能是服务器向上查找的不透明随机值，也可能是签名的 JWT 等结构化值。 签名的 JWT可以携带一个资源服务器在不加载会话记录的情况下验证的主张。 存储、 撤销和授权政策仍然需要服务器侧面状态 。
 
-### Implementation flow
+### 执行流程
 
 ```
 ┌─────────┐                                  ┌──────────────┐
@@ -186,43 +184,43 @@ A **token** is a credential. It may be an opaque random value that the server lo
      │<─────────────────────────────────────────────│
 ```
 
-**Initial login:**
+**初始登录:**
 
-1. User authenticates (through username/password, MFA, etc.)
-2. Server generates a token and returns it to the client
-3. Client stores the token according to its threat model. Browser memory, persistent storage, and HttpOnly cookies have different XSS, CSRF, and lifetime tradeoffs
+1. 用户通过用户名/密码词，MFA等认证(.)
+2. 服务器生成一个令牌并将其返回客户端
+3. 客户端按照它的威胁模式存储此令牌。 浏览器内存、 持续存储和 HttpOnly Cookie 具有不同的XSS、 CSRF 和寿命权衡
 
-**Subsequent requests:**
+**后续请求:**
 
-1. Client includes the token in the request header (typically `Authorization: Bearer <token>`)
-2. Server validates the token signature and expiration
-3. If valid, server processes the request
+1. 客户端包含请求头中的符号(通常为`Authorization: Bearer <token>`)
+2. 服务器验证符号签名和过期
+3. 如果有效，服务器处理请求
 
-### Advantages and disadvantages
+### 利弊
 
-**Advantages:**
+**优点:**
 
-- **Stateless** - No server-side session storage required
-- **Scalable** - Works seamlessly in distributed/clustered environments
-- **Cross-domain** - Can be sent in headers, bypassing cookie domain restrictions
+- **无国籍**- 不需要服务器侧会话存储
+- **可缩放**-在分布/集群环境中无缝工作
+- **跨域**-可以以信头发送，绕过 cookie 域限制
 
-**Disadvantages:**
+**缺点:**
 
-- **Cannot be revoked easily** - Once issued, tokens remain valid until expiration
-- **Larger payload** - Tokens are larger than session id, consuming more bandwidth
-- **Storage concerns** - Vulnerable to XSS if stored in localStorage
+- **无法轻易撤销**- 签发后，令牌一直有效到到期
+- **较大有效载荷**- 托肯斯大于会话代号，消耗更多的带宽
+- **存储问题**-如果存储在本地Storage中，则易受XSS的影响
 
-### Understanding JWT (JSON web token)
+### 理解 JWT(JSON 网络符号)
 
-The most popular token format is **JWT**, which consists of three parts separated by dots (`.`):
+最受欢迎的代号格式是**JWT**,它由三个部分组成，由点分隔成(`.`):
 
 ```bash
 header.payload.signature
 ```
 
-#### 1. Header
+#### 1. 标题
 
-Specifies the algorithm and token type:
+指定算法和符号类型 :
 
 ```javascript
 const header = {
@@ -231,9 +229,9 @@ const header = {
 }
 ```
 
-#### 2. Payload
+#### 2. 有效载荷
 
-Contains claims (user data and metadata):
+包含索赔(用户数据和元数据):
 
 ```js
 const payload = {
@@ -245,18 +243,18 @@ const payload = {
 }
 ```
 
-**Standard claims:**
+1.**标准索赔:**
 
-- `iss` (issuer) - Who issued the token
-- `sub` (subject) - User identifier
-- `aud` (audience) - Intended recipient
-- `exp` (expiration) - Expiration time
-- `iat` (issued at) - Token creation time
-- `nbf` (not before) - Token not valid before this time
+- `iss`(发行商)-谁发行的代号
+- `sub`(主题)- 用户标识符
+- `aud`(观众)- 预定接收者
+- `exp`(过期)- 过期时间
+- `iat`(在)发行 - 托肯创建时间
+- `nbf`(不在)之前 - 托肯在此之前无效
 
-#### 3. Signature
+#### 3. 签署
 
-Ensures token integrity and authenticity:
+保证标志性完整性和真实性:
 
 ```js
 // Generate signature
@@ -272,21 +270,21 @@ const base64Signature = base64UrlEncode(signature)
 const token = `${base64Header}.${base64Payload}.${base64Signature}`
 ```
 
-**Example jwt:**
+**示例 jwt:**
 
 ```
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
 ```
 
-Since JWTs are base64 encoded, you can easily decode them to inspect the header and payload:
+由于JWTs是基数64编码的，因此可以方便地解码它们来检查头和有效载荷:
 
-[JWT decoder](https://toolhub.run/tools/jwt-decoder)
+[JWT解码器](https://toolhub.run/tools/jwt-decoder)
 
-Note: JWTs are **not encrypted** by default. They are only encoded and signed. Therefore, avoid putting sensitive information in the payload. Backends should always verify the signature and validate claims before trusting the data in the token.
+注意: JWTs 默认为**不加密**, 只能编码和签名，因此，避免将敏感信息放入有效载荷中。 后端应该总是先验证签名并验证索赔，然后再将数据寄托到符中 。
 
-### Token verification process
+### B. 接受核查的进程
 
-Use a maintained JWT implementation instead of comparing a hand-written HMAC and decoding claims yourself. For example, with `jsonwebtoken` in a Node.js service:
+使用保持的 JWT 执行，而不是比较手写 HMAC 和 解码 。例如，在节点服务中与`jsonwebtoken`:
 
 ```js
 import jwt from 'jsonwebtoken'
@@ -304,17 +302,16 @@ function verifyToken(token, secretKey, issuer, audience) {
 }
 ```
 
-The allowed algorithm and key must be chosen by the server, not accepted from an untrusted token header. Require the claims your application depends on, including expiry, and match issuer and audience to the token contract. Do not treat decoding as verification. The later abbreviated revocation snippets focus on datastore checks; apply the same verification contract when integrating them. [JWT best current practices](https://www.rfc-editor.org/rfc/rfc8725.html).
+允许的算法和密钥必须由服务器选择，而不是从一个不可信符号头中接受。 需要您应用程序所依赖的主张，包括过期，并匹配发件人和收件人与符号合同。不要将解码作为验证。 后面的缩写撤销片段侧重于数据存储检查；在整合时应用相同的验证合同 。[JWT当前的最佳做法](https://www.rfc-editor.org/rfc/rfc8725.html)。
 
-### Refresh tokens and token rotation
+### 刷新符号和符号旋转
 
-Short-lived access tokens limit how long a stolen access credential can be used. A refresh token allows the client to obtain a replacement without asking for the password again. Lifetimes depend on the application; 15-minute access tokens and a seven-day refresh session are example choices, not universal security requirements.
+短寿命访问符限制了失窃访问证书的使用时间。 刷新符使客户端无需再次要求密码即可获得替换。 寿命取决于应用程序；15分钟访问符和7天刷新会话是实例选择，而不是普遍的安全要求 。
 
-The client must possess the refresh credential. The server stores a verification/revocation record, preferably using a hash of an opaque random token instead of retaining the raw bearer secret. For a same-site browser application, a server can set that credential in an `HttpOnly; Secure; SameSite=Lax` cookie and return an access token for memory storage. The browser does not set an HttpOnly cookie from JavaScript.
+客户端必须拥有刷新证书。 服务器保存一个验证/ 撤销记录，最好是使用不透明随机符号的散列，而不是保留原始的无记名密码。对于同一地点的浏览器应用程序，服务器可以在`HttpOnly; Secure; SameSite=Lax`cookie 中设置证书并返回内存存储访问证书 。 浏览器不会从 JavaScript 中设置 HtpOnly cookie 。
 
 <Mermaid
-  chart={`
-sequenceDiagram
+chart={`sequenceDiagram
   participant B as Browser
   participant A as Auth server
   participant D as Token store
@@ -325,13 +322,12 @@ sequenceDiagram
   A->>D: Atomically consume old token and store replacement
   D->>A: Rotation committed
   A->>B: New access token and replacement refresh cookie
-  Note over A,D: Reuse of a consumed token revokes the refresh family
-`}
+  Note over A,D: Reuse of a consumed token revokes the refresh family`}
 />
 
-#### Atomic rotation contract
+#### 原子旋转合同
 
-The following is datastore pseudocode. `transaction` must provide row locking or an equivalent compare-and-set guarantee; two concurrent requests cannot both consume the same active token. Keep consumed records until the family expires so reuse can be recognized.
+以下为数据存储假码。`transaction`提供行锁定或等效的比较和设置保证；两个同时提出的请求不能同时消耗相同的活动符号。 保留已消耗的记录，直到家族到期，才能确认再使用。
 
 ```text
 refresh(request):
@@ -360,33 +356,33 @@ refresh(request):
         return a new short-lived access token
 ```
 
-Do not throw an exception inside a transaction in a way that rolls back the reuse revocation. Coordinate refresh requests in the client so tabs do not routinely race with the same credential. If a response is lost after rotation commits, the old credential may no longer be usable; choose and document your recovery policy rather than blindly retrying it.
+不要在交易中以回滚方式丢弃重复使用撤销。 协调客户端的刷新请求，这样标签就不会经常与同样的证书进行竞争。如果在旋转后丢失了回复，旧的证书可能不再可用；选择并记录您的恢复政策，而不是盲目重试它 。
 
-Revoking the refresh family prevents further refreshes. Already-issued access tokens remain usable until expiry unless the resource server also checks revocation state. Device metadata may help detect anomalies, but a fingerprint is not cryptographic proof that a credential stayed on one device. [OAuth refresh-token replay protection](https://www.rfc-editor.org/rfc/rfc9700.html#section-4.14.2).
+撤销刷新家族会防止进一步的刷新。 已经发布的访问令牌一直可以使用到到期，除非资源服务器也检查撤销状态。 设备元数据可能有助于检测异常，但指纹不是密码学证明证书留在一个设备上。[OAuth rest-token replay protection](https://www.rfc-editor.org/rfc/rfc9700.html#section-4.14.2)。
 
-#### Verify the lifecycle
+#### 验证生命周期
 
-Check that one valid refresh returns a replacement, the consumed credential cannot refresh again, reuse commits family revocation, and two simultaneous refreshes cannot both succeed. Also check expiry, logout, missing cookies, invalid CSRF protection, and recovery after a lost response. These are different cases from merely accepting a valid JWT signature.
+检查一个有效的刷新返回一个替换，消耗的证书无法再次刷新，重复使用意味着家庭吊销，两个同时刷新都无法成功 。另外，检查过期、 登录、 缺少Cookie、 无效的 CSRF 保护以及丢失的回复后恢复。 这些情况不同于仅仅接受有效的 JWT 签名 。
 
-### Token revocation strategies
+### Token 撤销策略
 
-Even with refresh tokens, you need ways to **immediately invalidate tokens** (e.g., user logout, security breach, account suspension).
+即使有刷新符号，您也需要**立即失效符号**(的方法，例如用户登录，安全漏洞，账户暂停).
 
-#### Strategy 1: token blacklist (simple)
+#### 战略1:象征性黑名单(简单)
 
-Maintain a server-side list of revoked tokens. When a token is presented, check if it's blacklisted.
+维护被撤销的令牌的服务器侧列表。当一个令牌被显示时，请检查它是否被列入黑名单 。
 
-**Pros:** Simple to implement, works for all token types
+**Pros:**简单执行，为所有符号类型工作
 
-**Cons:** Each protected request needs a revocation lookup with a defined freshness policy; use indexed identifiers and expire records when tokens expire.
+**Cons:**每个受保护的请求都需要使用定义的新鲜度政策进行撤销查询；使用索引标识符，并在令牌过期时过期记录。
 
-#### Strategy 2: track token identifiers
+#### 战略2:追踪标识符
 
-Add a unique identifier (`jti`) to every token and track which ones are invalidated. This can make records smaller than storing whole tokens, but still needs a lookup and an expiry/cleanup policy.
+在每个符号中添加一个独特的标识符(`jti`), 并跟踪哪些符号无效 。这可以使记录比存储整个符号小，但仍需查找和过期/ 清理政策 。
 
-**Pros:** Per-token revocation with compact identifiers. The allowlist example below stores issued identifiers; a denylist would instead store revoked identifiers.
+**Pros:**带有紧凑标识符的 Per-token 撤销。 下面的允许列表示例存储已发布的标识符；拒绝列表将转而存储已撤销的标识符 。
 
-**Cons:** Requires a datastore check, retention policy, and consistent failure handling
+**Cons:**需要数据存储检查，保存政策和一致的故障处理
 
 ```js
 // Generate token with JTI
@@ -441,13 +437,13 @@ async function verifyToken(req, res, next) {
 }
 ```
 
-#### Strategy 3: token version/rotation - advanced
+#### 战略3:象征性版本/轮调 -- -- 高级
 
-Assign a version number to tokens and rotate it on logout. Only tokens with current version are valid.
+指定一个版本编号为符号，并在登录时旋转。只有当前版本的符号才有效 。
 
-**Pros:** One database lookup per user (not per token), instant revocation, can revoke all user tokens
+**Pros:**1 数据库查询 每位用户(不每令牌),即时撤销，可以撤销所有用户令牌
 
-**Cons:** Requires tracking per user, less granular than JTI
+**Cons:**需要每个用户的跟踪，颗粒小于 JTI
 
 ```js
 // Login - include user's current token version
@@ -491,55 +487,55 @@ async function verifyToken(req, res, next) {
 }
 ```
 
-#### Choose revocation granularity
+#### 选择取消颗粒度
 
-| Strategy               | Stored state                                     | Effect of revocation                   |
-| ---------------------- | ------------------------------------------------ | -------------------------------------- |
-| Token denylist         | Revoked token hashes or identifiers until expiry | Reject that token on a checked request |
-| Issued-token allowlist | Active token identifiers and expiry              | Reject a removed or revoked identifier |
-| User/session version   | Current version for that scope                   | Reject older tokens in that scope      |
+| 战略                 | 存储状态                         | 撤销的效果                 |
+| -------------------- | -------------------------------- | -------------------------- |
+| 托肯拒绝列表         | 翻转的符号散列或标识符，直到到期 | 根据已检查的请求拒绝该符号 |
+| 已发行的托存允许列表 | 活动符号标识符和过期的           | 拒绝已删除或已撤销的标识符 |
+| 用户/会场版本        | 该范畴的当前版本                 | 拒绝该范畴中的旧符号       |
 
-All three need a current lookup, directly or through a cache with an explicit freshness policy. An index can make a per-token lookup efficient; a per-user version does not eliminate the need to consult state. Choose the scope needed for logout and incident response instead of ranking the strategies as universally scalable or unscalable.
+所有三个版本都需要一个当前搜索，直接或通过一个带有明确新鲜度策略的缓存。一个索引可以使每盘搜索高效；每个用户的版本并不能消除咨询状态的需要。选择登录和事件响应所需的范围，而不是将策略排为可通用的可扩展或不可扩展的级别。
 
-### Security recommendations
+### 安保建议
 
-1. **Use strong secret keys** - At least 256 bits, randomly generated
-2. **Never expose secrets** - Keep secret keys secure, use environment variables
-3. **Set appropriate expiration** - Balance security and user experience
-4. **Avoid sensitive data in payload** - jwt payload is base64 encoded, not encrypted
+1. **使用强大的密钥**-至少256位，随机生成
+2. **永不暴露秘密**- 保密密钥安全，使用环境变量
+3. **设定适当的过期**- 平衡安全和用户体验
+4. **避免有效载荷中的敏感数据**- jwt有效载荷为基数64编码，不加密
 
-## Federated sign-in with OAuth and OpenID Connect
+## 与 OAuth 和 OpenID 连接的联邦签名
 
-**OAuth 2.0** provides delegated authorization: an application obtains scoped access to a resource. **OpenID Connect (OIDC)** adds an identity layer and ID tokens for sign-in. Google supports OIDC; other providers can expose different identity APIs. Do not assume an OAuth access token from any provider is itself a login assertion. [OIDC Core](https://openid.net/specs/openid-connect-core-1_0.html).
+**OAuth 2.0**提供授权:应用程序获得对资源的范围化访问.**OpenID Connect(OIDC)**增加了身份层和标识符，用于登录。 Google支持OIDC;其他提供者可以曝光不同身份API.不要假设任何提供者的OAuth访问符本身就是登录断言.[OIDC Core](https://openid.net/specs/openid-connect-core-1_0.html).
 
-### Why OAuth?
+### 为什么是奥奥特？
 
-**For users:**
+**用户:**
 
-- No need to create yet another account
-- Faster registration process
-- Trust established providers' security
-- One less password to remember
+- 不需要再创建一个账户
+- 加快登记进程
+- 已建立的信任提供商的安全
+- 少一个口令可以记住
 
-**For developers:**
+**开发者:**
 
-- Reduce development time (no need to build authentication from scratch)
-- Lower security risks (password storage handled by provider)
-- Access user data with permission (email, profile picture, etc.)
+- 减少开发时间(不需要从零开始建立认证)
+- 供应商处理的(密码存储安全风险降低)
+- 使用权限访问用户数据(电子邮件，配置图片等.)
 
-### OAuth 2.0 flow
+### OAuth 2.0 流量
 
-The following example uses a confidential server-side web application and Google OIDC. Its backend holds the client secret. Public clients such as browser-only applications do not safely hold that secret and use their provider's supported authorization-code/PKCE flow.
+以下例子使用一个保密的服务器侧网页应用程序和Google OIDC.它的后端持有客户端秘密，只有浏览器应用程序等公共客户端不能安全地持有该秘密，并使用其提供者支持的授权码/PKCE流量。
 
-#### Setup phase
+#### 设置阶段
 
-1. **Register your application** at [Google Cloud Console](https://console.cloud.google.com/)
-2. **Create OAuth 2.0 credentials** and receive:
-   - `client_id` - Public identifier for your app
-   - `client_secret` - Secret key for server communication
-3. **Configure authorized redirect URIs** (e.g., `https://yourapp.com/auth/google/callback`)
+1. **注册您的应用程序**位于[Google 云控台](https://console.cloud.google.com/)
+2. **创建 OAuth 2.0 证书**并接收:
+   - `client_id`-您的应用程序的公开标识符
+   - `client_secret`- 服务器通信的秘密密钥
+3. **配置授权重定向 URIs**(,例如`https://yourapp.com/auth/google/callback`)
 
-#### Authentication flow
+#### 认证流程
 
 ```
 ┌─────────┐                                  ┌──────────┐                     ┌─────────────┐
@@ -588,15 +584,15 @@ The following example uses a confidential server-side web application and Google
      │<───────────────────────────────────────────│                                  │
 ```
 
-### Detailed steps
+### 详细步骤
 
-**Step 1: Initiate login**
+**步骤1:启动登录**
 
-User clicks "Login with Google" on your site.
+用户点击您网站上的"Login with Google".
 
-**Step 2: Redirect to OAuth provider**
+**步骤2: 重定向给 OAuth 提供者**
 
-The application needs a server-side session for the temporary state below. Configure secure cookies and a production session store. These Express-style excerpts show where state and PKCE values live; use the provider's maintained OIDC library for discovery and token validation in a deployed application.
+应用程序需要为下面的临时状态配置一个服务器侧会话。 配置安全的 cookie 和一个生产会话商店。这些 Express 风格的节选显示状态和 PKCE 值的活性位置；使用提供者维护的 OIDC 库在一个已部署的应用程序中进行发现和符号验证 。
 
 ```js
 import { randomBytes, createHash } from 'node:crypto'
@@ -623,21 +619,21 @@ app.get('/auth/google', (req, res) => {
 })
 ```
 
-**Step 3: User authorizes**
+**第3步:用户授权**
 
-User logs in to Google (if not already) and approves the requested permissions (profile, email, etc.)
+用户登录到谷歌(如果还没有)并批准请求的许可(配置文件、电子邮件等。)
 
-**Step 4: Provider redirects with code**
+**第4步: 提供方以代码**重定向
 
-Google redirects back to your specified callback:
+Google 重定向到您的指定回调 :
 
 ```
 https://yourapp.com/callback?code=AUTHORIZATION_CODE&state=RANDOM_STATE&scope=openid+profile+email
 ```
 
-**Step 5: Exchange code for access token**
+**第5步: 访问符交换码**
 
-For this confidential web client, the server callback validates and consumes state before exchanging the code. `codeVerifier` is read from that same session; it is not a client secret. Then the server exchanges the code:
+对于这个保密的网络客户端，服务器在交换代码前会验证并消耗状态。`codeVerifier`是从同一会话中读取的；它不是一个客户端秘密。然后服务器交换代码 :
 
 ```js
 // Inside the server callback, before the token request:
@@ -676,11 +672,11 @@ if (!response.ok) throw new Error('Token exchange failed')
 const { access_token, id_token } = await response.json()
 ```
 
-**Why this backend?** This example authenticates a confidential client using its server-held secret. Authorization-code exchange is not universally backend-only; public clients use a supported PKCE flow without embedding a shared secret.
+**为什么这个后端?**这个例子可以使用它的服务器持有的秘密认证一个机密客户端。 授权码交换并非普遍只使用后端；公共客户端使用一个支持的PKCE流而不嵌入一个共享的秘密。
 
-**Step 6-8: validate identity and fetch profile data**
+**步骤 6-8:验证身份并获取剖面数据**
 
-Use a maintained [Google/OIDC library](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token) to verify the ID token's signature, issuer, audience, expiry, and any required nonce binding before creating a login. The validated `(issuer, sub)` pair identifies the account; do not automatically merge accounts merely because email strings match. If you fetch UserInfo, verify that its `sub` matches the validated ID token. The HTTP call below only shows profile retrieval; it does not replace those checks.
+使用一个维护的[Google/OIDC 库](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token)在创建登录前验证ID标志的签名，签发者，受众，过期，以及任何需要绑定的非ce 。 已验证的`(issuer, sub)`对称识别账户；不仅仅因为电子邮件字符串匹配而自动合并账户 。如果您获取用户信息，请验证其`sub`匹配已验证的ID 标志 。 HTTP 调用下面仅显示配置检索；它不替换这些检查 。
 
 ```js
 // Install google-auth-library for this Node.js example.
@@ -702,9 +698,9 @@ const userData = await userResponse.json()
 if (userData.sub !== identity.sub) throw new Error('Subject mismatch')
 ```
 
-**Step 9: create session**
+**步骤9: 创建会话**
 
-Create your own application session/token for the user:
+为用户创建自己的应用程序会话/磁盘 :
 
 ```js
 // Create user in your database (if new)
@@ -726,64 +722,64 @@ const sessionToken = jwt.sign({ userId: user.id }, YOUR_SECRET, {
 res.cookie('session', sessionToken, { httpOnly: true, secure: true, sameSite: 'lax' })
 ```
 
-### OAuth scopes
+### OAuth 范围
 
-Scopes define what data your app can access. Each provider has its own set of scopes. E.g.
+范围定义您的应用程序可以访问的数据。每个提供者都有自己的一套范围。例如。
 
-| Scope     | Description                            |
-| --------- | -------------------------------------- |
-| `openid`  | Requests OpenID Connect authentication |
-| `profile` | Basic profile (name, picture)          |
-| `email`   | Email address                          |
-| `repo`    | GitHub repositories (GitHub)           |
+| 范围      | 描述                   |
+| --------- | ---------------------- |
+| `openid`  | 请求 OpenID 连接认证   |
+| `profile` | 基本剖面图(名称，图片) |
+| `email`   | 电子邮件地址:          |
+| `repo`    | GitHub 仓库(GitHub)    |
 
-**Important:** Only request scopes you actually need! Users are less likely to authorize apps that request excessive permissions.
+**重要:**仅请求您实际需要的范围！用户不太可能授权请求过多权限的应用 。
 
-### Security considerations
+### 安全考虑
 
-1. Validate one-time state in the same server session that initiated sign-in, as shown above. Browser `sessionStorage` is not accessible to a server-side callback.
-2. Use PKCE and the provider's supported code flow; keep confidential-client secrets on the server.
-3. Validate the OIDC identity assertion and subject binding before creating an application session.
-4. Regenerate the application session identifier after successful sign-in, set cookie security attributes, and restrict post-login redirects to allowed application routes.
+1. 如上所示，在同一服务器会话中验证启动登录的一次性状态。 浏览器`sessionStorage`无法访问服务器端的回调 。
+2. 使用PKCE和提供者支持的代码流；在服务器上保留保密客户秘密。
+3. 在创建应用程序会话前验证 OIDC 身份断言并绑定主题 。
+4. 成功登录后重新生成应用程序会话标识符，设置 cookie 安全属性，并限制登录后重定向到允许应用程序路由。
 
-[OAuth security best current practice](https://www.rfc-editor.org/rfc/rfc9700.html).
+[OAuth安保最佳现行做法](https://www.rfc-editor.org/rfc/rfc9700.html).
 
-### Popular OAuth providers
+### 大众 OAuth 供应商
 
-| Provider   | Use Cases                          | Documentation                                                                  |
-| ---------- | ---------------------------------- | ------------------------------------------------------------------------------ |
-| **Google** | General purpose, wide reach        | [Google OAuth](https://developers.google.com/identity/protocols/oauth2)        |
-| **GitHub** | Developer tools, code repositories | [GitHub OAuth](https://docs.github.com/en/developers/apps/building-oauth-apps) |
+| 提供商       | 使用案例         | 文档                                                                                         |
+| ------------ | ---------------- | -------------------------------------------------------------------------------------------- |
+| **谷歌( G)** | 一般用途，范围广 | [Google OAuth (谷歌 OAuth) (英语).](https://developers.google.com/identity/protocols/oauth2) |
+| **GitHub**   | 开发工具，代码库 | [GitHub OAuth](https://docs.github.com/en/developers/apps/building-oauth-apps)               |
 
-### Why exchange a code?
+### 为什么要交换密码？
 
-An authorization code is short-lived, single-use, and bound to the client and redirect URI. PKCE additionally binds redemption to the verifier created for that request. The browser can carry the code back to the application without putting an API access token in the redirect URL.
+一个授权代码是短寿命的，单用，并绑定在客户端上，并重定向URI. PKCE额外绑定了为该请求创建的验证器的赎回。 浏览器可以将代码带回应用程序，而不在重定向URL中放置API访问符。
 
-The backend handling in this example is one client architecture, not a property of every OAuth flow. A code can also leak, so protect callback URLs, logs, session binding, and token exchange. Keep access and refresh credentials out of URLs.
+此示例中的后端处理是一个客户端架构，而不是每个 OAuth 流的属性。 代码也可以泄露，因此保护回调 URL、 日志、会话绑定和 符号交换 。 保留访问权限并刷新证书 URL 。
 
-## Single sign-on (SSO)
+## (SSO)单号
 
-**Single Sign-On (SSO)** allows users to authenticate once and gain access to multiple applications without re-entering credentials. It's a centralized authentication mechanism commonly used in enterprise environments.
+**单签名-在(SSO)**允许用户认证一次，并获得多个应用程序的访问权限而无需重新进入证书，是一种企业环境中常用的集中认证机制。
 
-### The problem SSO solves
+### SSO 问题解决
 
-Imagine a large organization with multiple internal applications:
+想象一个具有多个内部应用的大型组织:
 
-- HR portal
-- Project management tool
-- CRM system
+- 人力资源门户
+- 项目管理工具
+- 客户关系管理系统
 
-Without SSO, users would need to:
+没有特别服务单位，用户需要:
 
-- Remember different passwords for each system
-- Log in separately to each application
-- Deal with password reset requests across multiple platforms
+- 记住每个系统不同的密码
+- 单独登录到每个应用程序
+- 处理多个平台的密码重置请求
 
-SSO solves this by providing `one authentication point` for all services.
+SSO通过为所有服务提供`one authentication point`来解决这个问题。
 
-### How SSO works
+### SSO如何运作
 
-SSO relies on a **central authentication server** (often called an Identity Provider or IdP) that all applications trust.
+SSO依赖于一个**中央认证服务器**(经常被称为身份提供商或所有应用程序都信任的IDP).
 
 ```
 ┌─────────┐                 ┌──────────┐                 ┌──────────┐                 ┌──────────┐
@@ -872,81 +868,80 @@ SSO relies on a **central authentication server** (often called an Identity Prov
      │  --- User now has 3 sessions: sso.com, app-a.com, app-b.com ---                     │
 ```
 
-#### First-time access flow
+#### 第一次访问流量
 
-1. User visits `app-a.com`
-2. App A checks if user has a valid session → No
-3. Redirect to SSO `sso.example.com?returnUrl=app-a.com`
-4. User authenticates at the central SSO server (through username/password, MFA, etc.)
-5. SSO creates session and stores it in a cookie for `sso.example.com`
-6. SSO generates ticket (one-time use token) and redirects to `app-a.com?ticket=xyz123`
-7. App A validates ticket with SSO server backend-to-backend
-8. SSO confirms ticket is valid and provides user information
-9. App A creates session for the user and sets its own session cookie
-10. User accesses the requested resource
+1. 用户访问`app-a.com`
+2. App A 检查用户是否有有效的会话 ~ 否
+3. 重定向到 SSO`sso.example.com?returnUrl=app-a.com`
+4. 用户通过用户名/密码，MFA等在中央SSO服务器(进行认证.)
+5. SSO 创建会话并将其存储在`sso.example.com`的Cookie中
+6. SSO生成(一次性使用符)并重定向到`app-a.com?ticket=xyz123`
+7. App A用 SSO 服务器后端对后端验证票
+8. SSO确认票有效并提供用户信息
+9. App A为用户创建会话并设置自己的会话 cookie
+10. 用户访问请求的资源
 
-Now the user has **two active sessions**:
+现在用户有**两个活动会话**:
 
-- One with the SSO server (`sso.example.com`)
-- One with App A (`app-a.com`)
+- 1台与SSO服务器(`sso.example.com`)
+- 一台与 App A(`app-a.com`)
 
-#### Accessing another application
+#### 访问另一个应用程序
 
-1. User visits `app-b.com`
-2. App B checks if user has a valid session → No
-3. Redirect to SSO `sso.example.com?returnUrl=app-b.com`
-4. SSO detects existing session (from step 5 above)
-5. No login required! SSO immediately generates a ticket
-6. Redirects to `app-b.com?ticket=abc789`
-7. App B validates and creates its own session
-8. User accesses the resource without re-entering credentials
+1. 用户访问`app-b.com`
+2. App B 检查用户是否有有效的会话 ~ 否
+3. 重定向到 SSO`sso.example.com?returnUrl=app-b.com`
+4. SSO 检测现有会话(从上文第5步起)
+5. 无需登录！SSO 立即生成一张票
+6. 重定向到`app-b.com?ticket=abc789`
+7. App B 验证并创建自己的会话
+8. 用户访问资源而不重新进入证书
 
-### Benefits and challenges
+### 效益和挑战
 
-**Benefits:**
+**福利:**
 
-- Better UX - Users log in once, access everything
-- Centralized security - Single point for security policies, MFA, auditing
-- Reduced password fatigue - Fewer passwords to remember
-- IT efficiency - Easier user management and access control
+- 更好的 UX - 用户登录一次，访问所有信息
+- 集中式安保 -- -- 安保政策、外交部、审计的单一点
+- 密码疲劳减少 -要记住的密码减少
+- IT效率 - 方便用户管理和访问控制
 
-**Challenges:**
+**挑战:**
 
-- Implementation complexity - Requires coordination across applications
-- Security risk - Compromised SSO credentials expose all applications
+- 执行的复杂性 - 需要各应用程序之间的协调
+- 安全风险 -- --所有申请都暴露在SSO证书上
 
-### Popular SSO providers
+### 受欢迎的SSO供应商
 
-| Provider         | Use Cases                        | Documentation                                                     |
-| ---------------- | -------------------------------- | ----------------------------------------------------------------- |
-| Okta             | Enterprise identity management   | [Okta Developer](https://developer.okta.com/)                     |
-| Auth0            | Developer-friendly, customizable | [Auth0 Docs](https://auth0.com/docs)                              |
-| Google Workspace | Google-integrated organizations  | [Google Workspace SSO](https://support.google.com/a/answer/60224) |
+| 提供商         | 使用案例                 | 文档                                                            |
+| -------------- | ------------------------ | --------------------------------------------------------------- |
+| Okta           | 企业身份管理             | [Okta 开发者](https://developer.okta.com/)                      |
+| Auth0          | 开发者友好型，自定义型的 | [Auth0 Docs](https://auth0.com/docs)                            |
+| Google工作空间 | Google综合组织           | [Google工作空间 SSO](https://support.google.com/a/answer/60224) |
 
-### SSO describes the experience, not one ticket protocol
+### SSO描述的是经验，不是一张票协议
 
-SSO means a user can reach several applications without re-entering credentials after authenticating with the identity provider. It can be implemented with OIDC, SAML, CAS, or other protocols. The one-time-ticket diagram above is a conceptual ticket-based example, not a rule that SSO bypasses authorization codes or client authentication.
+SSO意味着用户在身份提供者认证后可以到达多个应用程序而无需重新进入证书，可以使用OIDC,SAML,CAS,或其他协议执行。 上面的一次性计票表图是一个概念性的例子，而不是SSO绕过授权代码或客户端认证的规则。
 
-Internal applications still need authenticated exchanges, bounded assertions, redirect validation, and protection against replay. Belonging to one organization does not make a bearer credential safe to expose. State which protocol and client type you use before deciding which credentials and validation steps are required.
+内部应用程序仍需要认证交换、有限度的断言、重新定位验证和防范重播。属于一个组织并不使无记名证书安全暴露。在决定需要哪些证书和验证步骤之前，请说明您使用的协议和客户类型。
 
-## QR code authentication
+## QR 代码认证
 
-A QR code transports data. It does not authenticate a user by itself. In a cross-device login, an already authenticated phone approves a pending browser login, and the server binds that approval to the initiating browser.
+一个 QR 代码传输数据。它本身不会认证一个用户。在交叉设备登录中，一个已经认证的手机批准一个等待的浏览器登录，服务器将批准内容绑定在启动浏览器上 。
 
-[QRCode generator](https://toolhub.run/tools/qr-generator) and [QRCode parser](https://toolhub.run/tools/qr-parser) help inspect the encoded data; do not put access credentials in a QR you intend to display publicly.
+[QRCode生成器](https://toolhub.run/tools/qr-generator)和[QRCode 解析器](https://toolhub.run/tools/qr-parser)帮助检查编码数据；不要将访问权限设置在您打算公开显示的QR中。
 
-### Separate the public identifier from token retrieval
+### 将公共标识符与符号检索分离
 
-Use two boundaries:
+使用两个边界:
 
-- A public `qrCodeId` identifies the pending login shown in the QR.
-- A private browser session, absent from the QR, authorizes polling and consumption of that login result.
+- 一个公共的`qrCodeId`识别出在QR中显示的待定登录。
+- 一个没有QR的私人浏览器会话，授权该登录结果的投票和消费。
 
-An authenticated mobile session approves the public ID. A device name, IP address, or browser fingerprint can provide context for the confirmation screen, but is not proof that a polling client is the initiating browser.
+经认证的移动会话批准公共ID. 设备名称，IP地址，或浏览器指纹可以为确认屏幕提供上下文，但并不是投票客户端是启动浏览器的证据。
 
 <Mermaid
-  chart={`
-sequenceDiagram
+chart={`sequenceDiagram
   participant B as Initiating browser
   participant S as Server
   participant M as Authenticated phone
@@ -958,13 +953,12 @@ sequenceDiagram
   S->>S: Bind user to pending login, enforce state and expiry
   B->>S: Poll with private browser session cookie
   S->>S: Atomically consume approved pending login
-  S->>B: Rotate browser session ID and establish authenticated session
-`}
+  S->>B: Rotate browser session ID and establish authenticated session`}
 />
 
-### Server-side state transitions
+### 服务端状态转换
 
-The following is pseudocode for the server contract, not a complete endpoint implementation. Browser endpoints also need their applicable CSRF and origin checks.
+以下为服务器合同的伪码，而非完整的端点执行。 浏览器端点也需要其适用的CSRF和源头检查。
 
 ```text
 create(browser_session):
@@ -989,28 +983,28 @@ consume(qrCodeId, browser_session):
     never return a login token merely because a caller knows qrCodeId
 ```
 
-Also support explicit cancellation and expiry. Stop browser polling on completion, cancellation, or expiry; a polling interval is not a security property. Make consumption atomic so two requests cannot both exchange the same approval.
+也支持明确取消和过期。 完成、取消或过期时停止浏览器投票；投票间隔不是一个安全财产。 使消费原子化，使两个请求不能同时交换同样的批准。
 
-### Verify the cross-device boundary
+### 校验跨设备边界
 
-With the same public QR ID, a different browser session must not retrieve or consume the approved login. Reject approvals after expiry, confirmation credentials from a different user, and repeated consumption. Test cancellation and a lost network response as well as the successful path.
+使用相同的公共 QR ID , 不同的浏览器会话不能检索或消费已核准的登录。 过期后拒绝批准，来自不同用户的确认证书，重复使用。 测试取消和丢失的网络响应以及成功路径 。
 
-A relayed or substituted QR can still trick a person into approving the attacker's browser. Show the requesting application and context clearly, require explicit approval, and document that scanning alone is not proof of intent. A temporary bearer credential limits its lifetime; it does not independently prove that a message came from one physical device.
+中继或替换的QR 仍然可以欺骗一个人批准攻击者浏览器。 显示请求的应用程序和上下文，需要明确批准，而文件显示扫描本身并不是意图的证据。 临时的无记名证书会限制其寿命；它不会独立地证明消息来自一个物理设备 。
 
-## Comparison & best practices
+## 比较和最佳做法
 
-### Choose the relevant layer
+### 选择相关层
 
-| Question                                              | Mechanism                                        | Design work that remains                                           |
-| ----------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
-| How does a browser carry a credential?                | Cookie                                           | Host scope, SameSite, CSRF, secure attributes                      |
-| How is a login represented?                           | Server session ID or access token                | Storage, expiry, verification, revocation                          |
-| How is an external identity asserted?                 | OIDC or another provider-specific login protocol | Client type, redirect/state binding, assertion validation          |
-| How do several apps reuse an identity-provider login? | SSO                                              | Protocol choice, per-app sessions, logout scope                    |
-| How does a phone approve a browser login?             | QR-assisted cross-device flow                    | Private browser binding, expiry, approval and one-time consumption |
+| 问题                                  | 机制                            | 仍为                                   | 的设计工作 |
+| ------------------------------------- | ------------------------------- | -------------------------------------- | ---------- |
+| 浏览器如何携带证书?                   | Cookie                          | 主机范围，SameSite, CSRF, 安全属性     |
+| 如何代表登录?                         | 服务器会话 ID 或访问令牌        | 存储，过期，验证，撤销                 |
+| 如何断言外部身份 ?                    | OIDC 或另一服务商专用的登录协议 | 客户端类型 重定向/状态绑定，断言验证   |
+| 几个应用程序如何重新使用身份提供登录? | SSO                             | 协议选择，每个应用程序会话，登录范围   |
+| 手机如何批准浏览器登录 ?              | QR 辅助跨设备流                 | 私人浏览器绑定，到期，批准和一次性消费 |
 
-For a same-site browser application, begin with a server-managed session and secure cookie unless a requirement justifies a different arrangement. For a resource API, decide whether an opaque token or a signed access token better fits validation and revocation needs. Federation and QR approval can establish either kind of application login; they do not replace those decisions.
+对于同一站点的浏览器应用程序，从服务器管理的会话开始，安全Cookie,除非要求证明有不同的安排。对于资源 API,请决定一个不透明的信使或一个签名的访问信使是否更符合验证和撤销需要。联邦和QR批准可以建立两种应用程序的登录；它们不会取代这些决定。
 
-Use HTTPS, validate inputs and redirects, protect state-changing requests, and rate-limit login attempts according to the threat model. Consider passkeys or other phishing-resistant authentication where supported. Token lifetime, lockout duration, and retry limits are application policies, not fixed universal numbers.
+使用 HTTPS , 验证输入和重定向，保护状态变化请求，以及根据威胁模式的速率限制登录尝试 。在支持时考虑密码或其他防钓认证 。 Token life, 锁闭时间，和重试限制是应用政策，而不是固定的普遍数 。
 
-Before accepting an implementation, test its failure paths: expired credentials, replay, logout, concurrent refresh, denied consent, lost responses, and a different browser attempting to consume a QR approval. A successful login alone does not verify those boundaries.
+在接受一个执行之前，测试其失败路径: 过期的证书、 重播、 登录、同时刷新、 被拒绝 、 丢失的回复，以及另一个浏览器试图使用 QR 批准。 仅成功登录并不能验证这些边界 。

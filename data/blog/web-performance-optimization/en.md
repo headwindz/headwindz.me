@@ -490,13 +490,13 @@ In Next.js, `<Link>` automatically prefetches the target route when it enters th
 Tree shaking, code splitting, and dynamic import operate at different stages and address different problems. They are most effective in combination.
 
 <Mermaid
-  chart={`
+chart={`
 flowchart TD
-  src[Source code and dependencies]
-  src --> ts[Tree shaking]
-  ts -->|Removes unused exports from each module| sc[Code splitting]
-  sc -->|Divides output into cacheable chunks| di[Dynamic import]
-  di -->|Defers non-critical chunks to runtime| result[Optimized delivery]
+src[Source code and dependencies]
+src --> ts[Tree shaking]
+ts -->|Removes unused exports from each module| sc[Code splitting]
+sc -->|Divides output into cacheable chunks| di[Dynamic import]
+di -->|Defers non-critical chunks to runtime| result[Optimized delivery]
 
 subgraph build[Build time]
 ts

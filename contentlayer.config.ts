@@ -43,15 +43,17 @@ const icon = fromHtmlIsomorphic(
   { fragment: true }
 )
 
+const articlePath = (path: string) => path.replace(/\/(?:en|ch)$/, '')
+
 const computedFields: ComputedFields = {
   readingTime: { type: 'json', resolve: (doc) => readingTime(doc.body.raw) },
   slug: {
     type: 'string',
-    resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, ''),
+    resolve: (doc) => articlePath(doc._raw.flattenedPath).replace(/^.+?(\/)/, ''),
   },
   path: {
     type: 'string',
-    resolve: (doc) => doc._raw.flattenedPath,
+    resolve: (doc) => articlePath(doc._raw.flattenedPath),
   },
   filePath: {
     type: 'string',
@@ -96,7 +98,7 @@ function createSearchIndex(allBlogs) {
 
 export const Blog = defineDocumentType(() => ({
   name: 'Blog',
-  filePathPattern: 'blog/**/*.mdx',
+  filePathPattern: 'blog/**/en.md',
   contentType: 'mdx',
   fields: {
     title: { type: 'string', required: true },
@@ -124,7 +126,7 @@ export const Blog = defineDocumentType(() => ({
         dateModified: doc.lastmod || doc.date,
         description: doc.summary,
         image: doc.images ? doc.images[0] : siteMetadata.socialBanner,
-        url: `${siteMetadata.siteUrl}/${doc._raw.flattenedPath}`,
+        url: `${siteMetadata.siteUrl}/${articlePath(doc._raw.flattenedPath)}`,
       }),
     },
   },
@@ -149,9 +151,34 @@ export const Authors = defineDocumentType(() => ({
   computedFields,
 }))
 
+export const TranslatedBlog = defineDocumentType(() => ({
+  name: 'TranslatedBlog',
+  filePathPattern: 'blog/**/ch.md',
+  contentType: 'mdx',
+  fields: {
+    title: { type: 'string', required: true },
+    summary: { type: 'string', required: true },
+  },
+  computedFields: {
+    sourceSlug: {
+      type: 'string',
+      resolve: (doc) => articlePath(doc._raw.flattenedPath).replace(/^blog\//, ''),
+    },
+    toc: { type: 'json', resolve: (doc) => extractTocHeadings(doc.body.raw) },
+    readingTime: { type: 'json', resolve: (doc) => readingTime(doc.body.raw) },
+  },
+}))
+
+export const TranslatedAuthor = defineDocumentType(() => ({
+  name: 'TranslatedAuthor',
+  filePathPattern: 'translations/authors/*.mdx',
+  contentType: 'mdx',
+  fields: { name: { type: 'string', required: true } },
+}))
+
 export default makeSource({
   contentDirPath: 'data',
-  documentTypes: [Blog, Authors],
+  documentTypes: [Blog, Authors, TranslatedBlog, TranslatedAuthor],
   disableImportAliasWarning: true,
   mdx: {
     cwd: process.cwd(),

@@ -1,3 +1,4 @@
+import { dictionaries, type Locale } from '../lib/i18n'
 import { ChevronRight } from 'lucide-react'
 
 interface Heading {
@@ -6,7 +7,13 @@ interface Heading {
   depth: number
 }
 
-export default function ArticleToc({ headings = [] }: { headings?: Heading[] }) {
+export default function ArticleToc({
+  headings = [],
+  locale = 'en',
+}: {
+  headings?: Heading[]
+  locale?: Locale
+}) {
   if (headings.length < 2) return null
   const depth = Math.min(...headings.map((heading) => heading.depth))
   const sections = headings.filter((heading) => heading.depth <= depth + 1)
@@ -15,9 +22,9 @@ export default function ArticleToc({ headings = [] }: { headings?: Heading[] }) 
       <details open>
         <summary>
           <ChevronRight size={16} aria-hidden="true" />
-          In this article
+          {dictionaries[locale].toc}
         </summary>
-        <nav aria-label="Article sections">
+        <nav aria-label={dictionaries[locale].sections}>
           <ol>
             {sections.map((heading, i) => (
               <li key={`${heading.url}-${i}`} className={heading.depth > depth ? 'is-nested' : ''}>

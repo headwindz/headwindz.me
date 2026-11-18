@@ -1,5 +1,6 @@
 'use client'
 
+import { useLocale } from './LocaleProvider'
 import Image from './Image'
 import Link from './Link'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
@@ -7,6 +8,7 @@ import { ArrowRight, X } from 'lucide-react'
 import { useState } from 'react'
 
 const Card = ({ title, description, imgSrc, href }) => {
+  const zh = useLocale() === 'zh'
   const [isImageOpen, setIsImageOpen] = useState(false)
 
   return (
@@ -17,7 +19,7 @@ const Card = ({ title, description, imgSrc, href }) => {
             <button
               onClick={() => setIsImageOpen(true)}
               className="notebook-project-image relative block w-full cursor-pointer overflow-hidden rounded-lg"
-              aria-label={`Preview ${title} image`}
+              aria-label={zh ? `预览 ${title} 图片` : `Preview ${title} image`}
               style={{ aspectRatio: '16/9' }}
             >
               <Image
@@ -36,11 +38,13 @@ const Card = ({ title, description, imgSrc, href }) => {
               <div className="fixed inset-0 bg-black/85" aria-hidden="true" />
               <div className="fixed inset-0 flex items-center justify-center overflow-y-auto p-4 sm:p-8">
                 <DialogPanel className="relative max-w-6xl">
-                  <DialogTitle className="sr-only">{title} image preview</DialogTitle>
+                  <DialogTitle className="sr-only">
+                    {zh ? `${title} 图片预览` : `${title} image preview`}
+                  </DialogTitle>
                   <button
                     className="absolute top-2 right-2 z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-gray-950 text-white hover:bg-gray-800"
                     onClick={() => setIsImageOpen(false)}
-                    aria-label="Close image preview"
+                    aria-label={zh ? '关闭图片预览' : 'Close image preview'}
                   >
                     <X className="h-5 w-5" aria-hidden="true" />
                   </button>
@@ -61,7 +65,7 @@ const Card = ({ title, description, imgSrc, href }) => {
         <div className="space-y-2">
           <h2 className="project-title text-gray-900 dark:text-gray-100">
             {href ? (
-              <Link href={href} aria-label={`Link to ${title}`}>
+              <Link href={href} aria-label={zh ? `访问 ${title}` : `Link to ${title}`}>
                 {title}
               </Link>
             ) : (
@@ -74,9 +78,9 @@ const Card = ({ title, description, imgSrc, href }) => {
           <Link
             href={href}
             className="group hover:border-primary-500 hover:text-primary-600 focus-visible:border-primary-500 focus-visible:text-primary-600 dark:hover:text-primary-400 dark:focus-visible:text-primary-400 inline-flex w-fit items-center gap-1 border-b border-transparent pb-0.5 text-sm text-gray-600 transition-colors duration-200 dark:text-gray-400"
-            aria-label={`Link to ${title}`}
+            aria-label={zh ? `访问 ${title}` : `Link to ${title}`}
           >
-            View project
+            {zh ? '访问项目' : 'View project'}
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-focus-visible:translate-x-1" />
           </Link>
         )}

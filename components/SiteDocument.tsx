@@ -10,8 +10,10 @@ import Header from '@/components/Header'
 import SectionContainer from '@/components/SectionContainer'
 import Footer from '@/components/Footer'
 import siteMetadata from '@/data/siteMetadata'
-import { ThemeProviders } from './theme-providers'
+import { ThemeProviders } from '../app/theme-providers'
 import { Metadata } from 'next'
+import { LocaleProvider } from './LocaleProvider'
+import { dictionaries, type Locale } from '../lib/i18n'
 
 const space_grotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -19,7 +21,7 @@ const space_grotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
 })
 
-export const metadata: Metadata = {
+export const siteDocumentMetadata: Metadata = {
   metadataBase: new URL(siteMetadata.siteUrl),
   title: {
     default: siteMetadata.title,
@@ -59,12 +61,18 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function SiteDocument({
+  children,
+  locale = 'en',
+}: {
+  children: React.ReactNode
+  locale?: Locale
+}) {
   const basePath = process.env.BASE_PATH || ''
 
   return (
     <html
-      lang={siteMetadata.language}
+      lang={locale === 'zh' ? 'zh-CN' : 'en'}
       className={`${space_grotesk.variable} scroll-smooth`}
       suppressHydrationWarning
     >
@@ -74,18 +82,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <link rel="alternate" type="application/rss+xml" href={`${basePath}/feed.xml`} />
       <body className="journal-site antialiased">
         <a href="#main-content" className="skip-link">
-          Skip to content
+          {dictionaries[locale].skip}
         </a>
         <ThemeProviders>
           <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />
           <SectionContainer>
-            <SearchProvider>
-              <Header />
-              <main id="main-content" tabIndex={-1} className="pb-4 outline-none">
-                {children}
-              </main>
-            </SearchProvider>
-            <Footer />
+            <LocaleProvider locale={locale}>
+              <SearchProvider>
+                <Header locale={locale} />
+                <main id="main-content" tabIndex={-1} className="pb-4 outline-none">
+                  {children}
+                </main>
+              </SearchProvider>
+            </LocaleProvider>
+            <Footer locale={locale} />
           </SectionContainer>
         </ThemeProviders>
         <SpeedInsights />

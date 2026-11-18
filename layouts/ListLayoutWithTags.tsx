@@ -1,5 +1,7 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider'
+import { localizedHref } from 'lib/i18n'
 import HomeCommand from '@/components/HomeCommand'
 import { usePathname, useRouter } from 'next/navigation'
 import { slug } from 'github-slugger'
@@ -23,6 +25,8 @@ interface ListLayoutProps {
 }
 
 function Pagination({ totalPages, currentPage }: PaginationProps) {
+  const locale = useLocale()
+  const zh = locale === 'zh'
   const pathname = usePathname()
   const basePath = pathname
     .replace(/^\//, '') // Remove leading slash
@@ -33,12 +37,12 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={zh ? '分页' : 'Pagination'}
       className="flex items-center justify-between border-t border-gray-200 py-2 dark:border-gray-800"
     >
       {!prevPage && (
         <button className="min-h-11 cursor-auto disabled:opacity-50" disabled={!prevPage}>
-          Previous
+          {zh ? '上一页' : 'Previous'}
         </button>
       )}
       {prevPage && (
@@ -47,20 +51,20 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
           className="inline-flex min-h-11 items-center"
           rel="prev"
         >
-          Previous
+          {zh ? '上一页' : 'Previous'}
         </Link>
       )}
       <span>
-        {currentPage} of {totalPages}
+        {zh ? `第 ${currentPage} 页，共 ${totalPages} 页` : `${currentPage} of ${totalPages}`}
       </span>
       {!nextPage && (
         <button className="min-h-11 cursor-auto disabled:opacity-50" disabled={!nextPage}>
-          Next
+          {zh ? '下一页' : 'Next'}
         </button>
       )}
       {nextPage && (
         <Link href={`/${basePath}/page/${currentPage + 1}`} rel="next">
-          Next
+          {zh ? '下一页' : 'Next'}
         </Link>
       )}
     </nav>
@@ -73,6 +77,8 @@ export default function ListLayoutWithTags({
   initialDisplayPosts = [],
   pagination,
 }: ListLayoutProps) {
+  const locale = useLocale()
+  const zh = locale === 'zh'
   const pathname = usePathname()
   const router = useRouter()
   const tagCounts = tagData as Record<string, number>
@@ -87,15 +93,20 @@ export default function ListLayoutWithTags({
         <div className="archive-heading">
           <h1 className="journal-page-title">{title === 'All Posts' ? 'All Posts' : title}</h1>
           <label className="topic-picker">
-            <span>Topic</span>
+            <span>{zh ? '主题' : 'Topic'}</span>
             <select
-              aria-label="Browse posts by topic"
+              aria-label={zh ? '按主题浏览文章' : 'Browse posts by topic'}
               value={pathname.split('/tags/')[1]?.split('/')[0] || ''}
               onChange={(event) =>
-                router.push(event.target.value ? `/tags/${event.target.value}` : '/blog')
+                router.push(
+                  localizedHref(
+                    event.target.value ? `/tags/${event.target.value}` : '/blog',
+                    locale
+                  )
+                )
               }
             >
-              <option value="">All posts</option>
+              <option value="">{zh ? '全部文章' : 'All posts'}</option>
               {sortedTags.map((tag) => (
                 <option key={tag} value={slug(tag)}>
                   {tag} ({tagCounts[tag]})
@@ -113,23 +124,26 @@ export default function ListLayoutWithTags({
                   <li key={path} className="py-8 first:pt-0">
                     <article className="flex flex-col gap-1.5">
                       <dl>
-                        <dt className="sr-only">Published on</dt>
+                        <dt className="sr-only">{zh ? '发布日期' : 'Published on'}</dt>
                         <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
                           <time dateTime={date} suppressHydrationWarning>
-                            {formatDate(date, siteMetadata.locale)}
+                            {formatDate(date, zh ? 'zh-CN' : siteMetadata.locale)}
                           </time>
                         </dd>
                       </dl>
                       <div className="space-y-2">
                         <div>
                           <h2 className="archive-post-title">
-                            <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">
+                            <Link
+                              href={localizedHref(`/${path}`, locale)}
+                              className="text-gray-900 dark:text-gray-100"
+                            >
                               {title === 'All Posts' ? 'Blogs' : title}
                             </Link>
                           </h2>
                           <div className="mt-2 flex flex-wrap gap-y-1">
                             {tags?.map((tag) => (
-                              <Tag key={tag} text={tag} />
+                              <Tag key={tag} text={tag} locale={locale} />
                             ))}
                           </div>
                         </div>
