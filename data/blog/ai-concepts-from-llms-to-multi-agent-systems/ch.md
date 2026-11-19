@@ -1,13 +1,13 @@
 ---
-title: '理解现代 AI：从大语言模型到多 Agent 系统'
+title: '读懂现代 AI 的核心概念'
 summary: '梳理 LLM、工作流、Agent、工具、MCP、Skills、插件、编排器、Hooks、护栏与 Harness 的架构关系。'
 ---
 
-模型、工具、技能和工具可以解决不同的问题。在决定谁选择下一个动作、哪个软件执行动作以及检查结果时，区分会变得有用。
+模型、工具、技能和 Harness 各有分工。设计系统时，需要明确由谁选择下一步行动、由什么软件执行，以及在哪里检查结果。
 
-本术语表使用十二个术语来描述这些责任。 执行和销售商的边界划分不同.以下的定义是工作惯例而不是通用的堆栈。 有关棋子互动的完整实例，请参见[AI 代理并使用](/blog/ai-agents-and-harnesses-from-tool-loops-to-reliable-systems)。
+本文梳理这些职责，以及上下文如何在各个组件之间流转。不同实现对组件边界的划分也有所不同。想看完整的执行示例，可以阅读 [AI Agent 与 Harness](/zh/blog/ai-agents-and-harnesses-from-tool-loops-to-reliable-systems)。
 
-# 十二个核心构件
+# 核心构件
 
 ## 1. 大型语言模型(LLMS)
 
@@ -61,13 +61,11 @@ const { text } = await generateText({
 | **灵活性**       | 刚性，处理预期路径         | 紧急，解决新路径   |
 | **失败模式**     | 步态错误或模型输出不正确   | 模型幻觉/无限循环  |
 
-<Mermaid
-chart={`flowchart LR
-  input[Raw Document] --> step1[Node 1: OCR & Chunking]
-  step1 --> step2[Node 2: LLM Information Extraction]
-  step2 --> step3{Node 3: Deterministic Schema Validation}
-  step3 -- Valid --> step4[Node 4: Database Ingestion]
-  step3 -- Invalid --> step5[Node 5: Human Review Queue]`}
+<SketchDiagram
+  src="/static/images/ai-concepts/document-workflow.svg"
+  alt="对原始文档进行 OCR 和切分，再由 LLM 提取信息。通过模式校验的记录写入数据库，其余进入人工审核队列。"
+  width={800}
+  height={565}
 />
 
 ### 何时使用工作流程
@@ -81,96 +79,7 @@ chart={`flowchart LR
 
 ---
 
-## 3. 自主代理
-
-### 什么是探员？
-
-**代理**是一个自主系统，将一个LLM包在一个迭代执行循环中，可以访问外部工具和内存来实现一个高层次的目标。
-
-$$\text{Agent} = \text{LLM} + \text{Tools} + \text{Memory} + \text{Execution Loop}$$
-
-当一个原始的LLM回答一个问题时，一个代理追求一个目标。 用户提供目标状态的(,例如`Fix the failing unit tests in the authentication service`),以及代理对问题的自主原因，选择动作，检查中间结果，以及自我纠正直到目标实现。
-
-### 代理人的核心特征
-
-1. **自主**:在每微步不需要人指导的情况下独立操作，它决定了飞行上的操作顺序和计数。
-2. **基于目标**:由明确的目标驱动.它不盲目执行硬码程序脚本，而是评价每个步骤是否使其更接近目标状态。
-3. **适应性**:从失败中动态恢复。当一个工具调用返回一个错误时，缺少一个文件，或者一个假说被反驳，代理检查反馈，更改其计划，并尝试一个替代路径 。
-
-### ReAct 模式:思考，计划，行动，观察
-
-**ReAct**是互换推理与动作的有用模式，并不是每个代理架构的要求。在这个概念循环中，模型提出下一个动作，并由主机执行:
-
-<Mermaid
-chart={`flowchart TD
-  goal([User Goal]) --> think[Think: Evaluate state and hypotheses]
-  think --> plan[Plan: Select next concrete action]
-  plan --> act[Act: Execute tool call]
-  act --> observe[Observe: Inspect tool execution output]
-  observe --> check{Goal achieved?}
-  check -- No: Error or next step needed --> think
-  check -- Yes: Final result ready --> done([Final Response])`}
-/>
-
-1. **Think(原因)**:LLM分析当前目标，对话历史，以及前期工具输出，以合成更新的内部状态。
-2. **Plan(动作选择)**:模型决定了哪一个工具可以引用，并格式化了必要的参数。
-3. **Act(执行)**:主机运行时间执行工具(,例如数据库查询，shell命令，API调用).
-4. **央视(反馈摄入)**:执行输出作为新消息重新附在代理上下文窗口中，触发下一个推理周期。
-
-```typescript
-// Conceptual implementation of an autonomous ReAct agent loop
-interface Tool {
-  name: string
-  description: string
-  execute: (args: Record<string, unknown>) => Promise<string>
-}
-
-async function runAgent(goal: string, tools: Tool[], maxIterations = 10) {
-  const messages: Array<{ role: string; content: string }> = [
-    {
-      role: 'system',
-      content: 'You are an autonomous agent. Reason, plan, and call tools to reach the goal.',
-    },
-    { role: 'user', content: goal },
-  ]
-
-  for (let i = 0; i < maxIterations; i++) {
-    // 1. Think & Plan: Call LLM with tool schemas
-    const response = await callLLMWithTools(messages, tools)
-
-    if (response.isComplete) {
-      return response.finalAnswer
-    }
-
-    // 2. Act: Execute selected tool
-    const { toolName, args } = response.selectedToolCall
-    const tool = tools.find((t) => t.name === toolName)
-    if (!tool) throw new Error(`Tool ${toolName} not found`)
-
-    // 3. Observe: Capture environmental feedback
-    const observation = await tool.execute(args)
-
-    // Feed back into loop
-    messages.push({ role: 'assistant', content: `Tool call: ${toolName}(${JSON.stringify(args)})` })
-    messages.push({ role: 'tool', content: observation })
-  }
-
-  throw new Error('Agent exceeded maximum reasoning iterations')
-}
-```
-
-### 何时使用代理
-
-当解析路径无法在编译时静态预测时使用代理 :
-
-- 交互故障排除、调试代码和修复错误
-- 探索性数据分析和多步骤竞争性研究
-- 诊断步骤取决于遥测的自动事故补救
-- 操作复杂的开发者环境(,例如执行 shell 命令，运行测试套件，写入补丁)
-
----
-
-## 4. 工具
+## 3. 工具
 
 ### 什么是工具？工具是什么？工具是什么？What are the violence?
 
@@ -232,41 +141,153 @@ export const weatherTool = tool({
 
 ---
 
-## 5. 示范背景议定书(MCP)
+## 4. 上下文工程
 
-### 什么是MCP? !什么MCP是MCP?
+**上下文工程（context engineering）**决定应用在每次调用模型时提供哪些信息。Agent 执行任务时，指令、对话历史、工具结果和检索到的文档都要占用有限的上下文窗口。
 
-该**示范背景协议(MCP 磁共振)**是一个开放标准，旨在解决$N \times M$AI客户端之间的整合问题(法学硕士、IDEs、桌面代理)和外部数据来源或工具(数据库、问题跟踪器、本地文件系统).
+### 管理上下文的四种策略
 
-没有MCP,每个AI平台(ChatGPT,Claude,Cursor,自定义公司代理)都必须为每个工具(GitHub,Postgres,Slack,Jira)开发专有集成。 MCP通过在JSON-RPC 2.0上构建的通用客户端-宿主-服务器协议，使这个接口标准化。
+| 策略             | 做法                                                    | 示例                                                     |
+| ---------------- | ------------------------------------------------------- | -------------------------------------------------------- |
+| 写入（Write）    | 把有用的状态保存到当前上下文窗口之外。                  | 将任务计划和已核实的发现保存到检查点。                   |
+| 选择（Select）   | 在下一步执行前载入所需信息。                            | 检索现行报销条款，并提供核查条款所需的工具。             |
+| 压缩（Compress） | 用更少的 token 表达已有上下文，同时保留任务所需的细节。 | 概括已完成的查询，保留来源链接、具体限额和待解决的问题。 |
+| 隔离（Isolate）  | 让子任务在独立的上下文中运行，再交回结果。              | 让子 Agent 比对政策版本，再返回生效日期及来源。          |
 
-<Mermaid
-chart={`
-flowchart LR
-subgraph Clients[AI Applications / Hosts]
-c1[Claude Desktop]
-c2[Cursor IDE]
-c3[Custom Agent Runtime]
-end
+[LangChain 的上下文工程分类](https://www.langchain.com/blog/context-engineering-for-agents)
 
-subgraph Protocol[Model Context Protocol - JSON-RPC]
-mcp[Standardized MCP Client / Server Spec]
-end
+### 短期记忆与长期记忆
 
-subgraph Servers[MCP Servers - Tool Collections]
-s1[PostgreSQL MCP Server: 8 SQL & schema tools]
-s2[GitHub MCP Server: 14 issue & PR tools]
-s3[Local Filesystem MCP Server: 6 FS tools]
-end
+记忆管理是上下文工程的一部分。应用需要决定保留哪些信息、保留多久，以及何时把它们提供给模型。
 
-c1 --> mcp
-c2 --> mcp
-c3 --> mcp
-mcp --> s1
-mcp --> s2
-mcp --> s3
-`}
+- **短期记忆**管理当前任务或会话的工作状态，包括对话历史、近期的工具调用结果和中间结论。应用可以在上下文窗口之外保留完整记录，每次调用时再提供相关片段或摘要。
+- **长期记忆**跨会话持久保存有用的信息，例如用户偏好和过往项目摘要。应用可以在新会话中按需取回相关记录，让回答更符合用户偏好，并延续之前的工作。
+
+例如，助手可以用短期记忆记录已经核对过的政策文件。到了另一次会话，它可以从长期记忆中取回用户的偏好，在政策摘要中注明生效日期并附上来源链接。
+
+### 检索增强生成（RAG）
+
+**检索增强生成（Retrieval-augmented generation，RAG）**先从外部资料库查找相关信息，再把这些信息提供给模型作为回答依据。常见的向量检索流程分三步。[RAG 原始论文](https://arxiv.org/abs/2005.11401)
+
+1. **切分文档。** 将长文档拆成可单独检索的片段（chunk），尽量把相关内容放在同一个片段里，并为每个片段保存来源链接、章节标题等元数据。
+2. **生成嵌入并建立索引。** 嵌入模型把每个片段转换为数值向量（embedding）。系统可以借助向量索引查找与查询向量相近的片段，包括措辞不同但意思相关的内容。[Dense Passage Retrieval 论文](https://arxiv.org/abs/2004.04906)
+3. **检索并生成。** 将问题转换为向量，找出候选片段，再把选中的原文和来源信息提供给模型生成回答。
+
+例如，问「公司会付酒店的钱吗？」时，系统可能找到标题为「住宿费用报销」的条款。切分的位置会影响回答：如果例外情况落在下一个片段，只取回第一个片段就可能漏掉限制条件。RAG 是实现「选择」策略的一种方式，既可以从文档库检索，也可以从长期记忆中检索。
+
+## 5. 自主代理
+
+### 什么是探员？
+
+**代理**是一个自主系统，将一个LLM包在一个迭代执行循环中，可以访问外部工具和内存来实现一个高层次的目标。
+
+$$\text{Agent} = \text{LLM} + \text{Tools} + \text{Memory} + \text{Execution Loop}$$
+
+当一个原始的LLM回答一个问题时，一个代理追求一个目标。 用户提供目标状态的(,例如`Fix the failing unit tests in the authentication service`),以及代理对问题的自主原因，选择动作，检查中间结果，以及自我纠正直到目标实现。
+
+### 代理人的核心特征
+
+1. **自主**:在每微步不需要人指导的情况下独立操作，它决定了飞行上的操作顺序和计数。
+2. **基于目标**:由明确的目标驱动.它不盲目执行硬码程序脚本，而是评价每个步骤是否使其更接近目标状态。
+3. **适应性**:从失败中动态恢复。当一个工具调用返回一个错误时，缺少一个文件，或者一个假说被反驳，代理检查反馈，更改其计划，并尝试一个替代路径 。
+
+### Agent 执行循环
+
+每轮迭代开始时，运行时汇集当前任务的上下文并调用模型。模型可以请求调用工具，也可以返回结果。运行时执行工具后，会记录返回值或错误，供模型下一轮使用。任务满足完成条件或达到执行上限时，运行时结束循环。
+
+### ReAct 模式:思考，计划，行动，观察
+
+**ReAct** 将推理、行动和观察交替进行。每次观察到的结果都可能改变下一步行动。下图中的 “Plan” 指为当前这一轮选择下一步行动。[ReAct 论文](https://arxiv.org/abs/2210.03629)
+
+<SketchDiagram
+  src="/static/images/ai-concepts/react-loop.svg"
+  alt="Agent 依次推理、选择下一步行动、执行并观察结果。目标未达成时继续循环，完成后返回答复。"
+  width={800}
+  height={790}
 />
+
+1. **Think（推理）**。模型结合任务目标、对话历史和工具结果判断当前进展。
+2. **Plan（选择行动）**。模型选择下一步要调用的工具，并生成参数。
+3. **Act（执行）**。宿主运行时执行工具调用，例如查询数据库或调用 API。
+4. **Observe（观察）**。运行时将工具结果加入上下文，供下一轮推理使用。
+
+```typescript
+// Conceptual implementation of an autonomous ReAct agent loop
+interface Tool {
+  name: string
+  description: string
+  execute: (args: Record<string, unknown>) => Promise<string>
+}
+
+async function runAgent(goal: string, tools: Tool[], maxIterations = 10) {
+  const messages: Array<{ role: string; content: string }> = [
+    {
+      role: 'system',
+      content: 'You are an autonomous agent. Reason, plan, and call tools to reach the goal.',
+    },
+    { role: 'user', content: goal },
+  ]
+
+  for (let i = 0; i < maxIterations; i++) {
+    // 1. Think & Plan: Call LLM with tool schemas
+    const response = await callLLMWithTools(messages, tools)
+
+    if (response.isComplete) {
+      return response.finalAnswer
+    }
+
+    // 2. Act: Execute selected tool
+    const { toolName, args } = response.selectedToolCall
+    const tool = tools.find((t) => t.name === toolName)
+    if (!tool) throw new Error(`Tool ${toolName} not found`)
+
+    // 3. Observe: Capture environmental feedback
+    const observation = await tool.execute(args)
+
+    // Feed back into loop
+    messages.push({ role: 'assistant', content: `Tool call: ${toolName}(${JSON.stringify(args)})` })
+    messages.push({ role: 'tool', content: observation })
+  }
+
+  throw new Error('Agent exceeded maximum reasoning iterations')
+}
+```
+
+### 先规划再执行（Plan-and-execute）
+
+**先规划再执行**由规划器先列出多个步骤，再由执行器逐步完成，并按需将结果传给后续步骤。如果某一步失败，或新证据改变了后续行动，系统可以重新规划剩余步骤。单个步骤也可以使用 ReAct 循环。[Plan-and-execute agents](https://www.langchain.com/blog/planning-agents)
+
+例如，Agent 要总结团队的差旅政策，可以先规划三个步骤：找到现行政策、核对生效日期、提取报销规则。如果找到的是归档版本，就先调整计划，找到替代文件后再写摘要。
+
+### 何时使用代理
+
+当解析路径无法在编译时静态预测时使用代理 :
+
+- 交互故障排除、调试代码和修复错误
+- 探索性数据分析和多步骤竞争性研究
+- 诊断步骤取决于遥测的自动事故补救
+- 操作复杂的开发者环境(,例如执行 shell 命令，运行测试套件，写入补丁)
+
+---
+
+## 6. 模型上下文协议（MCP）
+
+### 什么是 MCP？
+
+**模型上下文协议（Model Context Protocol，MCP）**是一项开放标准，为 AI 应用接入外部工具和数据源提供统一接口。宿主应用通过 MCP 客户端连接服务端，双方使用 JSON-RPC 2.0 交换消息。
+
+<SketchDiagram
+  src="/static/images/ai-concepts/mcp-architecture.svg"
+  alt="Claude Desktop、Cursor IDE 和自定义 Agent 运行时通过基于 JSON-RPC 的 MCP 连接 PostgreSQL、GitHub 和本地文件系统服务端。"
+  width={800}
+  height={475}
+/>
+
+### 为什么有了函数调用还需要 MCP？
+
+函数调用（function calling）让模型用函数名和结构化参数请求执行操作。应用仍需提供工具的参数定义、连接实际执行操作的服务，并把结果交回模型。如果 IDE 和桌面助手各自接入同一个工单系统，两个团队就要分别维护对接代码。
+
+有了 MCP，两个宿主可以连接同一个兼容的工单系统服务端。各自的 MCP 客户端通过 `tools/list` 发现工具，再通过 `tools/call` 执行调用。宿主仍可通过各自模型的函数调用接口提供工具定义、接收调用请求。当多个宿主需要复用同一套集成时，统一协议尤其有价值。[MCP 架构与工具发现](https://modelcontextprotocol.io/docs/learn/architecture)
 
 ### MCP与工具的关系: MCP作为标准化工具收集
 
@@ -348,7 +369,7 @@ await server.connect(transport)
 
 ---
 
-## 6. 技能
+## 7. 技能
 
 ### 什么是技能吗？
 
@@ -371,27 +392,11 @@ await server.connect(transport)
 
 渐进披露通过将技能加载到三个渐进层次来解决了这一点:
 
-<Mermaid
-chart={`
-flowchart TD
-subgraph Tier1[Tier 1: Catalog Index - Always in Context]
-idx[Skill Manifest: Name + 1-sentence Description <br/> illustrative compact metadata]
-end
-
-subgraph Tier2[Tier 2: On-Demand Activation - Loaded when Triggered]
-full[SKILL.md Body: Full Playbook, Instructions, Rules & Examples <br/> size depends on the skill]
-end
-
-subgraph Tier3[Tier 3: Lazy Sub-Resources - Read Only if Needed]
-ref[Supporting Assets: Schemas, Reference Docs, Scripts]
-end
-
-user([User Query: Audit authentication service]) --> match{Matches skill description?}
-Tier1 --> match
-match -- Yes: Activate skill --> Tier2
-Tier2 --> exec[Agent Execution]
-exec -.->|Read deep reference| Tier3
-`}
+<SketchDiagram
+  src="/static/images/ai-concepts/skill-disclosure.svg"
+  alt="Agent 根据技能目录中的简短说明匹配用户请求。匹配后加载 SKILL.md，执行时按需读取参考资料。"
+  width={800}
+  height={570}
 />
 
 1. **第一级:目录索引(发现元数据)**:
@@ -428,7 +433,7 @@ When auditing code:
 
 ---
 
-## 7. 插件
+## 8. 插件
 
 ### 什么是插件吗？
 
@@ -464,7 +469,7 @@ When auditing code:
 
 ---
 
-## 8.多代理系统
+## 9. 多代理系统
 
 ### 什么是多代理系统？
 
@@ -513,37 +518,11 @@ Supervisor Context: [Goal] + [Task Decomposition] + [Worker 1 Distilled Summary 
 
 编排子 Agent 时，常见的拓扑结构有五种。
 
-<Mermaid
-chart={`
-flowchart TD
-subgraph Pattern1[1. Hierarchical Supervisor]
-s1[Supervisor] --> w1[Worker A]
-s1 --> w2[Worker B]
-w1 -->|Summary| s1
-w2 -->|Summary| s1
-end
-
-subgraph Pattern2[2. Sequential Pipeline]
-p1[Planner] -->|Specs| p2[Coder]
-p2 -->|Code| p3[Reviewer]
-end
-
-subgraph Pattern3[3. Peer Debate / Critic]
-c1[Generator Agent] <-->|Drafts & Critiques| c2[Critic / Verifier]
-end
-
-subgraph Pattern4[4. Shared Blackboard]
-b1[Worker A] --> bb[(Shared State Board)]
-bb --> b2[Worker B]
-end
-
-subgraph Pattern5[5. Dynamic Fork-Join]
-lead[Main Agent] -->|Fork in parallel| f1[Investigator 1]
-lead -->|Fork in parallel| f2[Investigator 2]
-f1 --> join([Join & Reconcile])
-f2 --> join
-end
-`}
+<SketchDiagram
+  src="/static/images/ai-concepts/agent-coordination.svg"
+  alt="五种协作方式包括主管派发任务并接收摘要、顺序流水线、同伴互评、共享状态板，以及并行调查后汇总。"
+  width={800}
+  height={960}
 />
 
 1. **分级主管-工人(中枢-和声)**:
@@ -565,7 +544,7 @@ end
 
 ---
 
-## 9. 兽医
+## 10. 兽医
 
 ### 什么是管弦乐手？
 
@@ -620,7 +599,7 @@ class Orchestrator {
 
 ---
 
-## 10. 钩子
+## 11. 钩子
 
 ### 什么是钩子？
 
@@ -628,16 +607,11 @@ class Orchestrator {
 
 LLM本质上是概率性的，非定型的，以及黑盒的.**Hooks提供了观测，检查，变异，或中止代理操作所需的定型软件边界**. 类似于Git hooks, Webhooks,或React 生命周期方法，代理 hooks给出软件工程师应用定义的截取点。 执行取决于哪些操作通过这些点。
 
-<Mermaid
-chart={`flowchart LR
-  up[User Prompt] -->|beforePrompt| hp[Input Hook: Scrub PII & Sanitize]
-  hp --> agent[Agent Reasoning]
-  agent -->|beforeToolCall| ht[Tool Hook: Auth Check & Sandbox Gate]
-  ht --> tool[Execute Tool]
-  tool -->|afterToolCall| htr[Output Hook: Truncate & Format]
-  htr --> agent
-  agent -->|afterModelCall| ho[Model Hook: Check Hallucinations & Leaks]
-  ho --> res([Final Response])`}
+<SketchDiagram
+  src="/static/images/ai-concepts/lifecycle-hooks.svg"
+  alt="beforePrompt 处理输入。工具调用经过 beforeToolCall 和 afterToolCall，结果反馈给 Agent。答复通过 afterModelCall 检查。"
+  width={800}
+  height={900}
 />
 
 ### 常用的毒剂生命周期钩
@@ -704,7 +678,7 @@ hooks.onBeforeToolCall(async ({ toolName }) => {
 
 ---
 
-## 11. 护卫设施
+## 12. 护卫设施
 
 ### 护栏是什么？
 
@@ -731,18 +705,11 @@ hooks.onBeforeToolCall(async ({ toolName }) => {
 
 因为提示不能强制安全，所以**护栏一般直接在生命周期钩子内执行**:
 
-<Mermaid
-chart={`flowchart LR
-  subgraph Agent Runtime
-    p[User Input] --> bph[Hook: beforePrompt]
-    bph -->|1. Input Guardrail: PII & Injection Filter| llm[LLM Reasoning]
-    llm --> bth[Hook: beforeToolCall]
-    bth -->|2. Execution Guardrail: Permissions & Sandbox| tool[Tool Execution]
-    tool --> ath[Hook: afterToolCall]
-    ath -->|Sanitize output| llm
-    llm --> amh[Hook: afterModelCall]
-    amh -->|3. Output Guardrail: Hallucination & Leak Check| out[User Response]
-  end`}
+<SketchDiagram
+  src="/static/images/ai-concepts/guardrail-layers.svg"
+  alt="运行时过滤输入，检查工具权限和沙箱边界，清理送回模型的工具结果，并在答复前检查模型输出。"
+  width={800}
+  height={900}
 />
 
 1. **输入式护栏(挂在`beforePrompt`)**:
@@ -771,7 +738,7 @@ chart={`flowchart LR
 
 ---
 
-## 12. 办法
+## 13. 办法
 
 ### 什么是绳子？
 
@@ -803,30 +770,11 @@ $$\text{Harness} = \text{Environment Provisioning} + \text{Context Scaffolding} 
    - 在基准和测试模式(中，如SWE-bench,GAIA,或内部回归测试床)中，在代理完成运行后，该控制伞执行决定论断言。
    - 运行测试跑者(`pytest`,`jest`,`pnpm test`),编译代码，检查git diffs,或运行一个LLM-as-a-judge的分级器以产生记录结果.基于模型的分级器仍然是不确定的判断；确定性检查也只确定了它们实际测试的条件。
 
-<Mermaid
-chart={`
-flowchart TD
-task([Task / Benchmark Prompt]) --> harness
-
-subgraph harness[AI Runtime & Evaluation Harness]
-prov[1. Workspace Provisioning: Git Worktree & Sandbox]
-ctx[2. Context Injection: Repo files, AGENTS.md, Tool schemas]
-
-    subgraph runtime[3. Sandboxed Execution Boundary]
-      agent[Agent ReAct Loop: LLM + Tools]
-    end
-
-    telemetry[4. Telemetry & Budget Governor: Tokens, Timeouts, Logs]
-    eval[5. Verification Suite: Unit tests, Git diffs, Grader model]
-
-end
-
-prov --> ctx
-ctx --> runtime
-runtime --> telemetry
-runtime --> eval
-eval --> verdict([Evaluation Verdict: Pass / Fail & Benchmark Score])
-`}
+<SketchDiagram
+  src="/static/images/ai-concepts/runtime-evaluation-harness.svg"
+  alt="基准任务进入 Harness 后，依次创建工作区、注入上下文并在沙箱中运行 Agent。系统记录遥测数据并验证结果，给出评估结论。"
+  width={800}
+  height={697}
 />
 
 ### 评价和运行时间循环
@@ -913,119 +861,21 @@ async function runInHarness(config: HarnessConfig): Promise<BenchmarkResult> {
 
 # 概念如何连接:统一架构
 
-了解现代AI需要看到这十二块如何在复合系统中组合:
+下图展示了这些组件在一个系统中如何配合。
 
-<Mermaid
-chart={`
-flowchart TB
-subgraph Harness[Runtime, Sandbox & Evaluation Harness]
-subgraph Control[Control & Interception Layer]
-hooks[Hooks: Lifecycle Interception Points]
-gr[Guardrails: Input, Execution & Output Validation]
-hooks --> gr
-end
-
-    subgraph Orchestration[Orchestration & Coordination Layer]
-      orch[Orchestrator: Routing & State Management]
-      wf[Workflows: Deterministic DAGs]
-      mas[Multi-Agent System: Context Isolation]
-    end
-
-    subgraph Execution[Agent Execution Layer]
-      agent1[Specialized Agent A]
-      agent2[Specialized Agent B]
-      react[ReAct Loop: Think - Plan - Act - Observe]
-      llm[LLM: Cognitive Engine]
-    end
-
-    subgraph Capability[Capability & Packaging Layer]
-      plugins[Plugins: Distribution Bundles]
-      skills[Skills: Progressive Disclosure Playbooks]
-      mcp[MCP: Standardized Tool Collections]
-      tools[Tools: Concrete Executable Functions]
-    end
-
-    subgraph Verification[Verification & Evaluation Layer]
-      eval[Eval Engine: Test Suites, Diffs & Telemetry]
-    end
-
-end
-
-subgraph External[External Environment]
-apis[External APIs]
-dbs[Databases]
-env[Filesystem / OS]
-end
-
-Control -.-> Orchestration
-Control -.-> Execution
-Control -.-> Capability
-
-orch --> wf
-orch --> mas
-mas --> agent1
-mas --> agent2
-
-agent1 --> react
-react --> llm
-react --> skills
-react --> tools
-
-plugins --> skills
-plugins --> mcp
-mcp --> tools
-tools --> apis
-tools --> dbs
-tools --> env
-
-Execution --> eval
-`}
+<SketchDiagram
+  src="/static/images/ai-concepts/unified-architecture.svg"
+  alt="Harness 包含控制、编排、Agent 执行、工具集成和评估。编排器调度工作流和多个 Agent，插件提供技能与 MCP 集成，工具访问外部 API、数据库和文件。"
+  width={800}
+  height={1070}
 />
 
 图表是一种可能的安排。一个工作流程可以包含一个代理步骤，运行时间可以服务一个代理，而不需要单独的管弦乐手，一个评价工具也可以测试。根据任务选择边界，而不是执行每个框。
 
-# 何时使用什么:切实可行的决策框架
+# 结语
 
-选择正确的抽象可以防止过度工程化，并消除运行系统的复杂性。
+LLM 根据收到的上下文生成回应。工作流预先定义执行步骤，Agent 则根据工具反馈决定下一步行动。在多 Agent 系统中，各个 Agent 可以在各自的上下文中专注于子任务，由编排器协调交接、汇总结果。
 
-## 建筑对比矩阵
+先选定一个任务，再明确什么证据能证明任务已完成。以差旅政策为例，摘要中的报销限额和生效日期都应能在现行政策中核对。如果第一次尝试失败，就追查问题出在哪一步。系统可能需要改进检索、增加核对来源的工具，或者在 Harness 中加入完成检查。找到具体缺口后，再补上对应的组件。
 
-| 概念         | 责任                         | 边界 明确                      |
-| ------------ | ---------------------------- | ------------------------------ |
-| LLM          | 从上下文提出内容或动作       | 输入和生成策略                 |
-| 工作流程     | 遵循应用程序定义的控制路径   | 分支，重试，以及依赖模型的步骤 |
-| 代理         | 在授权的任务中选择下一步行动 | 工具权限和完成检查             |
-| 工具         | 展出一种可调用的能力         | 输入合同，效果，以及失败行为   |
-| MCP          | 标准化上下文/能力交换        | 协议版本和主机授权             |
-| Skill        | 供应可重复使用的任务指导     | 装载规则与辅助资源             |
-| 插件         | 集成套件                     | 依赖并请求权限                 |
-| 多剂系统     | 坐标 单独的工作环境          | 所有权，通信，和集成           |
-| Orchestrator | 路由工作和维护共享状态       | 货币，折叠，冲突处理           |
-| Hook         | 拦截支持的生命周期事件       | 哪些操作通过它                 |
-| Guardrail    | 检查或限制定义的动作/输出    | 强制财产和可能存在的虚假结果   |
-| Harness      | 供应运行时间或评价基础设施   | 隔离，证据，限制和接受标准     |
-
-## 决策流程图
-
-在设计一个特性时，使用这个决定路径来选择最简单的可行的架构:
-
-1. **任务需要现实世界动作还是动态外部数据?**
-   - _No_:使用生的**LLM**(迅速工程+结构输出).
-   - _是_: 开始步骤2.
-2. **执行路径是否固定且可预测?**
-   - _是_: 构建一个**工作流程** (编码管道在具体节点调用 LLMS**工具**).
-   - _No_:您需要一个**代理**(在一个自主 ReAct round)中使用 LLM 。
-3. **任务风险背景爆炸或需要不同领域的专门知识?**
-   - _ No_: 使用单张**代理服务器**配备了相关设备**技能** (通过逐步披露)财务报告和已审计财务报表**工具**.
-   - _Yes_:首先改进检索和上下文选择。当工作有独立的界限且协调成本合理时，考虑单独的代理；验证综合结果。
-4. **如何提供和分发工具和技能?**
-   - 如果曝光跨不同客户端的可重复使用的工具和资源集合:通过**MCP服务器**服务。
-   - 如果分发一个预装工具包，MCP配置，和技能:作为**插件**分发。
-5. **如何拦截，监视，并确保执行?**
-   - 附加寿命周期**钩子**(`beforePrompt``beforeToolCall``afterModelCall`)执行定型**护栏**, 伐木，以及模型外的预算限制 。 永远不要只依靠提示来保证安全 。
-6. **如何基准，隔离，测试系统?**
-   - 构建**评价并运行时使用**进行沙盒执行，注入再生产上下文，执行资源限制，运行自动回归测试床。
-
----
-
-从一个有边框的任务和可观察到的接受检查开始。当特定失败或要求证明额外机器有正当理由时，添加工具、 上下文管理或协调。[执行行走通过](/blog/ai-agents-and-harnesses-from-tool-loops-to-reliable-systems)以一个解析例来开发此方法 。
+想看 Agent 和 Harness 如何配合，可以阅读 [AI Agent 与 Harness](/zh/blog/ai-agents-and-harnesses-from-tool-loops-to-reliable-systems)中的完整示例。

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="697" viewBox="0 0 800 697" role="img" aria-labelledby="title description">
+<title id="title">Runtime and evaluation harness</title>
+<desc id="description">A benchmark task enters the harness. It provisions a workspace, injects context, runs the agent in a sandbox, records telemetry, and verifies the result to produce a verdict.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#52606d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<polyline points="400.0,233 400.0,258" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,332 400.0,357" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,93 400.0,159" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,431 400,450 214.5,450 214.5,474" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,431 400,450 585.5,450 585.5,474" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="585.5,548 585.5,581 561,581 561.0,596" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<g font-family="Chalkboard SE, Comic Sans MS, Trebuchet MS, sans-serif">
+<path d="M189 23 Q400 20 611 23 Q629 23 628 40 L628 72 Q629 90 611 89 Q400 92 189 89 Q171 90 172 72 L172 40 Q171 23 189 23 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="64.0" text-anchor="middle" fill="#225d82" font-size="23">Task / benchmark prompt</text>
+<rect x="24" y="117" width="752" height="449" rx="22" fill="none" stroke="#225d82" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="44" y="148" text-anchor="start" fill="#225d82" font-size="25">Runtime &amp; evaluation harness</text>
+<path d="M161 163 Q400 160 639 163 Q657 163 656 180 L656 212 Q657 230 639 229 Q400 232 161 229 Q143 230 144 212 L144 180 Q143 163 161 163 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="190.5" text-anchor="middle" fill="#225d82" font-size="23">1. Provision workspace</text>
+<text x="400.0" y="217.5" text-anchor="middle" fill="#225d82" font-size="23">Git worktree and sandbox</text>
+<path d="M161 262 Q400 259 639 262 Q657 262 656 279 L656 311 Q657 329 639 328 Q400 331 161 328 Q143 329 144 311 L144 279 Q143 262 161 262 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="289.5" text-anchor="middle" fill="#225d82" font-size="23">2. Inject context</text>
+<text x="400.0" y="316.5" text-anchor="middle" fill="#225d82" font-size="23">Repo files, AGENTS.md and tool schemas</text>
+<path d="M161 361 Q400 358 639 361 Q657 361 656 378 L656 410 Q657 428 639 427 Q400 430 161 427 Q143 428 144 410 L144 378 Q143 361 161 361 Z" fill="#65468e" fill-opacity=".05" stroke="#65468e" stroke-width="2.5"/>
+<text x="400.0" y="388.5" text-anchor="middle" fill="#65468e" font-size="23">3. Sandboxed execution</text>
+<text x="400.0" y="415.5" text-anchor="middle" fill="#65468e" font-size="23">ReAct loop: LLM and tools</text>
+<path d="M66 478 Q214 475 363 478 Q381 478 380 495 L380 527 Q381 545 363 544 Q214 547 66 544 Q48 545 49 527 L49 495 Q48 478 66 478 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="214.5" y="505.5" text-anchor="middle" fill="#8c451a" font-size="23">4. Telemetry and budgets</text>
+<text x="214.5" y="532.5" text-anchor="middle" fill="#8c451a" font-size="23">Tokens, timeouts and logs</text>
+<path d="M437 478 Q585 475 734 478 Q752 478 751 495 L751 527 Q752 545 734 544 Q585 547 437 544 Q419 545 420 527 L420 495 Q419 478 437 478 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="585.5" y="505.5" text-anchor="middle" fill="#28663f" font-size="23">5. Verification suite</text>
+<text x="585.5" y="532.5" text-anchor="middle" fill="#28663f" font-size="23">Tests, Git diffs and grader</text>
+<path d="M374 600 Q561 597 748 600 Q766 600 765 617 L765 649 Q766 667 748 666 Q561 669 374 666 Q356 667 357 649 L357 617 Q356 600 374 600 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="561.0" y="627.5" text-anchor="middle" fill="#28663f" font-size="23">Evaluation verdict</text>
+<text x="561.0" y="654.5" text-anchor="middle" fill="#28663f" font-size="23">Pass / fail and benchmark score</text>
+</g>
+</svg>

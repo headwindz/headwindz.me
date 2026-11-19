@@ -2427,48 +2427,57 @@ input:-webkit-autofill:focus {
   color: var(--journal-muted);
   font-size: 0.75rem;
 }
-.workflow-cover {
-  padding: 1rem;
-  background: var(--journal-card);
+.concepts-cover {
+  color: var(--journal-ink);
+  background: var(--journal-paper);
 }
-.workflow-track {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.4rem;
-  padding-block: 0.5rem 1.25rem;
+.concepts-cover figcaption {
+  padding: 0.8rem 1rem 0.55rem;
+  font-weight: 650;
 }
-.workflow-track > span {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--journal-muted);
-}
-.workflow-dot {
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--journal-rule);
-  border-radius: 50%;
-}
-.workflow-track > span[data-active='true'] {
-  color: var(--journal-accent);
-}
-.workflow-track > span[data-active='true'] .workflow-dot {
-  background: var(--journal-accent);
-}
-.workflow-output {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-top: 1px dashed var(--journal-rule);
-  padding-top: 0.5rem;
-  gap: 0.5rem;
-}
-.workflow-output button {
-  width: 40px;
+.concepts-index {
   display: grid;
-  place-items: center;
-  border-radius: 5px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding: 0 1rem 0.85rem;
+}
+.concepts-index button {
+  min-height: 44px;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--journal-rule);
+  border-radius: 5px 8px 6px 9px;
+  background: var(--journal-card);
+  color: var(--journal-ink);
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+}
+.concepts-index button:hover,
+.concepts-index button[aria-pressed='true'] {
+  border-color: var(--journal-accent);
+}
+.concepts-index button[aria-pressed='true'] {
   background: var(--notebook-mark);
+}
+.concepts-index button:focus-visible {
+  outline: 2px solid var(--journal-accent);
+  outline-offset: 2px;
+}
+.concepts-note {
+  min-height: 6.75rem;
+  padding: 0.7rem 1rem;
+  border-top: 1px dashed var(--journal-rule);
+  background: var(--journal-card);
+  color: var(--journal-muted);
+  line-height: 1.45;
+}
+.concepts-note p {
+  margin: 0;
+}
+.concepts-note .concepts-topics {
+  margin-bottom: 0.2rem;
+  color: var(--journal-ink);
+  font-weight: 650;
 }
 /* Web3 article map and interactive explanations */
 .web3-overview,
@@ -2731,13 +2740,6 @@ input:-webkit-autofill:focus {
   background: var(--notebook-mark);
 }
 @media (max-width: 450px) {
-  .workflow-track {
-    gap: 0.2rem;
-    font-size: 0.7rem;
-  }
-  .workflow-dot {
-    display: none;
-  }
   .workspace-dock button {
     font-size: 0.65rem;
   }

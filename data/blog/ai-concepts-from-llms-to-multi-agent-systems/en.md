@@ -1,5 +1,5 @@
 ---
-title: 'Demystifying modern AI: from LLMs to multi-agent systems'
+title: 'Demystifying modern AI concepts'
 date: '2026-09-25'
 featured: true
 tags: ['ai', 'architecture', 'notes']
@@ -8,9 +8,9 @@ summary: 'A comprehensive architectural breakdown of core modern AI building blo
 
 A model, a tool, a skill, and a harness solve different problems. The distinction becomes useful when deciding who chooses the next action, what software executes it, and where a result is checked.
 
-This glossary uses twelve terms to describe those responsibilities. Implementations and vendors draw their boundaries differently. The definitions below are working conventions rather than a universal stack. For a complete example of how the pieces interact, see [AI agents and harnesses](/blog/ai-agents-and-harnesses-from-tool-loops-to-reliable-systems).
+This glossary describes those responsibilities and how context moves between them. Implementations and vendors draw their boundaries differently. The definitions below are working conventions rather than a universal stack. For a complete example of how the pieces interact, see [AI agents and harnesses](/blog/ai-agents-and-harnesses-from-tool-loops-to-reliable-systems).
 
-# The twelve core building blocks
+# Core building blocks
 
 ## 1. Large language models (LLMs)
 
@@ -64,13 +64,11 @@ A **workflow** follows application-defined control flow, such as a pipeline or s
 | **Flexibility**    | Rigid, handles expected paths             | Emergent, solves novel paths        |
 | **Failure mode**   | Step errors or incorrect model output     | Model hallucination / infinite loop |
 
-<Mermaid
-chart={`flowchart LR
-  input[Raw Document] --> step1[Node 1: OCR & Chunking]
-  step1 --> step2[Node 2: LLM Information Extraction]
-  step2 --> step3{Node 3: Deterministic Schema Validation}
-  step3 -- Valid --> step4[Node 4: Database Ingestion]
-  step3 -- Invalid --> step5[Node 5: Human Review Queue]`}
+<SketchDiagram
+  src="/static/images/ai-concepts/document-workflow.svg"
+  alt="OCR and chunking prepare the raw document for LLM extraction. Schema validation sends valid records to the database and invalid records to human review."
+  width={800}
+  height={565}
 />
 
 ### When to use workflows
@@ -84,96 +82,7 @@ Use workflows for high-volume, mission-critical business processes with strict c
 
 ---
 
-## 3. Autonomous agents
-
-### What is an agent?
-
-An **agent** is an autonomous system that wraps an LLM in an iterative execution loop with access to external tools and memory to achieve a high-level goal.
-
-$$\text{Agent} = \text{LLM} + \text{Tools} + \text{Memory} + \text{Execution Loop}$$
-
-While a raw LLM answers a question, an agent pursues an objective. The user provides a target state (e.g., `Fix the failing unit tests in the authentication service`), and the agent autonomously reasons about the problem, chooses actions, inspects intermediate results, and self-corrects until the goal is achieved.
-
-### Core features of an agent
-
-1. **Autonomy**: Operates independently without requiring human guidance at every micro-step. It determines the sequence and count of operations on the fly.
-2. **Goal-based**: Driven by an explicit objective. Instead of blindly executing hardcoded procedural scripts, it evaluates whether each step brings it closer to the target state.
-3. **Adaptability**: Dynamically recovers from failures. When a tool call returns an error, a file is missing, or a hypothesis is refuted, the agent inspects the feedback, alters its plan, and tries an alternative path.
-
-### The ReAct pattern: think, plan, act, observe
-
-**ReAct** is one useful pattern for interleaving reasoning and actions. It is not a requirement for every agent architecture. In this conceptual loop, the model proposes the next action and the host executes it:
-
-<Mermaid
-chart={`flowchart TD
-  goal([User Goal]) --> think[Think: Evaluate state and hypotheses]
-  think --> plan[Plan: Select next concrete action]
-  plan --> act[Act: Execute tool call]
-  act --> observe[Observe: Inspect tool execution output]
-  observe --> check{Goal achieved?}
-  check -- No: Error or next step needed --> think
-  check -- Yes: Final result ready --> done([Final Response])`}
-/>
-
-1. **Think (Reasoning)**: The LLM analyzes the current goal, conversation history, and prior tool outputs to synthesize an updated internal state.
-2. **Plan (Action selection)**: The model decides which tool to invoke and formats the necessary arguments.
-3. **Act (Execution)**: The host runtime executes the tool (e.g., database query, shell command, API call).
-4. **Observe (Feedback ingestion)**: The execution output is appended back into the agent context window as a new message, triggering the next reasoning cycle.
-
-```typescript
-// Conceptual implementation of an autonomous ReAct agent loop
-interface Tool {
-  name: string
-  description: string
-  execute: (args: Record<string, unknown>) => Promise<string>
-}
-
-async function runAgent(goal: string, tools: Tool[], maxIterations = 10) {
-  const messages: Array<{ role: string; content: string }> = [
-    {
-      role: 'system',
-      content: 'You are an autonomous agent. Reason, plan, and call tools to reach the goal.',
-    },
-    { role: 'user', content: goal },
-  ]
-
-  for (let i = 0; i < maxIterations; i++) {
-    // 1. Think & Plan: Call LLM with tool schemas
-    const response = await callLLMWithTools(messages, tools)
-
-    if (response.isComplete) {
-      return response.finalAnswer
-    }
-
-    // 2. Act: Execute selected tool
-    const { toolName, args } = response.selectedToolCall
-    const tool = tools.find((t) => t.name === toolName)
-    if (!tool) throw new Error(`Tool ${toolName} not found`)
-
-    // 3. Observe: Capture environmental feedback
-    const observation = await tool.execute(args)
-
-    // Feed back into loop
-    messages.push({ role: 'assistant', content: `Tool call: ${toolName}(${JSON.stringify(args)})` })
-    messages.push({ role: 'tool', content: observation })
-  }
-
-  throw new Error('Agent exceeded maximum reasoning iterations')
-}
-```
-
-### When to use agents
-
-Use agents when the solution path cannot be statically predicted at compile-time:
-
-- Interactive troubleshooting, debugging code, and bug fixing
-- Exploratory data analysis and multi-step competitive research
-- Automated incident remediation where diagnostic steps depend on telemetry
-- Operating complex developer environments (e.g., executing shell commands, running test suites, writing patches)
-
----
-
-## 4. Tools
+## 3. Tools
 
 ### What are tools?
 
@@ -235,41 +144,155 @@ Expose tools whenever an agent or LLM requires:
 
 ---
 
-## 5. Model Context Protocol (MCP)
+## 4. Context engineering
+
+**Context engineering** is how an application decides what the model receives on each call. As an agent works, its instructions, conversation history, tool outputs, and retrieved documents compete for space in a finite context window.
+
+### Four strategies for managing context
+
+| Strategy | How it works                                                                      | Example                                                                                      |
+| -------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Write    | Save useful state outside the current context window.                             | Store the task plan and verified findings in a checkpoint.                                   |
+| Select   | Load the information needed for the next step.                                    | Retrieve the current reimbursement rules and expose the tools needed to check them.          |
+| Compress | Represent earlier context in fewer tokens while preserving task-critical details. | Summarize completed lookups and retain source links, exact limits, and unresolved questions. |
+| Isolate  | Give a subtask its own working context and pass back the result.                  | Let a worker compare policy versions and return the effective date with its source.          |
+
+[LangChain's context engineering taxonomy](https://www.langchain.com/blog/context-engineering-for-agents)
+
+### Short-term and long-term memory
+
+Memory is part of context engineering. The application decides what to retain, how long to keep it, and when to load it for a future model call.
+
+- **Short-term memory** tracks the working state of the current task or conversation. It includes conversation history, recent tool results, and intermediate conclusions. A session can retain the full record outside the model while supplying a subset or a summary on each call.
+- **Long-term memory** is a persistent store of selected information that can be recalled across conversations, such as a user's preferences or summaries of past projects. Recalling relevant entries supports personalization and continuity over time.
+
+For example, the assistant may keep the policy documents it has checked in short-term memory. In a later conversation, it may recall a saved preference to include effective dates and links to sources in policy summaries.
+
+### Retrieval-augmented generation (RAG)
+
+**Retrieval-augmented generation** looks up relevant information in an external collection and supplies it to the model as evidence for an answer. A typical vector-based pipeline works in three steps. [Original RAG paper](https://arxiv.org/abs/2005.11401)
+
+1. **Chunk the documents.** Split long documents into retrievable passages called chunks. Keep related text together where possible and store metadata such as the source URL and section heading with each chunk.
+2. **Embed and index the chunks.** An embedding model maps each chunk to a numeric vector. The resulting index supports finding passages whose embeddings are similar to a query embedding, including passages that use different wording. [Dense Passage Retrieval paper](https://arxiv.org/abs/2004.04906)
+3. **Retrieve and generate.** Embed the question, find candidate chunks, then give the model the selected passage text and source metadata to use when generating its answer.
+
+A question about whether the company pays for hotel stays might retrieve a passage headed “Lodging reimbursement.” Chunk boundaries matter here. If the exception sits in the next chunk, retrieving only the first can produce an incomplete answer. RAG implements the **select** strategy and can retrieve from a document collection or from long-term memory.
+
+## 5. Autonomous agents
+
+### What is an agent?
+
+An **agent** is an autonomous system that wraps an LLM in an iterative execution loop with access to external tools and memory to achieve a high-level goal.
+
+$$\text{Agent} = \text{LLM} + \text{Tools} + \text{Memory} + \text{Execution Loop}$$
+
+While a raw LLM answers a question, an agent pursues an objective. The user provides a target state (e.g., `Fix the failing unit tests in the authentication service`), and the agent autonomously reasons about the problem, chooses actions, inspects intermediate results, and self-corrects until the goal is achieved.
+
+### Core features of an agent
+
+1. **Autonomy**: Operates independently without requiring human guidance at every micro-step. It determines the sequence and count of operations on the fly.
+2. **Goal-based**: Driven by an explicit objective. Instead of blindly executing hardcoded procedural scripts, it evaluates whether each step brings it closer to the target state.
+3. **Adaptability**: Dynamically recovers from failures. When a tool call returns an error, a file is missing, or a hypothesis is refuted, the agent inspects the feedback, alters its plan, and tries an alternative path.
+
+### The agent loop
+
+On each iteration, the runtime assembles the current task context and calls the model. The model can propose a tool call or return a result. When the runtime executes a tool, it records the outcome, including errors, so the next model call can use that feedback. The runtime ends the loop when the task meets its completion criteria or an execution limit is reached.
+
+### The ReAct pattern: think, plan, act, observe
+
+**ReAct** interleaves reasoning, actions, and observations. Each observation can change the next action. In the diagram, “Plan” means choosing the next action for the current iteration. [ReAct paper](https://arxiv.org/abs/2210.03629)
+
+<SketchDiagram
+  src="/static/images/ai-concepts/react-loop.svg"
+  alt="The agent thinks, plans the next action, acts and observes the result. It repeats if the goal is still unmet and returns a response when complete."
+  width={800}
+  height={790}
+/>
+
+1. **Think (Reasoning)**: The LLM analyzes the current goal, conversation history, and prior tool outputs to synthesize an updated internal state.
+2. **Plan (Action selection)**: The model decides which tool to invoke and formats the necessary arguments.
+3. **Act (Execution)**: The host runtime executes the tool (e.g., database query, shell command, API call).
+4. **Observe (Feedback ingestion)**: The execution output is appended back into the agent context window as a new message, triggering the next reasoning cycle.
+
+```typescript
+// Conceptual implementation of an autonomous ReAct agent loop
+interface Tool {
+  name: string
+  description: string
+  execute: (args: Record<string, unknown>) => Promise<string>
+}
+
+async function runAgent(goal: string, tools: Tool[], maxIterations = 10) {
+  const messages: Array<{ role: string; content: string }> = [
+    {
+      role: 'system',
+      content: 'You are an autonomous agent. Reason, plan, and call tools to reach the goal.',
+    },
+    { role: 'user', content: goal },
+  ]
+
+  for (let i = 0; i < maxIterations; i++) {
+    // 1. Think & Plan: Call LLM with tool schemas
+    const response = await callLLMWithTools(messages, tools)
+
+    if (response.isComplete) {
+      return response.finalAnswer
+    }
+
+    // 2. Act: Execute selected tool
+    const { toolName, args } = response.selectedToolCall
+    const tool = tools.find((t) => t.name === toolName)
+    if (!tool) throw new Error(`Tool ${toolName} not found`)
+
+    // 3. Observe: Capture environmental feedback
+    const observation = await tool.execute(args)
+
+    // Feed back into loop
+    messages.push({ role: 'assistant', content: `Tool call: ${toolName}(${JSON.stringify(args)})` })
+    messages.push({ role: 'tool', content: observation })
+  }
+
+  throw new Error('Agent exceeded maximum reasoning iterations')
+}
+```
+
+### Plan-and-execute
+
+In **plan-and-execute**, a planner first lays out multiple steps. An executor carries them out, passing results to later steps as needed. The system can revise the remaining plan when a step fails or new evidence changes what should happen next. An individual step can itself use a ReAct loop. [Plan-and-execute agents](https://www.langchain.com/blog/planning-agents)
+
+For example, an agent asked to summarize a team's travel policy might plan to locate the current policy, check its effective date, and extract the reimbursement rules. If the first document is archived, the agent can revise the plan to find its replacement before writing the summary.
+
+### When to use agents
+
+Use agents when the solution path cannot be statically predicted at compile-time:
+
+- Interactive troubleshooting, debugging code, and bug fixing
+- Exploratory data analysis and multi-step competitive research
+- Automated incident remediation where diagnostic steps depend on telemetry
+- Operating complex developer environments (e.g., executing shell commands, running test suites, writing patches)
+
+---
+
+## 6. Model Context Protocol (MCP)
 
 ### What is MCP?
 
 The **Model Context Protocol (MCP)** is an open standard designed to solve the $N \times M$ integration problem between AI clients (LLMs, IDEs, desktop agents) and external data sources or tools (databases, issue trackers, local filesystems).
 
-Without MCP, every AI platform (ChatGPT, Claude, Cursor, custom company agents) must author proprietary integrations for every tool (GitHub, Postgres, Slack, Jira). MCP standardizes this interface via a universal client-host-server protocol built over JSON-RPC 2.0.
+The host application connects to servers through MCP clients. MCP defines how clients and servers exchange messages using JSON-RPC 2.0.
 
-<Mermaid
-chart={`
-flowchart LR
-subgraph Clients[AI Applications / Hosts]
-c1[Claude Desktop]
-c2[Cursor IDE]
-c3[Custom Agent Runtime]
-end
-
-subgraph Protocol[Model Context Protocol - JSON-RPC]
-mcp[Standardized MCP Client / Server Spec]
-end
-
-subgraph Servers[MCP Servers - Tool Collections]
-s1[PostgreSQL MCP Server: 8 SQL & schema tools]
-s2[GitHub MCP Server: 14 issue & PR tools]
-s3[Local Filesystem MCP Server: 6 FS tools]
-end
-
-c1 --> mcp
-c2 --> mcp
-c3 --> mcp
-mcp --> s1
-mcp --> s2
-mcp --> s3
-`}
+<SketchDiagram
+  src="/static/images/ai-concepts/mcp-architecture.svg"
+  alt="Claude Desktop, Cursor IDE and a custom agent runtime connect through MCP over JSON-RPC to PostgreSQL, GitHub and filesystem servers."
+  width={800}
+  height={475}
 />
+
+### Why function calling alone leaves an integration problem
+
+Function calling gives the model a way to request a named operation with structured arguments. The application still needs to supply the tool schema, connect to the service that implements it, and return the result. If an IDE and a desktop assistant each hard-code their own issue-tracker integration, both teams must maintain service-specific adapters.
+
+With MCP, both hosts can connect to the same compatible issue-tracker server. Their MCP clients discover tools through `tools/list` and invoke them through `tools/call`. Each host can still use its model's function-calling interface to present the tools and receive a call request. The shared protocol is especially valuable when several hosts need the same integrations. [MCP architecture and tool discovery](https://modelcontextprotocol.io/docs/learn/architecture)
 
 ### The relationship between MCP and tools: MCP as a standardized tool collection
 
@@ -351,7 +374,7 @@ await server.connect(transport)
 
 ---
 
-## 6. Skills
+## 7. Skills
 
 ### What is a skill?
 
@@ -374,27 +397,11 @@ In large codebases or enterprise environments, an agent may have access to 50+ s
 
 Progressive disclosure solves this by loading skills in three progressive tiers:
 
-<Mermaid
-chart={`
-flowchart TD
-subgraph Tier1[Tier 1: Catalog Index - Always in Context]
-idx[Skill Manifest: Name + 1-sentence Description <br/> illustrative compact metadata]
-end
-
-subgraph Tier2[Tier 2: On-Demand Activation - Loaded when Triggered]
-full[SKILL.md Body: Full Playbook, Instructions, Rules & Examples <br/> size depends on the skill]
-end
-
-subgraph Tier3[Tier 3: Lazy Sub-Resources - Read Only if Needed]
-ref[Supporting Assets: Schemas, Reference Docs, Scripts]
-end
-
-user([User Query: Audit authentication service]) --> match{Matches skill description?}
-Tier1 --> match
-match -- Yes: Activate skill --> Tier2
-Tier2 --> exec[Agent Execution]
-exec -.->|Read deep reference| Tier3
-`}
+<SketchDiagram
+  src="/static/images/ai-concepts/skill-disclosure.svg"
+  alt="A compact manifest is available to match the request. When the skill matches, the agent loads SKILL.md and reads supporting files only when needed."
+  width={800}
+  height={570}
 />
 
 1. **Tier 1: Catalog index (discovery metadata)**:
@@ -431,7 +438,7 @@ Use skills to institutionalize organizational playbooks and keep agent behavior 
 
 ---
 
-## 7. Plugins
+## 8. Plugins
 
 ### What is a plugin?
 
@@ -467,7 +474,7 @@ Use plugins when packaging capabilities for distribution across developers, team
 
 ---
 
-## 8. Multi-agent systems
+## 9. Multi-agent systems
 
 ### What is a multi-agent system?
 
@@ -516,37 +523,11 @@ While separate contexts can reduce irrelevant material, it introduces significan
 
 There are five major topological patterns for orchestrating sub-agents:
 
-<Mermaid
-chart={`
-flowchart TD
-subgraph Pattern1[1. Hierarchical Supervisor]
-s1[Supervisor] --> w1[Worker A]
-s1 --> w2[Worker B]
-w1 -->|Summary| s1
-w2 -->|Summary| s1
-end
-
-subgraph Pattern2[2. Sequential Pipeline]
-p1[Planner] -->|Specs| p2[Coder]
-p2 -->|Code| p3[Reviewer]
-end
-
-subgraph Pattern3[3. Peer Debate / Critic]
-c1[Generator Agent] <-->|Drafts & Critiques| c2[Critic / Verifier]
-end
-
-subgraph Pattern4[4. Shared Blackboard]
-b1[Worker A] --> bb[(Shared State Board)]
-bb --> b2[Worker B]
-end
-
-subgraph Pattern5[5. Dynamic Fork-Join]
-lead[Main Agent] -->|Fork in parallel| f1[Investigator 1]
-lead -->|Fork in parallel| f2[Investigator 2]
-f1 --> join([Join & Reconcile])
-f2 --> join
-end
-`}
+<SketchDiagram
+  src="/static/images/ai-concepts/agent-coordination.svg"
+  alt="A supervisor dispatches and receives summaries, a pipeline passes work forward, peers exchange drafts and critiques, workers share a state board, and fork-join reconciles parallel investigations."
+  width={800}
+  height={960}
 />
 
 1. **Hierarchical supervisor-worker (hub-and-spoke)**:
@@ -568,7 +549,7 @@ end
 
 ---
 
-## 9. Orchestrators
+## 10. Orchestrators
 
 ### What is an orchestrator?
 
@@ -623,7 +604,7 @@ Implement an orchestrator whenever your architecture spans:
 
 ---
 
-## 10. Hooks
+## 11. Hooks
 
 ### What are hooks?
 
@@ -631,16 +612,11 @@ Implement an orchestrator whenever your architecture spans:
 
 An LLM is inherently probabilistic, non-deterministic, and black-box. **Hooks provide the deterministic software boundaries** required to observe, inspect, mutate, or abort agent operations. Similar to Git hooks, Webhooks, or React lifecycle methods, agent hooks give software engineers application-defined interception points. Enforcement depends on which operations pass through those points.
 
-<Mermaid
-chart={`flowchart LR
-  up[User Prompt] -->|beforePrompt| hp[Input Hook: Scrub PII & Sanitize]
-  hp --> agent[Agent Reasoning]
-  agent -->|beforeToolCall| ht[Tool Hook: Auth Check & Sandbox Gate]
-  ht --> tool[Execute Tool]
-  tool -->|afterToolCall| htr[Output Hook: Truncate & Format]
-  htr --> agent
-  agent -->|afterModelCall| ho[Model Hook: Check Hallucinations & Leaks]
-  ho --> res([Final Response])`}
+<SketchDiagram
+  src="/static/images/ai-concepts/lifecycle-hooks.svg"
+  alt="Input passes through beforePrompt. Tool calls pass through beforeToolCall and afterToolCall, whose output feeds agent reasoning. The response path checks output through afterModelCall."
+  width={800}
+  height={900}
 />
 
 ### Common agent lifecycle hooks
@@ -707,7 +683,7 @@ Hooks are the foundational layer for:
 
 ---
 
-## 11. Guardrails
+## 12. Guardrails
 
 ### What are guardrails?
 
@@ -734,18 +710,11 @@ Real safety requires **deterministic code execution outside the model**.
 
 Because prompts cannot enforce safety, **guardrails are typically implemented directly inside lifecycle hooks**:
 
-<Mermaid
-chart={`flowchart LR
-  subgraph Agent Runtime
-    p[User Input] --> bph[Hook: beforePrompt]
-    bph -->|1. Input Guardrail: PII & Injection Filter| llm[LLM Reasoning]
-    llm --> bth[Hook: beforeToolCall]
-    bth -->|2. Execution Guardrail: Permissions & Sandbox| tool[Tool Execution]
-    tool --> ath[Hook: afterToolCall]
-    ath -->|Sanitize output| llm
-    llm --> amh[Hook: afterModelCall]
-    amh -->|3. Output Guardrail: Hallucination & Leak Check| out[User Response]
-  end`}
+<SketchDiagram
+  src="/static/images/ai-concepts/guardrail-layers.svg"
+  alt="The runtime filters input, enforces tool permissions and sandbox boundaries, sanitizes tool results before they return to reasoning, and checks model output before responding."
+  width={800}
+  height={900}
 />
 
 1. **Input guardrails (hooked at `beforePrompt`)**:
@@ -774,7 +743,7 @@ Guardrails are non-negotiable in production:
 
 ---
 
-## 12. Harnesses
+## 13. Harnesses
 
 ### What is a harness?
 
@@ -806,30 +775,11 @@ An agent harness fulfills four core engineering functions:
    - In benchmark and testing modes (such as SWE-bench, GAIA, or internal regression testbeds), the harness executes deterministic assertions after the agent concludes its run.
    - Runs test runners (`pytest`, `jest`, `pnpm test`), compiles code, checks git diffs, or runs an LLM-as-a-judge grader to produce a recorded result. A model-based grader remains an uncertain judgment; deterministic checks also establish only the conditions they actually test.
 
-<Mermaid
-chart={`
-flowchart TD
-task([Task / Benchmark Prompt]) --> harness
-
-subgraph harness[AI Runtime & Evaluation Harness]
-prov[1. Workspace Provisioning: Git Worktree & Sandbox]
-ctx[2. Context Injection: Repo files, AGENTS.md, Tool schemas]
-
-    subgraph runtime[3. Sandboxed Execution Boundary]
-      agent[Agent ReAct Loop: LLM + Tools]
-    end
-
-    telemetry[4. Telemetry & Budget Governor: Tokens, Timeouts, Logs]
-    eval[5. Verification Suite: Unit tests, Git diffs, Grader model]
-
-end
-
-prov --> ctx
-ctx --> runtime
-runtime --> telemetry
-runtime --> eval
-eval --> verdict([Evaluation Verdict: Pass / Fail & Benchmark Score])
-`}
+<SketchDiagram
+  src="/static/images/ai-concepts/runtime-evaluation-harness.svg"
+  alt="A benchmark task enters the harness. It provisions a workspace, injects context, runs the agent in a sandbox, records telemetry, and verifies the result to produce a verdict."
+  width={800}
+  height={697}
 />
 
 ### The evaluation and runtime loop
@@ -916,119 +866,21 @@ A harness is essential in four primary engineering scenarios:
 
 # How the concepts connect: the unified architecture
 
-Understanding modern AI requires seeing how these twelve pieces fit together in a compound system:
+Understanding modern AI requires seeing how these pieces fit together in a compound system:
 
-<Mermaid
-chart={`
-flowchart TB
-subgraph Harness[Runtime, Sandbox & Evaluation Harness]
-subgraph Control[Control & Interception Layer]
-hooks[Hooks: Lifecycle Interception Points]
-gr[Guardrails: Input, Execution & Output Validation]
-hooks --> gr
-end
-
-    subgraph Orchestration[Orchestration & Coordination Layer]
-      orch[Orchestrator: Routing & State Management]
-      wf[Workflows: Deterministic DAGs]
-      mas[Multi-Agent System: Context Isolation]
-    end
-
-    subgraph Execution[Agent Execution Layer]
-      agent1[Specialized Agent A]
-      agent2[Specialized Agent B]
-      react[ReAct Loop: Think - Plan - Act - Observe]
-      llm[LLM: Cognitive Engine]
-    end
-
-    subgraph Capability[Capability & Packaging Layer]
-      plugins[Plugins: Distribution Bundles]
-      skills[Skills: Progressive Disclosure Playbooks]
-      mcp[MCP: Standardized Tool Collections]
-      tools[Tools: Concrete Executable Functions]
-    end
-
-    subgraph Verification[Verification & Evaluation Layer]
-      eval[Eval Engine: Test Suites, Diffs & Telemetry]
-    end
-
-end
-
-subgraph External[External Environment]
-apis[External APIs]
-dbs[Databases]
-env[Filesystem / OS]
-end
-
-Control -.-> Orchestration
-Control -.-> Execution
-Control -.-> Capability
-
-orch --> wf
-orch --> mas
-mas --> agent1
-mas --> agent2
-
-agent1 --> react
-react --> llm
-react --> skills
-react --> tools
-
-plugins --> skills
-plugins --> mcp
-mcp --> tools
-tools --> apis
-tools --> dbs
-tools --> env
-
-Execution --> eval
-`}
+<SketchDiagram
+  src="/static/images/ai-concepts/unified-architecture.svg"
+  alt="Inside the harness, hooks and guardrails govern orchestration, agent execution and capabilities. The orchestrator routes workflows or multiple agents. Agents use a ReAct loop, the LLM, skills and tools. Plugins supply skills and MCP integrations. Tools reach APIs, databases and files. Verification evaluates execution."
+  width={800}
+  height={1070}
 />
 
 The diagram is one possible arrangement. A workflow can contain an agent step, a runtime can serve one agent without a separate orchestrator, and an evaluation harness can test either. Choose boundaries according to the task rather than implementing every box.
 
-# When to use what: practical decision framework
+# Conclusion
 
-Choosing the right abstraction prevents over-engineering and eliminates runaway system complexity.
+An LLM generates a response from the context it receives. A workflow defines the sequence of steps, while an agent uses feedback from tools to decide what to do next. In a multi-agent system, each agent can work with a focused context, and an orchestrator coordinates the handoffs and combines the results.
 
-## Architectural comparison matrix
+Start with one task and define what evidence would show it is complete. For the travel-policy example, that could be a summary whose reimbursement limits and effective date can be checked against the current policy. If the first attempt fails, trace where it failed. The system may need better retrieval, a tool to check the source, or a completion check in the harness. Add the component that addresses the gap you can observe.
 
-| Concept            | Responsibility                              | Boundary to make explicit                            |
-| ------------------ | ------------------------------------------- | ---------------------------------------------------- |
-| LLM                | Propose content or actions from context     | Inputs and generation strategy                       |
-| Workflow           | Follow application-defined control paths    | Branches, retries, and model-dependent steps         |
-| Agent              | Choose next actions within a delegated task | Tool authority and completion checks                 |
-| Tool               | Expose a callable capability                | Input contract, effects, and failure behavior        |
-| MCP                | Standardize context/capability exchange     | Protocol version and host authorization              |
-| Skill              | Supply reusable task guidance               | Loading rules and supporting resources               |
-| Plugin             | Package an integration                      | Dependencies and requested permissions               |
-| Multi-agent system | Coordinate separate working contexts        | Ownership, communication, and integration            |
-| Orchestrator       | Route work and maintain shared state        | Concurrency, retries, and conflict handling          |
-| Hook               | Intercept a supported lifecycle event       | Which operations pass through it                     |
-| Guardrail          | Check or restrict a defined action/output   | Enforced property and possible false results         |
-| Harness            | Supply runtime or evaluation infrastructure | Isolation, evidence, limits, and acceptance criteria |
-
-## Decision flowchart
-
-When designing a feature, use this decision path to pick the simplest viable architecture:
-
-1. **Does the task require real-world actions or dynamic external data?**
-   - _No_: Use a raw **LLM** (prompt engineering + structured outputs).
-   - _Yes_: Proceed to Step 2.
-2. **Is the execution path fixed and predictable?**
-   - _Yes_: Build a **workflow** (code pipeline calling LLMs at specific nodes with **tools**).
-   - _No_: You need an **agent** (an LLM in an autonomous ReAct loop).
-3. **Does the task risk context explosion or require distinct domains of expertise?**
-   - _No_: Use a single **agent** equipped with relevant **skills** (via progressive disclosure) and **tools**.
-   - _Yes_: First improve retrieval and context selection. Consider separate agents when the work has independent boundaries and the coordination cost is justified; verify the combined result.
-4. **How are tools and skills provided and distributed?**
-   - If exposing a reusable collection of tools and resources across different clients: serve them via an **MCP server**.
-   - If distributing a pre-packaged bundle of tools, MCP configs, and skills: distribute as a **plugin**.
-5. **How do you intercept, monitor, and secure execution?**
-   - Attach lifecycle **hooks** (`beforePrompt`, `beforeToolCall`, `afterModelCall`) to enforce deterministic **guardrails**, logging, and budget limits outside the model. Never rely on prompts alone for safety.
-6. **How do you benchmark, isolate, and test the system?**
-   - Build an **evaluation and runtime harness** to sandbox execution, inject reproducible context, enforce resource limits, and run automated regression testbeds.
-
----
-
-Start with one bounded task and an observable acceptance check. Add tools, context management, or coordination when a specific failure or requirement justifies the extra machinery. The [execution walkthrough](/blog/ai-agents-and-harnesses-from-tool-loops-to-reliable-systems) develops that approach with one parser example.
+For a worked example of how an agent and a harness cooperate, see [AI agents and harnesses](/blog/ai-agents-and-harnesses-from-tool-loops-to-reliable-systems).

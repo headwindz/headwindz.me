@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="900" viewBox="0 0 800 900" role="img" aria-labelledby="title description">
+<title id="title">Hooks in the agent lifecycle</title>
+<desc id="description">Input passes through beforePrompt. Tool calls pass through beforeToolCall and afterToolCall, whose output feeds agent reasoning. The response path checks output through afterModelCall.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#52606d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<polyline points="400.0,95 400.0,127" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,201 400.0,233" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,307 400.0,339" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,413 400.0,445" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,519 400.0,551" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="157,588.0 72,588 72,270 157,270.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="643,270.0 724,270 724,738 643,738.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,775 400.0,807" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<g font-family="Chalkboard SE, Comic Sans MS, Trebuchet MS, sans-serif">
+<path d="M178 25 Q400 22 622 25 Q640 25 639 42 L639 74 Q640 92 622 91 Q400 94 178 91 Q160 92 161 74 L161 42 Q160 25 178 25 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="66.0" text-anchor="middle" fill="#225d82" font-size="23">User prompt</text>
+<path d="M178 131 Q400 128 622 131 Q640 131 639 148 L639 180 Q640 198 622 197 Q400 200 178 197 Q160 198 161 180 L161 148 Q160 131 178 131 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="400.0" y="158.5" text-anchor="middle" fill="#8c451a" font-size="23">beforePrompt</text>
+<text x="400.0" y="185.5" text-anchor="middle" fill="#8c451a" font-size="23">Scrub PII and sanitize input</text>
+<path d="M178 237 Q400 234 622 237 Q640 237 639 254 L639 286 Q640 304 622 303 Q400 306 178 303 Q160 304 161 286 L161 254 Q160 237 178 237 Z" fill="#65468e" fill-opacity=".05" stroke="#65468e" stroke-width="2.5"/>
+<text x="400.0" y="278.0" text-anchor="middle" fill="#65468e" font-size="23">Agent reasoning</text>
+<path d="M178 343 Q400 340 622 343 Q640 343 639 360 L639 392 Q640 410 622 409 Q400 412 178 409 Q160 410 161 392 L161 360 Q160 343 178 343 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="400.0" y="370.5" text-anchor="middle" fill="#8c451a" font-size="23">beforeToolCall</text>
+<text x="400.0" y="397.5" text-anchor="middle" fill="#8c451a" font-size="23">Check authorization and sandbox policy</text>
+<path d="M178 449 Q400 446 622 449 Q640 449 639 466 L639 498 Q640 516 622 515 Q400 518 178 515 Q160 516 161 498 L161 466 Q160 449 178 449 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="490.0" text-anchor="middle" fill="#225d82" font-size="23">Execute tool</text>
+<path d="M178 555 Q400 552 622 555 Q640 555 639 572 L639 604 Q640 622 622 621 Q400 624 178 621 Q160 622 161 604 L161 572 Q160 555 178 555 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="400.0" y="582.5" text-anchor="middle" fill="#8c451a" font-size="23">afterToolCall</text>
+<text x="400.0" y="609.5" text-anchor="middle" fill="#8c451a" font-size="23">Truncate and format the result</text>
+<text x="113" y="537" text-anchor="middle" fill="#334155" font-size="19">Tool</text>
+<text x="113" y="559" text-anchor="middle" fill="#334155" font-size="19">feedback</text>
+<path d="M178 705 Q400 702 622 705 Q640 705 639 722 L639 754 Q640 772 622 771 Q400 774 178 771 Q160 772 161 754 L161 722 Q160 705 178 705 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="400.0" y="732.5" text-anchor="middle" fill="#8c451a" font-size="23">afterModelCall</text>
+<text x="400.0" y="759.5" text-anchor="middle" fill="#8c451a" font-size="23">Check for hallucinations and leaks</text>
+<path d="M178 811 Q400 808 622 811 Q640 811 639 828 L639 860 Q640 878 622 877 Q400 880 178 877 Q160 878 161 860 L161 828 Q160 811 178 811 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="400.0" y="852.0" text-anchor="middle" fill="#28663f" font-size="23">Final response</text>
+<text x="714" y="693" text-anchor="end" fill="#334155" font-size="19">Response path</text>
+</g>
+</svg>

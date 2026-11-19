@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="790" viewBox="0 0 800 790" role="img" aria-labelledby="title description">
+<title id="title">ReAct execution loop</title>
+<desc id="description">The agent thinks, plans the next action, acts and observes the result. It repeats if the goal is still unmet and returns a response when complete.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#52606d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<polyline points="400.0,95 400.0,133" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,207 400.0,245" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,319 400.0,357" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,431 400.0,469" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,543 400.0,581" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,655 400.0,693" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="157,618.0 78,618 78,170 157,170.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<g font-family="Chalkboard SE, Comic Sans MS, Trebuchet MS, sans-serif">
+<path d="M178 25 Q400 22 622 25 Q640 25 639 42 L639 74 Q640 92 622 91 Q400 94 178 91 Q160 92 161 74 L161 42 Q160 25 178 25 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="66.0" text-anchor="middle" fill="#225d82" font-size="23">User goal</text>
+<path d="M178 137 Q400 134 622 137 Q640 137 639 154 L639 186 Q640 204 622 203 Q400 206 178 203 Q160 204 161 186 L161 154 Q160 137 178 137 Z" fill="#65468e" fill-opacity=".05" stroke="#65468e" stroke-width="2.5"/>
+<text x="400.0" y="164.5" text-anchor="middle" fill="#65468e" font-size="23">Think</text>
+<text x="400.0" y="191.5" text-anchor="middle" fill="#65468e" font-size="23">Evaluate state and hypotheses</text>
+<path d="M178 249 Q400 246 622 249 Q640 249 639 266 L639 298 Q640 316 622 315 Q400 318 178 315 Q160 316 161 298 L161 266 Q160 249 178 249 Z" fill="#65468e" fill-opacity=".05" stroke="#65468e" stroke-width="2.5"/>
+<text x="400.0" y="276.5" text-anchor="middle" fill="#65468e" font-size="23">Plan</text>
+<text x="400.0" y="303.5" text-anchor="middle" fill="#65468e" font-size="23">Select the next concrete action</text>
+<path d="M178 361 Q400 358 622 361 Q640 361 639 378 L639 410 Q640 428 622 427 Q400 430 178 427 Q160 428 161 410 L161 378 Q160 361 178 361 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="400.0" y="388.5" text-anchor="middle" fill="#8c451a" font-size="23">Act</text>
+<text x="400.0" y="415.5" text-anchor="middle" fill="#8c451a" font-size="23">Execute tool call</text>
+<path d="M178 473 Q400 470 622 473 Q640 473 639 490 L639 522 Q640 540 622 539 Q400 542 178 539 Q160 540 161 522 L161 490 Q160 473 178 473 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="500.5" text-anchor="middle" fill="#225d82" font-size="23">Observe</text>
+<text x="400.0" y="527.5" text-anchor="middle" fill="#225d82" font-size="23">Inspect the tool result</text>
+<path d="M178 585 Q400 582 622 585 Q640 585 639 602 L639 634 Q640 652 622 651 Q400 654 178 651 Q160 652 161 634 L161 602 Q160 585 178 585 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="400.0" y="626.0" text-anchor="middle" fill="#28663f" font-size="23">Goal achieved?</text>
+<path d="M178 697 Q400 694 622 697 Q640 697 639 714 L639 746 Q640 764 622 763 Q400 766 178 763 Q160 764 161 746 L161 714 Q160 697 178 697 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="400.0" y="738.0" text-anchor="middle" fill="#28663f" font-size="23">Final response</text>
+<text x="62" y="607" text-anchor="end" fill="#334155" font-size="23">No</text>
+<text x="417" y="688" text-anchor="start" fill="#334155" font-size="23">Yes</text>
+</g>
+</svg>

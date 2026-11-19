@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="900" viewBox="0 0 800 900" role="img" aria-labelledby="title description">
+<title id="title">Guardrails around agent execution</title>
+<desc id="description">The runtime filters input, enforces tool permissions and sandbox boundaries, sanitizes tool results before they return to reasoning, and checks model output before responding.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#52606d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<polyline points="400.0,133 400.0,158" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,232 400.0,257" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,331 400.0,356" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,430 400.0,455" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,529 400.0,554" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="123,591.0 63,591 63,294 123,294.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="677,294.0 736,294 736,715 677,715.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,752 400.0,784" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<g font-family="Chalkboard SE, Comic Sans MS, Trebuchet MS, sans-serif">
+<rect x="22" y="14" width="756" height="866" rx="22" fill="none" stroke="#225d82" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="42" y="45" text-anchor="start" fill="#225d82" font-size="25">Agent runtime</text>
+<path d="M144 63 Q400 60 656 63 Q674 63 673 80 L673 112 Q674 130 656 129 Q400 132 144 129 Q126 130 127 112 L127 80 Q126 63 144 63 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="104.0" text-anchor="middle" fill="#225d82" font-size="23">User input</text>
+<path d="M144 162 Q400 159 656 162 Q674 162 673 179 L673 211 Q674 229 656 228 Q400 231 144 228 Q126 229 127 211 L127 179 Q126 162 144 162 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="400.0" y="189.5" text-anchor="middle" fill="#8c451a" font-size="23">beforePrompt</text>
+<text x="400.0" y="216.5" text-anchor="middle" fill="#8c451a" font-size="23">1. Input guardrail: PII and injection filter</text>
+<path d="M144 261 Q400 258 656 261 Q674 261 673 278 L673 310 Q674 328 656 327 Q400 330 144 327 Q126 328 127 310 L127 278 Q126 261 144 261 Z" fill="#65468e" fill-opacity=".05" stroke="#65468e" stroke-width="2.5"/>
+<text x="400.0" y="302.0" text-anchor="middle" fill="#65468e" font-size="23">LLM reasoning</text>
+<path d="M144 360 Q400 357 656 360 Q674 360 673 377 L673 409 Q674 427 656 426 Q400 429 144 426 Q126 427 127 409 L127 377 Q126 360 144 360 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="400.0" y="387.5" text-anchor="middle" fill="#8c451a" font-size="23">beforeToolCall</text>
+<text x="400.0" y="414.5" text-anchor="middle" fill="#8c451a" font-size="23">2. Execution guardrail: permissions and sandbox</text>
+<path d="M144 459 Q400 456 656 459 Q674 459 673 476 L673 508 Q674 526 656 525 Q400 528 144 525 Q126 526 127 508 L127 476 Q126 459 144 459 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="500.0" text-anchor="middle" fill="#225d82" font-size="23">Tool execution</text>
+<path d="M144 558 Q400 555 656 558 Q674 558 673 575 L673 607 Q674 625 656 624 Q400 627 144 624 Q126 625 127 607 L127 575 Q126 558 144 558 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="400.0" y="585.5" text-anchor="middle" fill="#8c451a" font-size="23">afterToolCall</text>
+<text x="400.0" y="612.5" text-anchor="middle" fill="#8c451a" font-size="23">Sanitize tool output</text>
+<path d="M144 682 Q400 679 656 682 Q674 682 673 699 L673 731 Q674 749 656 748 Q400 751 144 748 Q126 749 127 731 L127 699 Q126 682 144 682 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="400.0" y="709.5" text-anchor="middle" fill="#8c451a" font-size="23">afterModelCall</text>
+<text x="400.0" y="736.5" text-anchor="middle" fill="#8c451a" font-size="23">3. Output guardrail: hallucination and leak checks</text>
+<path d="M144 788 Q400 785 656 788 Q674 788 673 805 L673 837 Q674 855 656 854 Q400 857 144 854 Q126 855 127 837 L127 805 Q126 788 144 788 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="400.0" y="829.0" text-anchor="middle" fill="#28663f" font-size="23">User response</text>
+</g>
+</svg>

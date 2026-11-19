@@ -96,7 +96,7 @@ export const featuredTranslations: Record<string, { title: string; summary: stri
       '模型、工具与 Harness 如何组成 Agent，以及如何围绕有界执行循环扩展上下文、权限、恢复、评估和多 Agent 协作。',
   },
   'ai-concepts-from-llms-to-multi-agent-systems': {
-    title: '理解现代 AI：从大语言模型到多 Agent 系统',
+    title: '读懂现代 AI 的核心概念',
     summary:
       '梳理 LLM、工作流、Agent、工具、MCP、Skills、插件、编排器、Hooks、护栏与 Harness 等核心概念及其架构关系。',
   },

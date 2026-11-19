@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="475" viewBox="0 0 800 475" role="img" aria-labelledby="title description">
+<title id="title">MCP hosts, protocol and servers</title>
+<desc id="description">Claude Desktop, Cursor IDE and a custom agent runtime connect through MCP over JSON-RPC to PostgreSQL, GitHub and filesystem servers.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#52606d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<polyline points="158.0,136 158,163 250,163 250,187" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="250,261 250,280 196,280 196,362" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,136 400,163 400,163 400,187" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400,261 400,280 438,280 438,362" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="642.0,136 642,163 550,163 550,187" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="550,261 550,280 680,280 680,362" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<g font-family="Chalkboard SE, Comic Sans MS, Trebuchet MS, sans-serif">
+<rect x="22" y="18" width="756" height="134" rx="22" fill="none" stroke="#225d82" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="42" y="49" text-anchor="start" fill="#225d82" font-size="25">AI applications / hosts</text>
+<path d="M61 66 Q158 63 255 66 Q273 66 272 83 L272 115 Q273 133 255 132 Q158 135 61 132 Q43 133 44 115 L44 83 Q43 66 61 66 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="158.0" y="107.0" text-anchor="middle" fill="#225d82" font-size="23">Claude Desktop</text>
+<path d="M303 66 Q400 63 497 66 Q515 66 514 83 L514 115 Q515 133 497 132 Q400 135 303 132 Q285 133 286 115 L286 83 Q285 66 303 66 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="107.0" text-anchor="middle" fill="#225d82" font-size="23">Cursor IDE</text>
+<path d="M545 66 Q642 63 739 66 Q757 66 756 83 L756 115 Q757 133 739 132 Q642 135 545 132 Q527 133 528 115 L528 83 Q527 66 545 66 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="642.0" y="93.5" text-anchor="middle" fill="#225d82" font-size="23">Custom agent</text>
+<text x="642.0" y="120.5" text-anchor="middle" fill="#225d82" font-size="23">runtime</text>
+<path d="M219 191 Q400 188 581 191 Q599 191 598 208 L598 240 Q599 258 581 257 Q400 260 219 257 Q201 258 202 240 L202 208 Q201 191 219 191 Z" fill="#65468e" fill-opacity=".05" stroke="#65468e" stroke-width="2.5"/>
+<text x="400.0" y="218.5" text-anchor="middle" fill="#65468e" font-size="23">Model Context Protocol</text>
+<text x="400.0" y="245.5" text-anchor="middle" fill="#65468e" font-size="23">Client / server over JSON-RPC</text>
+<rect x="22" y="300" width="756" height="152" rx="22" fill="none" stroke="#28663f" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="42" y="331" text-anchor="start" fill="#28663f" font-size="25">MCP servers</text>
+<path d="M61 366 Q158 363 255 366 Q273 366 272 383 L272 415 Q273 433 255 432 Q158 435 61 432 Q43 433 44 415 L44 383 Q43 366 61 366 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="158.0" y="393.5" text-anchor="middle" fill="#28663f" font-size="23">PostgreSQL</text>
+<text x="158.0" y="420.5" text-anchor="middle" fill="#28663f" font-size="23">SQL / schema tools</text>
+<path d="M303 366 Q400 363 497 366 Q515 366 514 383 L514 415 Q515 433 497 432 Q400 435 303 432 Q285 433 286 415 L286 383 Q285 366 303 366 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="400.0" y="393.5" text-anchor="middle" fill="#28663f" font-size="23">GitHub</text>
+<text x="400.0" y="420.5" text-anchor="middle" fill="#28663f" font-size="23">Issue and PR tools</text>
+<path d="M545 366 Q642 363 739 366 Q757 366 756 383 L756 415 Q757 433 739 432 Q642 435 545 432 Q527 433 528 415 L528 383 Q527 366 545 366 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="642.0" y="393.5" text-anchor="middle" fill="#28663f" font-size="23">Local filesystem</text>
+<text x="642.0" y="420.5" text-anchor="middle" fill="#28663f" font-size="23">File tools</text>
+</g>
+</svg>

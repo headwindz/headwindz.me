@@ -1,7 +1,6 @@
 ---
 title: 'Building enterprise design systems: from design patterns to frontend architecture'
 date: 2026-10-18
-featured: true
 tags: ['architecture', 'react', 'css', 'web']
 summary: 'How to build and maintain an enterprise design system: shared patterns, component APIs, tokens, themes, documentation, and upgrades across product teams.'
 reviewed: 2026-11-17

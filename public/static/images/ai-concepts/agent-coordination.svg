@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="960" viewBox="0 0 800 960" role="img" aria-labelledby="title description">
+<title id="title">Five multi-agent coordination patterns</title>
+<desc id="description">A supervisor dispatches and receives summaries, a pipeline passes work forward, peers exchange drafts and critiques, workers share a state board, and fork-join reconciles parallel investigations.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#52606d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<polyline points="302,111.0 398,111.0 398,81.5 539,81.5" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<polyline points="302,111.0 398,111.0 398,146.5 539,146.5" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<polyline points="250,295.5 303,295.5" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="497,295.5 550,295.5" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="292,470.0 508,470.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<polyline points="246,636.5 290,636.5" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="501,636.5 554,636.5" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="235,827.0 260,827 260,794.0 291,794.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="505,794.0 536,794.0 536,827 561,827.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="235,827.0 260,827 260,870.0 291,870.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="505,870.0 536,870.0 536,827 561,827.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<g font-family="Chalkboard SE, Comic Sans MS, Trebuchet MS, sans-serif">
+<rect x="25" y="18" width="750" height="172" rx="22" fill="none" stroke="#225d82" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="45" y="49" text-anchor="start" fill="#225d82" font-size="25">1. Hierarchical supervisor</text>
+<rect x="25" y="210" width="750" height="148" rx="22" fill="none" stroke="#8c451a" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="45" y="241" text-anchor="start" fill="#8c451a" font-size="25">2. Sequential pipeline</text>
+<rect x="25" y="378" width="750" height="151" rx="22" fill="none" stroke="#28663f" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="45" y="409" text-anchor="start" fill="#28663f" font-size="25">3. Peer debate / critic</text>
+<rect x="25" y="549" width="750" height="148" rx="22" fill="none" stroke="#65468e" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="45" y="580" text-anchor="start" fill="#65468e" font-size="25">4. Shared blackboard</text>
+<rect x="25" y="717" width="750" height="222" rx="22" fill="none" stroke="#225d82" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="45" y="748" text-anchor="start" fill="#225d82" font-size="25">5. Dynamic fork-join</text>
+<path d="M77 78 Q179 75 281 78 Q299 78 298 95 L298 127 Q299 145 281 144 Q179 147 77 144 Q59 145 60 127 L60 95 Q59 78 77 78 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="179.0" y="119.0" text-anchor="middle" fill="#225d82" font-size="23">Supervisor</text>
+<path d="M560 58 Q639 55 719 58 Q737 58 736 75 L736 88 Q737 106 719 105 Q639 108 560 105 Q542 106 543 88 L543 75 Q542 58 560 58 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="639.5" y="89.5" text-anchor="middle" fill="#225d82" font-size="23">Worker A</text>
+<path d="M560 123 Q639 120 719 123 Q737 123 736 140 L736 153 Q737 171 719 170 Q639 173 560 170 Q542 171 543 153 L543 140 Q542 123 560 123 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="639.5" y="154.5" text-anchor="middle" fill="#225d82" font-size="23">Worker B</text>
+<text x="414" y="75" text-anchor="middle" fill="#334155" font-size="19">Tasks / summaries</text>
+<path d="M77 269 Q153 266 229 269 Q247 269 246 286 L246 305 Q247 323 229 322 Q153 325 77 322 Q59 323 60 305 L60 286 Q59 269 77 269 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="153.0" y="303.5" text-anchor="middle" fill="#8c451a" font-size="23">Planner</text>
+<path d="M324 269 Q400 266 476 269 Q494 269 493 286 L493 305 Q494 323 476 322 Q400 325 324 322 Q306 323 307 305 L307 286 Q306 269 324 269 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="400.0" y="303.5" text-anchor="middle" fill="#8c451a" font-size="23">Coder</text>
+<path d="M571 269 Q647 266 723 269 Q741 269 740 286 L740 305 Q741 323 723 322 Q647 325 571 322 Q553 323 554 305 L554 286 Q553 269 571 269 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="647.0" y="303.5" text-anchor="middle" fill="#8c451a" font-size="23">Reviewer</text>
+<text x="276" y="262" text-anchor="middle" fill="#334155" font-size="18">Specs</text>
+<text x="523" y="262" text-anchor="middle" fill="#334155" font-size="18">Code</text>
+<path d="M77 443 Q174 440 271 443 Q289 443 288 460 L288 480 Q289 498 271 497 Q174 500 77 497 Q59 498 60 480 L60 460 Q59 443 77 443 Z" fill="#65468e" fill-opacity=".05" stroke="#65468e" stroke-width="2.5"/>
+<text x="174.0" y="478.0" text-anchor="middle" fill="#65468e" font-size="23">Generator agent</text>
+<path d="M529 443 Q626 440 723 443 Q741 443 740 460 L740 480 Q741 498 723 497 Q626 500 529 497 Q511 498 512 480 L512 460 Q511 443 529 443 Z" fill="#65468e" fill-opacity=".05" stroke="#65468e" stroke-width="2.5"/>
+<text x="626.0" y="478.0" text-anchor="middle" fill="#65468e" font-size="23">Critic / verifier</text>
+<text x="400" y="454" text-anchor="middle" fill="#334155" font-size="19">Drafts and critiques</text>
+<path d="M77 610 Q151 607 225 610 Q243 610 242 627 L242 646 Q243 664 225 663 Q151 666 77 663 Q59 664 60 646 L60 627 Q59 610 77 610 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="151.0" y="644.5" text-anchor="middle" fill="#28663f" font-size="23">Worker A</text>
+<path d="M311 610 Q395 607 480 610 Q498 610 497 627 L497 646 Q498 664 480 663 Q395 666 311 663 Q293 664 294 646 L294 627 Q293 610 311 610 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="395.5" y="631.0" text-anchor="middle" fill="#28663f" font-size="23">Shared state</text>
+<text x="395.5" y="658.0" text-anchor="middle" fill="#28663f" font-size="23">board</text>
+<path d="M575 610 Q649 607 723 610 Q741 610 740 627 L740 646 Q741 664 723 663 Q649 666 575 663 Q557 664 558 646 L558 627 Q557 610 575 610 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="649.0" y="644.5" text-anchor="middle" fill="#28663f" font-size="23">Worker B</text>
+<path d="M72 800 Q143 797 214 800 Q232 800 231 817 L231 837 Q232 855 214 854 Q143 857 72 854 Q54 855 55 837 L55 817 Q54 800 72 800 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="143.0" y="835.0" text-anchor="middle" fill="#225d82" font-size="23">Main agent</text>
+<path d="M312 768 Q398 765 484 768 Q502 768 501 785 L501 803 Q502 821 484 820 Q398 823 312 820 Q294 821 295 803 L295 785 Q294 768 312 768 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="398.0" y="802.0" text-anchor="middle" fill="#225d82" font-size="23">Investigator 1</text>
+<path d="M312 844 Q398 841 484 844 Q502 844 501 861 L501 879 Q502 897 484 896 Q398 899 312 896 Q294 897 295 879 L295 861 Q294 844 312 844 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="398.0" y="878.0" text-anchor="middle" fill="#225d82" font-size="23">Investigator 2</text>
+<path d="M582 793 Q654 790 726 793 Q744 793 743 810 L743 844 Q744 862 726 861 Q654 864 582 861 Q564 862 565 844 L565 810 Q564 793 582 793 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="654.0" y="821.5" text-anchor="middle" fill="#225d82" font-size="23">Join and</text>
+<text x="654.0" y="848.5" text-anchor="middle" fill="#225d82" font-size="23">reconcile</text>
+</g>
+</svg>

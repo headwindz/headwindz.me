@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="565" viewBox="0 0 800 565" role="img" aria-labelledby="title description">
+<title id="title">Document processing workflow</title>
+<desc id="description">OCR and chunking prepare the raw document for LLM extraction. Schema validation sends valid records to the database and invalid records to human review.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#52606d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<polyline points="400.0,95 400.0,122" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,196 400.0,223" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,297 400.0,324" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,398 400,418 205,418 205.0,466" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,398 400,418 595,418 595.0,466" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<g font-family="Chalkboard SE, Comic Sans MS, Trebuchet MS, sans-serif">
+<path d="M178 25 Q400 22 622 25 Q640 25 639 42 L639 74 Q640 92 622 91 Q400 94 178 91 Q160 92 161 74 L161 42 Q160 25 178 25 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="66.0" text-anchor="middle" fill="#225d82" font-size="23">Raw document</text>
+<path d="M178 126 Q400 123 622 126 Q640 126 639 143 L639 175 Q640 193 622 192 Q400 195 178 192 Q160 193 161 175 L161 143 Q160 126 178 126 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="167.0" text-anchor="middle" fill="#225d82" font-size="23">1. OCR and chunking</text>
+<path d="M178 227 Q400 224 622 227 Q640 227 639 244 L639 276 Q640 294 622 293 Q400 296 178 293 Q160 294 161 276 L161 244 Q160 227 178 227 Z" fill="#65468e" fill-opacity=".05" stroke="#65468e" stroke-width="2.5"/>
+<text x="400.0" y="268.0" text-anchor="middle" fill="#65468e" font-size="23">2. LLM information extraction</text>
+<path d="M178 328 Q400 325 622 328 Q640 328 639 345 L639 377 Q640 395 622 394 Q400 397 178 394 Q160 395 161 377 L161 345 Q160 328 178 328 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="400.0" y="369.0" text-anchor="middle" fill="#8c451a" font-size="23">3. Deterministic schema validation</text>
+<path d="M63 470 Q205 467 347 470 Q365 470 364 487 L364 519 Q365 537 347 536 Q205 539 63 536 Q45 537 46 519 L46 487 Q45 470 63 470 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="205.0" y="511.0" text-anchor="middle" fill="#28663f" font-size="23">4. Database ingestion</text>
+<path d="M453 470 Q595 467 737 470 Q755 470 754 487 L754 519 Q755 537 737 536 Q595 539 453 536 Q435 537 436 519 L436 487 Q435 470 453 470 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="595.0" y="511.0" text-anchor="middle" fill="#8c451a" font-size="23">5. Human review queue</text>
+<text x="217" y="450" text-anchor="start" fill="#334155" font-size="23">Valid</text>
+<text x="607" y="450" text-anchor="start" fill="#334155" font-size="23">Invalid</text>
+</g>
+</svg>

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1070" viewBox="0 0 800 1070" role="img" aria-labelledby="title description">
+<title id="title">Unified AI system architecture</title>
+<desc id="description">Inside the harness, hooks and guardrails govern orchestration, agent execution and capabilities. The orchestrator routes workflows or multiple agents. Agents use a ReAct loop, the LLM, skills and tools. Plugins supply skills and MCP integrations. Tools reach APIs, databases and files. Verification evaluates execution.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#52606d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<polyline points="358,141.0 442,141.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,313 400,320 207.5,320 207.5,327" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="400.0,313 400,320 592.5,320 592.5,327" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="592.5,383 592.5,408 206.5,408 206.5,458" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="592.5,383 592.5,408 596.5,408 596.5,458" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="206.5,514 206.5,542" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="342,570.0 461,570.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="395.0,732 395.0,750" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="506,776.5 543,760.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="284,705.5 196,705.5 196,731" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="206.5,598 206.5,624 50,624 50,760 58,760.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="206.5,598 206.5,624 641,624 641.0,731" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="762,584 771,584 771,871 648,871.0" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="38,152 29,152 29,683 38,683" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)" stroke-dasharray="7 6"/>
+<polyline points="29,285 38,285" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)" stroke-dasharray="7 6"/>
+<polyline points="29,482 38,482" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)" stroke-dasharray="7 6"/>
+<polyline points="641.0,789 641,828 779,828 779,979 169,979 169.0,997" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="641.0,789 641,828 779,828 779,979 400,979 400.0,997" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="641.0,789 641,828 779,828 779,979 631,979 631.0,997" fill="none" stroke="#52606d" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<g font-family="Chalkboard SE, Comic Sans MS, Trebuchet MS, sans-serif">
+<rect x="15" y="14" width="770" height="904" rx="22" fill="none" stroke="#225d82" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="35" y="45" text-anchor="start" fill="#225d82" font-size="25">Runtime, sandbox and evaluation harness</text>
+<rect x="38" y="67" width="724" height="122" rx="22" fill="none" stroke="#8c451a" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="58" y="98" text-anchor="start" fill="#8c451a" font-size="25">Control and interception</text>
+<path d="M78 114 Q207 111 337 114 Q355 114 354 131 L354 151 Q355 169 337 168 Q207 171 78 168 Q60 169 61 151 L61 131 Q60 114 78 114 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="207.5" y="149.0" text-anchor="middle" fill="#8c451a" font-size="23">Hooks</text>
+<path d="M463 114 Q592 111 722 114 Q740 114 739 131 L739 151 Q740 169 722 168 Q592 171 463 168 Q445 169 446 151 L446 131 Q445 114 463 114 Z" fill="#8c451a" fill-opacity=".05" stroke="#8c451a" stroke-width="2.5"/>
+<text x="592.5" y="149.0" text-anchor="middle" fill="#8c451a" font-size="23">Guardrails</text>
+<rect x="38" y="222" width="724" height="172" rx="22" fill="none" stroke="#225d82" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="58" y="253" text-anchor="start" fill="#225d82" font-size="25">Orchestration and coordination</text>
+<path d="M272 262 Q400 259 528 262 Q546 262 545 279 L545 292 Q546 310 528 309 Q400 312 272 309 Q254 310 255 292 L255 279 Q254 262 272 262 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="293.5" text-anchor="middle" fill="#225d82" font-size="23">Orchestrator</text>
+<path d="M83 331 Q207 328 332 331 Q350 331 349 348 L349 362 Q350 380 332 379 Q207 382 83 379 Q65 380 66 362 L66 348 Q65 331 83 331 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="207.5" y="363.0" text-anchor="middle" fill="#225d82" font-size="23">Workflows</text>
+<path d="M468 331 Q592 328 717 331 Q735 331 734 348 L734 362 Q735 380 717 379 Q592 382 468 379 Q450 380 451 362 L451 348 Q450 331 468 331 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="592.5" y="363.0" text-anchor="middle" fill="#225d82" font-size="23">Multi-agent system</text>
+<rect x="38" y="418" width="724" height="194" rx="22" fill="none" stroke="#65468e" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="58" y="449" text-anchor="start" fill="#65468e" font-size="25">Agent execution</text>
+<path d="M92 462 Q206 459 321 462 Q339 462 338 479 L338 493 Q339 511 321 510 Q206 513 92 510 Q74 511 75 493 L75 479 Q74 462 92 462 Z" fill="#65468e" fill-opacity=".05" stroke="#65468e" stroke-width="2.5"/>
+<text x="206.5" y="494.0" text-anchor="middle" fill="#65468e" font-size="23">Specialized agent A</text>
+<path d="M482 462 Q596 459 711 462 Q729 462 728 479 L728 493 Q729 511 711 510 Q596 513 482 510 Q464 511 465 493 L465 479 Q464 462 482 462 Z" fill="#65468e" fill-opacity=".05" stroke="#65468e" stroke-width="2.5"/>
+<text x="596.5" y="494.0" text-anchor="middle" fill="#65468e" font-size="23">Specialized agent B</text>
+<path d="M92 546 Q206 543 321 546 Q339 546 338 563 L338 577 Q339 595 321 594 Q206 597 92 594 Q74 595 75 577 L75 563 Q74 546 92 546 Z" fill="#65468e" fill-opacity=".05" stroke="#65468e" stroke-width="2.5"/>
+<text x="206.5" y="578.0" text-anchor="middle" fill="#65468e" font-size="23">ReAct loop</text>
+<path d="M482 546 Q596 543 711 546 Q729 546 728 563 L728 577 Q729 595 711 594 Q596 597 482 594 Q464 595 465 577 L465 563 Q464 546 482 546 Z" fill="#65468e" fill-opacity=".05" stroke="#65468e" stroke-width="2.5"/>
+<text x="596.5" y="578.0" text-anchor="middle" fill="#65468e" font-size="23">LLM</text>
+<rect x="38" y="639" width="724" height="174" rx="22" fill="none" stroke="#28663f" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="58" y="670" text-anchor="start" fill="#28663f" font-size="25">Capabilities and packaging</text>
+<path d="M79 735 Q161 732 244 735 Q262 735 261 752 L261 768 Q262 786 244 785 Q161 788 79 785 Q61 786 62 768 L62 752 Q61 735 79 735 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="161.5" y="768.0" text-anchor="middle" fill="#28663f" font-size="23">Skills</text>
+<path d="M305 683 Q395 680 485 683 Q503 683 502 700 L502 711 Q503 729 485 728 Q395 731 305 728 Q287 729 288 711 L288 700 Q287 683 305 683 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="395.0" y="713.5" text-anchor="middle" fill="#28663f" font-size="23">Plugins</text>
+<path d="M305 754 Q395 751 485 754 Q503 754 502 771 L502 782 Q503 800 485 799 Q395 802 305 799 Q287 800 288 782 L288 771 Q287 754 305 754 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="395.0" y="784.5" text-anchor="middle" fill="#28663f" font-size="23">MCP</text>
+<path d="M564 735 Q641 732 718 735 Q736 735 735 752 L735 768 Q736 786 718 785 Q641 788 564 785 Q546 786 547 768 L547 752 Q546 735 564 735 Z" fill="#28663f" fill-opacity=".05" stroke="#28663f" stroke-width="2.5"/>
+<text x="641.0" y="768.0" text-anchor="middle" fill="#28663f" font-size="23">Tools</text>
+<path d="M173 846 Q400 843 627 846 Q645 846 644 863 L644 879 Q645 897 627 896 Q400 899 173 896 Q155 897 156 879 L156 863 Q155 846 173 846 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="879.0" text-anchor="middle" fill="#225d82" font-size="23">Verification · Tests, diffs and telemetry</text>
+<rect x="38" y="933" width="724" height="124" rx="22" fill="none" stroke="#225d82" stroke-width="1.6" stroke-dasharray="9 7"/>
+<text x="58" y="964" text-anchor="start" fill="#225d82" font-size="25">External environment</text>
+<path d="M82 1001 Q169 998 256 1001 Q274 1001 273 1018 L273 1027 Q274 1045 256 1044 Q169 1047 82 1044 Q64 1045 65 1027 L65 1018 Q64 1001 82 1001 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="169.0" y="1030.5" text-anchor="middle" fill="#225d82" font-size="23">APIs</text>
+<path d="M313 1001 Q400 998 487 1001 Q505 1001 504 1018 L504 1027 Q505 1045 487 1044 Q400 1047 313 1044 Q295 1045 296 1027 L296 1018 Q295 1001 313 1001 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="400.0" y="1030.5" text-anchor="middle" fill="#225d82" font-size="23">Databases</text>
+<path d="M544 1001 Q631 998 718 1001 Q736 1001 735 1018 L735 1027 Q736 1045 718 1044 Q631 1047 544 1044 Q526 1045 527 1027 L527 1018 Q526 1001 544 1001 Z" fill="#225d82" fill-opacity=".05" stroke="#225d82" stroke-width="2.5"/>
+<text x="631.0" y="1030.5" text-anchor="middle" fill="#225d82" font-size="23">Files / OS</text>
+</g>
+</svg>
