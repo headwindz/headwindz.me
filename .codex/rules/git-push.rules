@@ -1,0 +1,7 @@
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "prompt",
+    justification = "Ask before pushing changes from this workspace.",
+    match = ["git push", "git push origin main"],
+    not_match = ["git status", "git commit"],
+)

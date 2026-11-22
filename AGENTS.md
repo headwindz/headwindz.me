@@ -1,72 +1,38 @@
 # AGENTS.md
 
-Guidance for agents working on headwindz.me, Michael Zheng's personal blog and portfolio.
+## Working in this repository
 
-## Source of truth
+- Read [README.md](./README.md) for setup, project structure, and deployment. Inspect `package.json` and the relevant implementation before changing behavior or documenting commands. Use pnpm and preserve `pnpm-lock.yaml`.
+- Keep changes focused and preserve unrelated work in the working tree. Keep credentials out of version control by storing them in local environment files or deployment settings.
+- Commit or deploy only when explicitly requested.
+- Push only when explicitly requested. Request approval through the Codex approval dialog for each `git push` and include the commits and destination in the prompt. See the [Codex push rule](./.codex/rules/git-push.rules).
 
-Inspect `package.json` and the relevant implementation before changing behavior or documenting commands. The current stack is Next.js 16 App Router, React 19, TypeScript, Contentlayer2, and Tailwind CSS 4. Use pnpm and preserve `pnpm-lock.yaml`.
+## Implementation
 
-Read [README.md](./README.md) for setup, commands, authoring examples, and deployment limitations. Use Node.js 20.9 or newer. `pnpm start` starts development; `pnpm serve` runs the production server after a build.
-
-## Where to make changes
-
-| Concern                             | Files                                                                                                 |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Pages, API handlers, metadata       | `app/`, including `app/seo.tsx`, `app/sitemap.ts`, `app/robots.ts`                                    |
-| Shared UI and MDX registration      | `components/`, `components/MDXComponents.tsx`                                                         |
-| Post, list, and author presentation | `layouts/`                                                                                            |
-| Posts and author profiles           | `data/blog/**/{en,ch}.md`, `data/authors/**/*.mdx`                                                    |
-| Site configuration                  | `data/siteMetadata.js`, `data/projectsData.ts`, `data/headerNavLinks.ts`                              |
-| Styling and theme tokens            | `css/tailwind.css`; there is no `tailwind.config.js`                                                  |
-| MDX schema and processing           | `contentlayer.config.ts`, `lib/remark-demo.mjs`                                                       |
-| Interactive demos                   | `demos/`, `components/LiveDemo.tsx`, `components/LiveDemoEditor.tsx`, `app/api/demo-preview/route.ts` |
-| Runtime and RSS generation          | `scripts/build-demo-runtime.mjs`, `scripts/postbuild.mjs`, `scripts/rss.mjs`                          |
-| Framework and tooling               | `next.config.js`, `tsconfig.json`, `eslint.config.mjs`, `prettier.config.js`                          |
-
-## Implementation conventions
-
-- Keep changes focused and preserve unrelated work already in the working tree.
-- Use functional React components, hooks, and typed props. Add client boundaries only where needed; `LiveDemo` reads source files on the server.
-- Use PascalCase for component filenames, kebab-case for MDX and demo paths, and existing neighboring conventions for utilities.
-- Use Tailwind classes and the CSS-based theme. Theme providers live in `app/theme-providers.tsx`.
-- Follow Prettier: no semicolons, single quotes, two-space indentation, and a 100-character print width.
-- Prefer static generation where appropriate, while preserving the Node.js endpoint required for editable demos.
+- Use functional React components, hooks, and typed props. Prefer static generation and add client boundaries only where needed. `LiveDemo` reads demo sources on the server.
+- Use PascalCase for component filenames and follow neighboring conventions for utilities. Follow `prettier.config.js` for formatting.
+- Use Tailwind classes and the theme in `css/tailwind.css`. Theme providers live in `app/theme-providers.tsx`.
 - Use the existing image wrapper and Next.js image optimization. Check `next.config.js` when adding remote image hosts or external scripts.
-- Keep secrets in local environment files or deployment settings. Never commit credentials.
 
-## Content conventions
+## Posts and diagrams
 
-- Add posts as `data/blog/<slug>/en.md`, optionally under a category folder. Put the Chinese version in `ch.md` alongside it. Both files support MDX.
-- Include `title`, `date`, `tags`, and `summary`. The schema requires only `title` and `date`; tags default to an empty list.
-- Consult `contentlayer.config.ts` before introducing or changing frontmatter fields.
-- Use sentence case headings, preserving acronyms and proper names: `## Getting started`, `### Using the API`.
-- Write concise, clear sentences and avoid unnecessary words.
-- For architecture diagrams, prefer hand-drawn images over Mermaid, with transparent backgrounds, sketch-style rounded boxes and arrows, dashed grouping lines, restrained blue/orange/green/purple accents, and clear handwritten-style labels. Prefer SVG for crisp lines and text when zooming. Choose label and line colors with sufficient contrast against the diagram viewer's background in light and dark themes. Keep text readable on mobile, include descriptive alt text, and store assets under `public/static/images/<topic>/`. Use the existing `SketchDiagram` viewer for expand, zoom, and download controls. Apply this preference to new or revised diagrams; replace existing diagrams only when requested.
-- Register reusable MDX components in `components/MDXComponents.tsx`.
-- Preserve existing URLs; add redirects in `next.config.js` when intentionally changing published slugs.
+- Follow [Writing a post](./README.md#writing-a-post) and [Chinese pilot](./README.md#chinese-pilot) for file layout, heading style, and translation conventions. Include `title`, `date`, `tags`, and `summary` for English posts. Check `contentlayer.config.ts` before changing frontmatter fields.
+- Register reusable MDX components in `components/MDXComponents.tsx`. Preserve published URLs and add redirects in `next.config.js` when intentionally changing slugs.
+- For new or revised architecture diagrams, prefer hand-drawn SVGs with transparent backgrounds, sketch-style rounded boxes and arrows, dashed groupings, and restrained blue, orange, green, and purple accents. Keep handwritten-style labels legible on mobile and ensure lines and text have sufficient contrast in both themes.
+- Store diagram assets in `public/static/images/<topic>/`, add descriptive alt text, and use `SketchDiagram` for expand, zoom, and download controls. Replace existing diagrams only when requested.
 
-## Demo workflow and constraints
+## Interactive demos
 
-1. Create a self-contained file at `demos/<topic>/<example>.tsx`. Each path segment must contain only lowercase letters, digits, or hyphens.
-2. Define a component named `App`; the preview compiler appends the React mount call.
-3. Add `[Try the example](demo://<topic>/<example>.tsx)` in its own MDX paragraph. The remark plugin inserts `LiveDemo`, which reads the file from `demos/`.
-4. Use only supported imports: `react`, `react-dom/client`, and `react/jsx-runtime`. The API rejects other packages and local imports.
-5. Check the editor and rendered preview. Its iframe stylesheet is separate from the site's full Tailwind CSS.
-
-`pnpm dev`, `pnpm start`, `pnpm build`, and `pnpm analyze` generate `lib/demo-runtime.generated.json` before Next.js runs. Change the generator rather than hand-editing the generated runtime. Restart development after runtime changes. Keep the import restrictions and iframe isolation intact when modifying preview behavior.
-
-Static-only deployment does not support the preview API. The editor also uses an absolute `/api/demo-preview` URL; verify subpath behavior before changing `BASE_PATH`.
+- Follow [Adding an interactive demo](./README.md#adding-an-interactive-demo) for source paths, MDX links, and compiler requirements. Check both the editor and the rendered preview.
+- Preserve the import restrictions, iframe isolation, and Node.js preview endpoint when changing demo behavior. Verify the absolute `/api/demo-preview` request under a subpath before changing `BASE_PATH`.
+- Update `scripts/build-demo-runtime.mjs` or its inputs for runtime changes. Restart development after changing the runtime.
 
 ## Generated files
 
-Do not manually edit `.next/`, `.contentlayer/`, `lib/demo-runtime.generated.json`, `app/tag-data.json`, `public/search.json`, or generated RSS feeds. Regenerate them through the normal scripts. Review the diff after checks and keep generated changes only when required by the task.
+Regenerate `.next/`, `.contentlayer/`, `lib/demo-runtime.generated.json`, `app/tag-data.json`, `public/search.json`, and RSS feeds through the normal scripts. Review the diff after checks and keep generated changes only when required by the task.
 
 ## Validation
 
-- For documentation-only edits, run `pnpm exec prettier --check README.md AGENTS.md` and `git diff --check`, and verify claims against source.
-- For code or content changes, run `pnpm lint` and `pnpm build`. Start `pnpm dev` and check affected pages and interactive behavior.
-- The lint script covers `app`, `components`, `lib`, `layouts`, `scripts`, and `next.config.js`; it does not check every directory. Check changed files outside those paths explicitly where applicable.
-- There is no dedicated automated test script. Add or run focused checks when the change warrants them.
-- Builds need network access for the Space Grotesk Google font. Report runtime or network blockers accurately rather than claiming checks passed.
-- Summarize changes, checks actually run, and remaining limitations. Do not commit or deploy unless explicitly requested.
-- Push only when the user explicitly asks to push the changes being delivered. Editing files or requesting a commit does not authorize a push. A previous push request does not authorize pushing later changes or follow-up tasks; wait for a new explicit push request.
+- For documentation-only edits, verify claims against source and run `pnpm exec prettier --check README.md AGENTS.md` and `git diff --check`.
+- For code or content changes, run `pnpm lint` and `pnpm build`, then use `pnpm dev` to check affected pages and interactions. Check changed files outside the lint script's scope separately and run focused checks when warranted.
+- Builds fetch the Space Grotesk font from Google. Report the checks actually run and any blockers or remaining limitations.
