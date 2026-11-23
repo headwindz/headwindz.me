@@ -1,6 +1,7 @@
 import { ReactNode } from 'react'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog, Authors } from 'contentlayer/generated'
+import ArticleToc from '@/components/ArticleToc'
 import Comments from '@/components/Comments'
 import Link from '@/components/Link'
 import PageTitle from '@/components/PageTitle'
@@ -30,7 +31,7 @@ interface LayoutProps {
 }
 
 export default function PostLayout({ content, authorDetails, next, prev, children }: LayoutProps) {
-  const { filePath, path, slug, date, title, tags } = content
+  const { filePath, path, slug, date, title, tags, toc } = content
   const basePath = path.split('/')[0]
 
   return (
@@ -94,8 +95,11 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
               </dd>
             </dl>
             <div className="divide-y divide-gray-200 xl:col-span-3 xl:row-span-2 xl:pb-0 dark:divide-gray-700">
-              <div id="post-body" className="prose dark:prose-invert max-w-none pt-10 pb-8">
-                {children}
+              <div className="article-reading-layout">
+                <ArticleToc key={slug} headings={toc} />
+                <div id="post-body" className="prose dark:prose-invert max-w-none pt-10 pb-8">
+                  {children}
+                </div>
               </div>
               <div className="pt-6 pb-6 text-sm text-gray-700 dark:text-gray-300">
                 <Link href={discussUrl(path)} rel="nofollow">

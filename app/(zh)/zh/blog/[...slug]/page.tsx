@@ -7,7 +7,6 @@ import { coreContent } from 'pliny/utils/contentlayer'
 import { MDXLayoutRenderer } from 'pliny/mdx-components'
 import { components } from '@/components/MDXComponents'
 import PostSimple from '@/layouts/PostSimple'
-import ReadingProgress from '@/components/ReadingProgress'
 import siteMetadata from '@/data/siteMetadata'
 import { chinesePosts, translations } from 'lib/i18n/posts'
 
@@ -81,7 +80,6 @@ export default async function Page({ params }: Props) {
   }
   return (
     <>
-      <ReadingProgress key={slug} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

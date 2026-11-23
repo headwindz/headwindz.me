@@ -5,6 +5,7 @@
 - Read [README.md](./README.md) for setup, project structure, and deployment. Inspect `package.json` and the relevant implementation before changing behavior or documenting commands. Use pnpm and preserve `pnpm-lock.yaml`.
 - Keep changes focused and preserve unrelated work in the working tree. Keep credentials out of version control by storing them in local environment files or deployment settings.
 - Commit or deploy only when explicitly requested.
+- Use Conventional Commits for new commits, such as `docs: clarify setup instructions` or `fix(blog): align article headings`. The Husky `commit-msg` hook checks messages against `.commitlintrc.json`.
 - Push only when explicitly requested. Request approval through the Codex approval dialog for each `git push` and include the commits and destination in the prompt. See the [Codex push rule](./.codex/rules/git-push.rules).
 
 ## Implementation

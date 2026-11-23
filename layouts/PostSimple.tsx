@@ -51,8 +51,8 @@ export default function PostLayout({ content, next, prev, children, locale = 'en
             </div>
           </div>
         </header>
-        <div className={`article-reading-layout ${toc?.length > 1 ? 'has-index' : ''}`}>
-          <ArticleToc headings={toc} locale={locale} />
+        <div className="article-reading-layout">
+          <ArticleToc key={slug} headings={toc} locale={locale} />
           <div id="post-body" className="article-body prose dark:prose-invert">
             {children}
           </div>

@@ -13,7 +13,6 @@ import PostBanner from '@/layouts/PostBanner'
 import { Metadata } from 'next'
 import siteMetadata from '@/data/siteMetadata'
 import { notFound } from 'next/navigation'
-import ReadingProgress from '@/components/ReadingProgress'
 
 const defaultLayout = 'PostSimple'
 const layouts = {
@@ -115,7 +114,6 @@ export default async function Page(props: { params: Promise<{ slug: string[] }> 
 
   return (
     <>
-      <ReadingProgress key={slug} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
